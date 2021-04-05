@@ -30,6 +30,7 @@ export enum TokenType {
     lower, greater, lowerOrEqual, greaterOrEqual, 
     
     equal,
+    notEqual,
 
     // semicolon
     semicolon, // ;
@@ -162,6 +163,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     "<": TokenType.lower,
     ">": TokenType.greater,
     "=": TokenType.equal,
+    "<>": TokenType.notEqual,
     
     ';': TokenType.semicolon, // ;
 

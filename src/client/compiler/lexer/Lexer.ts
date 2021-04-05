@@ -151,6 +151,17 @@ export class Lexer {
                     this.pushToken(TokenType.division, '/');
                     this.next();
                     return;
+                case TokenType.lower:
+                    if(this.nextChar == ">"){
+                        this.pushToken(TokenType.notEqual, '<>');
+                        this.next();
+                        this.next();
+                        return;
+                    } else {
+                        this.pushToken(TokenType.lower, '<');
+                        this.next();
+                        return;
+                    }
                 case TokenType.rightSquareBracket:
                     this.checkClosingBracket(specialCharToken);
                     break;
