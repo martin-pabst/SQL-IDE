@@ -38,12 +38,22 @@ export class DatabaseTool {
                 
                 console.log(event.data);
 
-                let querySuccessCallback = that.querySuccessCallbacksMap.get(event.data?.id);
-                if(querySuccessCallback != null){
-                    querySuccessCallback(event.data);
-                    this.queryErrorCallbackMap.delete(event.data.id);
-                    this.querySuccessCallbacksMap.delete(event.data.id);
+                let id = event.data.id;
+                if(event.data.error != null){
+                    let querySuccessCallback = that.querySuccessCallbacksMap.get(id);
+                    if(querySuccessCallback != null){
+                        querySuccessCallback(event.data.results[0]);
+                    }
+                } else {
+                    let queryErrorCallback = that.queryErrorCallbackMap.get(id);
+                    if(queryErrorCallback != null){
+                        queryErrorCallback(event.data.error);
+                    }
                 }
+
+                this.queryErrorCallbackMap.delete(id);
+                this.querySuccessCallbacksMap.delete(id);
+
             };
 
             worker.postMessage({
