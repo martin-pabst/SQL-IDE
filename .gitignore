@@ -1,0 +1,17 @@
+/node_modules
+/htdocs/js
+# /htdocs/js.webpack
+/*.7z
+/*.zip
+/material
+/upload.cmd
+/upload_csg.cmd
+/package-lock.json
+/babel.config.js
+/htdocs/assets/mp3
+/htdocs/assets/fonts
+/htdocs/js.webpack/javaOnline-apiDoc*
+/htdocs/js.webpack/javaOnline.css
+/htdocs/js.webpack/javaOnline.css.map
+/htdocs/js.webpack/javaOnline.js
+/htdocs/js.webpack/javaOnline.js.map

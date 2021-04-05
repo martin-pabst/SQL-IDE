@@ -1,0 +1,12 @@
+[
+    {
+        "name": "Leere-Datenbank",
+        "description": "Enthält keine Tabellen",
+        "filename": "empty.sql"
+    },
+    {
+        "name": "Terra-Datenbank",
+        "description": "Enthält Informationen zu Kontinenten, Ländern, Orten und Flüssen. Diese Datenbank enthält sehr viele Datensätze.",
+        "filename": "terra.sql"
+    }
+]
