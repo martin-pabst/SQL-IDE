@@ -10,7 +10,7 @@ export class Parser {
     static operatorPrecedence: TokenType[][] = [
         // [TokenType.or], [TokenType.and],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
-        [TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
+        [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
     ];
 
     module: Module;

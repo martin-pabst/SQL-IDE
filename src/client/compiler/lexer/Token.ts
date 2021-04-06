@@ -28,7 +28,7 @@ export enum TokenType {
     minus, plus, multiplication, division,
     singleQuote, doubleQuote, // ', "
     lower, greater, lowerOrEqual, greaterOrEqual, 
-    
+    concatenation,    
     equal,
     notEqual,
 
@@ -40,6 +40,9 @@ export enum TokenType {
 
     // backslash
     backslash,
+
+    // @
+    pipe,
 
     // @
     at,
@@ -110,6 +113,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.greater]: ">", 
     [TokenType.lowerOrEqual]: "<=", 
     [TokenType.greaterOrEqual]: ">=", 
+    [TokenType.concatenation]: "||", 
     
     // semicolon
     [TokenType.semicolon]: ";", // ;
@@ -122,6 +126,9 @@ export var TokenTypeReadable: {[tt: number]: string} = {
 
     // at
     [TokenType.at]: "@",
+    
+    // pipe
+    [TokenType.pipe]: "|",
 
     // whitespace
     [TokenType.space]: "ein Leerzeichen",
@@ -158,6 +165,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     '/': TokenType.division,
     '\\': TokenType.backslash,
     '@': TokenType.at,
+    '|': TokenType.pipe,
     '\'': TokenType.singleQuote, 
     '"': TokenType.doubleQuote, // ', "
     "<": TokenType.lower,

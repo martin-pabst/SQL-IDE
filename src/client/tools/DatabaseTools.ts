@@ -200,7 +200,7 @@ export class DatabaseTool {
                 let type: string = columnArray1[2];
                 let notNull: boolean = columnArray1[3] == 1;
                 let dflt_value: string = columnArray1[4];
-                let isPrimaryKey: boolean = columnArray1[5] == 1;
+                let isPrimaryKey: boolean = columnArray1[5] != 0;
 
                 let columnStructure: ColumnStructure = {
                     name: name, 
@@ -242,7 +242,7 @@ export class DatabaseTool {
             }
         }
 
-        // console.log(this.databaseStructure);
+        console.log(this.databaseStructure);
 
         return this.databaseStructure;
 
