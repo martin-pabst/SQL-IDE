@@ -6,7 +6,7 @@
     
         CREATE TABLE fluss (
             FNR varchar(3) NOT NULL primary key,
-            Name varchar(30) NOT NULL,
+            Name varchar(30) NOT NULL check(length(Name) <= 30), -- Test comment
             ZielFNR varchar(3) DEFAULT NULL,
             Meer varchar(25) DEFAULT NULL,
             Laenge double(53,0) DEFAULT NULL
