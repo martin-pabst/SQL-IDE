@@ -90,7 +90,7 @@ export class DatabaseTool {
             that.executeQuery(sql, (result) => {
                 if(callback != null) callback();
                 that.retrieveDatabaseStructure(() => {});
-                that.executeQuery("select isDate('2019-04-30')", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
+                that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
             }, (error) => {});
 
         };

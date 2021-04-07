@@ -13,6 +13,10 @@ export enum TokenType {
     keywordFrom,
     keywordWhere,
 
+    keywordOr,
+    keywordAnd,
+    keywordNot,
+
     // brackets
     leftBracket, // ()
     rightBracket,
@@ -90,6 +94,10 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordSelect]: "select",
     [TokenType.keywordFrom]: "from",
     [TokenType.keywordWhere]: "where",
+
+    [TokenType.keywordAnd]: "and",
+    [TokenType.keywordOr]: "or",
+    [TokenType.keywordNot]: "not",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()

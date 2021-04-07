@@ -4,6 +4,9 @@
     
     -- --------------------------------------------------------
     
+  create table test(v boolean);
+  insert into test values(true), (0);
+
         CREATE TABLE fluss (
             FNR varchar(3) NOT NULL primary key,
             Name varchar(30) NOT NULL check(length(Name) <= 30), -- Test comment

@@ -8,7 +8,7 @@ type ASTNodes = ASTNode[];
 export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
-        // [TokenType.or], [TokenType.and],
+        [TokenType.keywordOr], [TokenType.keywordAnd],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
     ];
