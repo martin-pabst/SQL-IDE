@@ -12,13 +12,10 @@ export type QueryResult = {
 export type QuerySuccessCallback = (results: QueryResult[]) => void;
 export type QueryErrorCallback = (error: string) => void;
 
-export type SQLType = "varchar" | "double" | "int";
-
 export type ColumnStructure = {
     name: string;
     table: TableStructure;
 
-    type: SQLType;
     typeLength1?: number; // for varchar(5), ...
     typeLength2?: number; // for varchar(5), ...
     completeTypeSQL: string;
@@ -207,7 +204,6 @@ export class DatabaseTool {
                     name: name, 
                     isPrimaryKey: isPrimaryKey,
                     completeTypeSQL: type,
-                    type: "varchar",
                     table: tableStructure,
                     typeLength1: 0,
                     typeLength2: 0,

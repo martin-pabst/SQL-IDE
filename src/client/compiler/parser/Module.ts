@@ -24,6 +24,7 @@ export type File = {
     saved: boolean,
     version: number,
     panelElement?: AccordionElement
+
 }
 
 export type IdentifierPosition = {
@@ -53,7 +54,7 @@ export class Module {
     tokenList: Token[];
 
     // 2nd pass: ASTParser
-    mainProgramAst: ASTNode[];
+    sqlStatements: ASTNode[];
     mainSymbolTable: SymbolTable;
 
     identifierPositions: { [line: number]: IdentifierPosition[] } = {};

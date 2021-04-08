@@ -7,7 +7,9 @@ export abstract class SQLType {
 
     abstract canCastTo(type2: SQLType): boolean;
 
-    abstract getResultType(operator: TokenType, secondType: SQLType): SQLType;
+    abstract getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType;
+
+    abstract getBinaryResult(operator: TokenType, value1: any, value2: any): any;
 
 }
 
@@ -23,10 +25,10 @@ export class SQLBaseType extends SQLType {
 
     constructor(public name: string, public parameterDescriptions: string[],
         public checkFunction: CheckFunction, public outputFunction: OutputFunction, public canCastToList: string[]) {
-            super();
+        super();
     }
 
-    static getBaseType(name: string){
+    static getBaseType(name: string) {
         return this.baseTypeMap.get(name.toLocaleLowerCase());
     }
 
@@ -61,24 +63,69 @@ export class SQLBaseType extends SQLType {
 
     }
 
-    getResultType(operator: TokenType, secondType: SQLType): SQLType {
+    getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType {
 
-        
+
         let map = this.binaryResultTypes.get(operator);
-        if(map == null) return null;
-        
+        if (map == null) return null;
+
         let bt2: SQLBaseType = secondType instanceof SQLBaseType ? secondType : secondType["baseType"];
 
         return map.get(bt2);
 
     }
 
+    getBinaryResult(operator: TokenType, value1: any, value2: any): any {
+        switch (operator) {
+            case TokenType.concatenation:
+                if (value1 != null && value2 != null) return value1 + value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.plus:
+                if (value1 != null && value2 != null) return value1 + value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.minus:
+                if (value1 != null && value2 != null) return value1 - value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.multiplication:
+                if (value1 != null && value2 != null) return value1 * value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.division:
+                if (value1 != null && value2 != null) return value1 * value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.keywordAnd:
+                if (value1 != null && value2 != null) return value1 * value2;
+                return value1 != null ? value1 : value2;
+            case TokenType.keywordOr:
+                if (value1 != null && value2 != null) return Math.max(value1, value2);
+                return value1 != null ? value1 : value2;
+            case TokenType.lower:
+                if (value1 != null && value2 != null) return value1 < value2;
+                return value1 != null ? false : true;
+            case TokenType.greater:
+                if (value1 != null && value2 != null) return value1 >= value2;
+                return value1 != null ? false : true;
+            case TokenType.lowerOrEqual:
+                if (value1 != null && value2 != null) return value1 <= value2;
+                return value1 != null ? false : true;
+            case TokenType.greaterOrEqual:
+                if (value1 != null && value2 != null) return value1 >= value2;
+                return value1 != null ? false : true;
+            case TokenType.equal:
+                return value1 == value2;
+            case TokenType.notEqual:
+                return value1 != value2;
+        }
+    }
+
+
 }
 
+let tens: number[] = [1, 10, 100, 1000, 100000, 100000, 1000000, 10000000, 100000000, 1000000000];
+
 export class SQLDerivedType extends SQLType {
-    
+
     name: string;
-    
+
     constructor(public baseType: SQLBaseType, public parameterValues: number[]) {
         super();
         this.name = `${baseType.name}(${parameterValues.join(", ")})`;
@@ -92,21 +139,21 @@ export class SQLDerivedType extends SQLType {
 
     }
 
-    getResultType(operator: TokenType, secondType: SQLType): SQLType {
+    getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType {
 
-        
+
         let map = this.baseType.binaryResultTypes.get(operator);
-        if(map == null) return null;
-        
+        if (map == null) return null;
+
         let bt2: SQLBaseType = secondType instanceof SQLBaseType ? secondType : secondType["baseType"];
 
         let returnBaseType = map.get(bt2);
 
-        if(this.baseType == bt2 && this.baseType == returnBaseType && secondType instanceof SQLDerivedType){
-            if(this.baseType.name == "varchar" || operator == TokenType.concatenation){
+        if (this.baseType == bt2 && this.baseType == returnBaseType && secondType instanceof SQLDerivedType) {
+            if (this.baseType.name == "varchar" || operator == TokenType.concatenation) {
                 return new SQLDerivedType(this.baseType, [this.parameterValues[0] + secondType.parameterValues[0]]);
             }
-            if(this.baseType.name == "decimal"){
+            if (this.baseType.name == "decimal") {
                 return new SQLDerivedType(this.baseType, [Math.max(this.parameterValues[0], secondType.parameterValues[0]), Math.max(this.parameterValues[1], secondType.parameterValues[1])]);
             }
         }
@@ -115,9 +162,17 @@ export class SQLDerivedType extends SQLType {
 
     }
 
-}
+    getBinaryResult(operator: TokenType, value1: any, value2: any): any {
+        let result = this.baseType.getBinaryResult(operator, value1, value2);
+        if(this.name = "varchar") return result == null ? null : ("" + result).substr(0, this.parameterValues[0]);
+        if(this.name == "decimal") {
+            if(result == null) return null;
+            return Math.round(result * tens[this.parameterValues[1]])/tens[this.parameterValues[1]];
+        }
 
-let tens: number[] = [1, 10, 100, 1000, 100000, 100000, 1000000, 10000000, 100000000, 1000000000];
+        return result;
+    }
+}
 
 var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= pv[0])`,
     (v: string, pv) => v.substr(0, pv[0]), ["text"]);

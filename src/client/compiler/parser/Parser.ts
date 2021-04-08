@@ -47,7 +47,7 @@ export class Parser {
         this.errorList = [];
 
         if (this.tokenList.length == 0) {
-            this.module.mainProgramAst = [];
+            this.module.sqlStatements = [];
             this.module.errors[1] = this.errorList;
             return;
         }
@@ -60,7 +60,7 @@ export class Parser {
         this.endToken.position = { line: lastToken.position.line, column: lastToken.position.column + lastToken.position.length, length: 1 };
 
         let astNodes = this.parseMain();
-        this.module.mainProgramAst = astNodes.mainProgramAST;
+        this.module.sqlStatements = astNodes.mainProgramAST;
 
         this.module.errors[1] = this.errorList;
 
@@ -295,7 +295,7 @@ export class Parser {
 
         switch (this.tt) {
             case TokenType.keywordSelect:
-                // restStatements = ...
+                return this.parseSelect();
                 break;
             default:
                 let s = TokenTypeReadable[this.tt];
@@ -309,6 +309,11 @@ export class Parser {
 
         return retStatements;
 
+    }
+
+    parseSelect(){
+        this.nextToken(); // skip "select"
+        
     }
 
 

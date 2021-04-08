@@ -1,20 +1,24 @@
 import { TextPosition } from "../lexer/Token.js";
+import { Table, Column } from "./SQLTable.js";
 
+export type Symbol = {
+    identifier: string;
+    table?: Table;
+    column?: Column;
+
+    posOfDefinition: TextPosition;
+    referencedOnPositions: TextPosition[];
+}
 
 export class SymbolTable {
-
-    static maxId: number = 0;
-
-    public id = SymbolTable.maxId++;
 
     parent: SymbolTable; // SymbolTable of parent scope
     positionFrom: TextPosition;
     positionTo: TextPosition;
 
-    beginsNewStackframe: boolean = false;
-    stackframeSize: number;
-
     childSymbolTables: SymbolTable[] = [];
+
+    Symbols: Map<string, Symbol> = new Map();
 
     constructor(parentSymbolTable: SymbolTable, positionFrom: TextPosition, positionTo: TextPosition) {
 
