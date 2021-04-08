@@ -1,6 +1,6 @@
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, TermNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode } from "./AST.js";
 import { Module } from "./Module.js";
 
 type ASTNodes = ASTNode[];
@@ -289,14 +289,13 @@ export class Parser {
 
 
 
-    parseStatement(expectSemicolon: boolean = true): ASTNode[] {
+    parseStatement(expectSemicolon: boolean = true): ASTNode {
 
-        let retStatements: ASTNode[] = [];
+        let retStatements: ASTNode = null;
 
         switch (this.tt) {
             case TokenType.keywordSelect:
                 return this.parseSelect();
-                break;
             default:
                 let s = TokenTypeReadable[this.tt];
                 if (s != this.cct.value) s += "(" + this.cct.value + ")";
@@ -311,9 +310,25 @@ export class Parser {
 
     }
 
-    parseSelect(){
+    parseSelect(): ASTNode{
+        let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
         
+
+
+        let node: SelectNode = {
+            type: TokenType.keywordSelect,
+            position: startPosition,
+            endPosition: this.getCurrentPosition(),
+            symbolTable: null,
+            columnList: [],
+            tableList: [],
+            whereNode: null,
+            parentStatement: null,
+            subQueries: []
+        }
+
+        return node;
     }
 
 

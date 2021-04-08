@@ -12,6 +12,10 @@ export enum TokenType {
     keywordSelect,
     keywordFrom,
     keywordWhere,
+    keywordGroup,
+    keywordBy,
+    keywordHaving,
+    keywordOrder,
 
     keywordOr,
     keywordAnd,
@@ -94,6 +98,10 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordSelect]: "select",
     [TokenType.keywordFrom]: "from",
     [TokenType.keywordWhere]: "where",
+    [TokenType.keywordGroup]: "group",
+    [TokenType.keywordBy]: "by",
+    [TokenType.keywordHaving]: "having",
+    [TokenType.keywordOrder]: "order",
 
     [TokenType.keywordAnd]: "and",
     [TokenType.keywordOr]: "or",
@@ -198,6 +206,10 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "where": TokenType.keywordWhere,
     "true": TokenType.true,
     "false": TokenType.false,
+    "group": TokenType.keywordGroup,
+    "by": TokenType.keywordBy,
+    "having": TokenType.keywordHaving,
+    "order": TokenType.keywordOrder,
 };
 
 export var EscapeSequenceList: {[keyword: string]:string} = {

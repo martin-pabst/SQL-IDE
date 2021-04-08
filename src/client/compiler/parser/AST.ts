@@ -14,6 +14,7 @@ export type ASTNode =
 export type SelectNode = {
     type: TokenType.keywordSelect,
     position: TextPosition,
+    endPosition: TextPosition,
     subQueries: SelectNode[], 
     parentStatement: StatementNode,
     symbolTable: SymbolTable,
@@ -21,10 +22,32 @@ export type SelectNode = {
     columnList: TermNode[],
     tableList: TermNode[],
     whereNode: TermNode,
-    groupByNode: GroupByNode,
-    havingNode: HavingNode,
-    orderByNode: OrderByNode
+    groupByNode?: GroupByNode,
+    havingNode?: HavingNode,
+    orderByNode?: OrderByNode
 }
+
+export type GroupByNode = {
+    type: TokenType.keywordGroup,
+    position: TextPosition,
+    
+    columnList: TermNode[],
+}
+
+export type HavingNode = {
+    type: TokenType.keywordHaving,
+    position: TextPosition,
+    
+    condition: TermNode,
+}
+
+export type OrderByNode = {
+    type: TokenType.keywordOrder,
+    position: TextPosition,
+    
+    columnList: TermNode[],
+}
+
 
 export type UpdateNode = {
     type: TokenType.keywordSelect,
