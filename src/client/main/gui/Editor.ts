@@ -7,6 +7,7 @@ import { MyHoverProvider } from "./MyHoverProvider.js";
 import { MyCodeActionProvider } from "./MyCodeActionProvider.js";
 import { MyReferenceProvider } from "./MyReferenceProvider.js";
 import { Workspace } from "../../workspace/Workspace.js";
+import { defineVscSQL } from "./VscSql.js";
 
 export class Editor {
 
@@ -25,19 +26,18 @@ export class Editor {
 
 
 
-        defineMyJava();
+        defineVscSQL();
 
         monaco.editor.defineTheme('myCustomThemeDark', {
             base: 'vs-dark', // can also be vs-dark or hc-black
             inherit: true, // can also be false to completely replace the builtin rules
             rules: [
-                { token: 'method', foreground: 'dcdcaa', fontStyle: 'italic' },
-                { token: 'print', foreground: 'dcdcaa', fontStyle: 'italic bold' },
-                { token: 'class', foreground: '3DC9B0' },
+                { token: 'functions', foreground: 'dcdcaa', fontStyle: 'italic' },
+                { token: 'string.sql', foreground: '3DC9B0' },
                 { token: 'number', foreground: 'b5cea8' },
                 { token: 'type', foreground: '499cd6' },
-                { token: 'identifier', foreground: '9cdcfe' },
-                { token: 'statement', foreground: 'bb96c0', fontStyle: 'bold' },
+                { token: 'identifier', foreground: '40e040' },
+                { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
                 { token: 'keyword', foreground: '68bed4', fontStyle: 'bold' },
                 // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },
             ],
@@ -51,13 +51,12 @@ export class Editor {
             base: 'vs', // can also be vs-dark or hc-black
             inherit: true, // can also be false to completely replace the builtin rules
             rules: [
-                { token: 'method', foreground: '694E16', fontStyle: 'italic bold' },
-                { token: 'print', foreground: '811f3f', fontStyle: 'italic bold' },
-                { token: 'class', foreground: 'a03030' },
+                { token: 'functions', foreground: '694E16', fontStyle: 'italic bold' },
+                { token: 'string.sql', foreground: 'a03030' },
                 { token: 'number', foreground: '404040' },
                 { token: 'type', foreground: '0000ff', fontStyle: 'bold' },
-                { token: 'identifier', foreground: '001080' },
-                { token: 'statement', foreground: '8000e0', fontStyle: 'bold' },
+                { token: 'identifier', foreground: '8000e0' },
+                { token: 'statement', foreground: '001080', fontStyle: 'bold' },
                 { token: 'keyword', foreground: '00a000', fontStyle: 'bold' },
                 { token: 'comment', foreground: '808080', fontStyle: 'italic' },
             ],
@@ -90,7 +89,7 @@ export class Editor {
             //     '}'
             // ].join('\n'),
             // language: 'myJava',
-            language: 'myJava',
+            language: 'vscSQL',
             lightbulb: {
                 enabled: true
             },
@@ -185,14 +184,14 @@ export class Editor {
             }
         });
 
-        monaco.languages.registerHoverProvider('myJava', new MyHoverProvider(this));
+        monaco.languages.registerHoverProvider('vscSQL', new MyHoverProvider(this));
 
-        monaco.languages.registerCompletionItemProvider('myJava', new MyCompletionItemProvider(this.main));
-        monaco.languages.registerCodeActionProvider('myJava', new MyCodeActionProvider(this.main));
-        monaco.languages.registerReferenceProvider('myJava', new MyReferenceProvider(this.main));
+        monaco.languages.registerCompletionItemProvider('vscSQL', new MyCompletionItemProvider(this.main));
+        monaco.languages.registerCodeActionProvider('vscSQL', new MyCodeActionProvider(this.main));
+        monaco.languages.registerReferenceProvider('vscSQL', new MyReferenceProvider(this.main));
 
 
-        monaco.languages.registerSignatureHelpProvider('myJava', new MySignatureHelpProvider(this.main));
+        monaco.languages.registerSignatureHelpProvider('vscSQL', new MySignatureHelpProvider(this.main));
 
         this.editor.onMouseDown((e: monaco.editor.IEditorMouseEvent) => {
             const data = e.target.detail;
