@@ -19,8 +19,13 @@ import { ViewModeController } from "./gui/ViewModeController.js";
 import { ErrorManager } from "./gui/ErrorManager.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { MainBase } from "./MainBase.js";
+import { TextPosition } from "../compiler/lexer/Token.js";
 
-export class Main {
+export class Main implements MainBase {
+    isEmbedded(): boolean {
+        return false;
+    }
 
     getCurrentWorkspace(): Workspace {
         return this.currentWorkspace;

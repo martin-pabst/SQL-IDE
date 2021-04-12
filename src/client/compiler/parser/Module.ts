@@ -6,6 +6,7 @@ import { TextPosition, Token, TokenType, TextPositionWithoutLength } from "../le
 import { SymbolTable } from "./SymbolTable.js";
 import { Main } from "../../main/Main.js";
 import { ASTNode } from "./AST.js";
+import { MainBase } from "../../main/MainBase.js";
 
 export type File = {
     name: string,
@@ -63,7 +64,7 @@ export class Module {
     static uriMap: { [name: string]: number } = {};
     bracketError: string;
 
-    constructor(file: File, public main: Main) {
+    constructor(file: File, public main: MainBase) {
         if (file == null || this.main == null) return; // used by AdhocCompiler and ApiDoc
 
         this.file = file;
@@ -97,8 +98,7 @@ export class Module {
                 that.lastSavedVersionId = versionId;
             }
 
-            // if(!that.main.isEmbedded()){
-            if (true) {
+            if(!that.main.isEmbedded()){
                 let main1: Main = <Main>main;
                 if (main1.workspacesOwnerId != main1.user.id) {
                     if (that.file.text_before_revision == null || that.file.student_edited_after_revision) {
@@ -119,7 +119,7 @@ export class Module {
 
 
 
-    static restoreFromData(f: FileData, main: Main): Module {
+    static restoreFromData(f: FileData, main: MainBase): Module {
 
         let f1: File = {
             name: f.name,
@@ -333,7 +333,7 @@ export class ModuleStore {
 
     dirty: boolean = false;
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
     }
 
     findModuleById(module_id: number): Module {

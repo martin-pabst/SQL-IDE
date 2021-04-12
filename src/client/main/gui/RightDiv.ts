@@ -1,5 +1,6 @@
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 export class RightDiv {
 
@@ -8,7 +9,7 @@ export class RightDiv {
     $tabs: JQuery<HTMLElement>;
     $headings: JQuery<HTMLElement>;
 
-    constructor(private main: Main, public $rightDiv: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, public $rightDiv: JQuery<HTMLElement>) {
 
         this.$tabs = $rightDiv.find('.jo_tabs');
         this.$headings = $rightDiv.find('.jo_tabheadings');

@@ -1,10 +1,11 @@
 import { Module } from "../../compiler/parser/Module.js";
 import { Main } from "../Main.js";
 import { Editor } from "./Editor.js";
+import { MainBase } from "../MainBase.js";
 
 export class MyReferenceProvider implements monaco.languages.ReferenceProvider {
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
 
     }
 

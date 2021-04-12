@@ -1,9 +1,10 @@
 import { QuickFix } from "../../compiler/lexer/Lexer.js";
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 export class MyCodeActionProvider implements monaco.languages.CodeActionProvider {
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
 
     }
 

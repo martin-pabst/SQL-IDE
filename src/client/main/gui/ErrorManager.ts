@@ -2,6 +2,7 @@ import { Workspace } from "../../workspace/Workspace.js";
 import { Error } from "../../compiler/lexer/Lexer.js";
 import { Module } from "../../compiler/parser/Module.js";
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 export class ErrorManager {
 
@@ -15,7 +16,7 @@ export class ErrorManager {
 
     lightBulbOnClickFunctionList: {class: string, onClickFunction: () => void, title: string}[] = [];
 
-    constructor(private main: Main, private $bottomDiv: JQuery<HTMLElement>, private $mainDiv: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, private $bottomDiv: JQuery<HTMLElement>, private $mainDiv: JQuery<HTMLElement>) {
         this.minimapColor["error"] = "#bc1616";
         this.minimapColor["warning"] = "#cca700";
         this.minimapColor["info"] = "#75beff";

@@ -4,13 +4,14 @@ import { Workspace } from "../../workspace/Workspace.js";
 import { Module } from "../../compiler/parser/Module.js";
 import { ErrorManager } from "./ErrorManager.js";
 import { HomeworkManager } from "./HomeworkManager.js";
+import { MainBase } from "../MainBase.js";
 
 export class BottomDiv {
 
     errorManager: ErrorManager;
     homeworkManager: HomeworkManager;
 
-    constructor(private main: Main, public $bottomDiv: JQuery<HTMLElement>, public $mainDiv: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, public $bottomDiv: JQuery<HTMLElement>, public $mainDiv: JQuery<HTMLElement>) {
 
 
         if (this.$bottomDiv.find('.jo_tabheadings>.jo_homeworkTabheading').length > 0) {

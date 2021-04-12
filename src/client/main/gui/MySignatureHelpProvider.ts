@@ -1,5 +1,6 @@
 import { Module, MethodCallPosition } from "../../compiler/parser/Module.js";
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 
 
@@ -8,7 +9,7 @@ export class MySignatureHelpProvider implements monaco.languages.SignatureHelpPr
     signatureHelpTriggerCharacters?: readonly string[] = ['(', ',', ';', '<', '>', '=']; // semicolon, <, >, = for for-loop, if, while, ...
     signatureHelpRetriggerCharacters?: readonly string[] = [];
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
     }
 
     provideSignatureHelp(model: monaco.editor.ITextModel, position: monaco.Position,

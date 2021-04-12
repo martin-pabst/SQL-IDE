@@ -122,7 +122,7 @@
                             <div class="jo_tabheadings">
                                 <div class="jo_tabheading jo_active" data-target="jo_errorsTab">Fehler</div>
                                 <div class="jo_tabheading jo_console-tab" data-target="jo_consoleTab">Console</div>
-                                <div class="jo_tabheading" data-target="jo_pcodeTab">PCode</div>
+                                <div class="jo_tabheading" data-target="jo_resultTab">PCode</div>
                                 <div class="jo_tabheading jo_homeworkTabheading" data-target="jo_homeworkTab">Hausaufgaben</div>
                                 <div class="jo_tabheading-right jo_noHeading">
                                     <img class="jo_network-busy" src="assets/projectexplorer/compile.gif">
@@ -146,7 +146,7 @@
                                         <div class="jo_commandline"></div>
                                     </div>
                                 </div>
-                                <div class="jo_scrollable jo_pcodeTab">PCode</div>
+                                <div class="jo_scrollable jo_resultTab">PCode</div>
                                 <div class="jo_homeworkTab"></div>
                             </div>
                         </div>
@@ -168,64 +168,20 @@
                 <div class="jo_control-container"></div>
 
                 <div class="jo_tabheadings">
-                    <div class="jo_tabheading jo_active" data-target="jo_run">Ausgabe</div>
-                    <div class="jo_tabheading jo_classDiagramTabHeading" data-target="jo_classdiagram">Klassen</div>
-                    <!-- <div class="jo_tabheading jo_objectDiagramTabHeading" data-target="jo_objectdiagram">Objekte</div>
-                    <div class="jo_tabheading" data-target="jo_sequencediagram">Sequenzdiagramm</div> -->
+                    <div class="jo_tabheading jo_active" data-target="jo_db_tree">DB (Baum)</div>
+                    <div class="jo_tabheading" data-target="jo_db_list">DB (Liste)</div>
                 </div>
 
                 <div class="jo_tabs">
 
-                    <div class="jo_tab jo_active jo_run">
-                        <!-- <div class="jo_run-caption">Ausgabe</div> -->
-                        <div class="jo_run-programend">Programm beendet</div>
-                        <div class="jo_run-input">
-                            <div>
-                                <div>
-                                    <div class="jo_run-input-message" class="jo_rix">Bitte geben Sie eine Zahl ein!</div>
-                                    <input class="jo_run-input-input" type="text" class="jo_rix">
-                                    <div class="jo_run-input-button-outer" class="jo_rix">
-                                        <div class="jo_run-input-button" class="jo_rix">OK</div>
-                                    </div>
-
-                                    <div class="jo_run-input-error" class="jo_rix"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="jo_run-inner">
-                            <div class="jo_graphics"></div>
-                            <div class="jo_output" class="jo_scrollable"></div>
-                        </div>
-
+                    <div class="jo_tab jo_active jo_db_tree">
+                        Baum
+                    </div>
+                    <div class="jo_tab jo_active jo_db_list">
+                        Liste
                     </div>
 
-                    <div class="jo_tab jo_classdiagram">
-                        <img src="assets/projectexplorer/svg-loaders/ball-triangle.svg" class="jo_classdiagram-spinner">
-                    </div>
 
-                    <!-- <div class="jo_tab jo_objectdiagram">
-                        <div class="jo_objectdiagram-header">
-                            <div>
-                            <span>Typ: </span>
-                            <select class="jo_objectdiagram-type">
-                                <option value="none">Bitte auswählen...</option>
-                                <option value="tree">Baumdiagramm</option>
-                                <option value="list">Liste</option>
-                                <option value="all">Alle Objekte</option>
-                            </select>
-                            </div>
-                            <div class="jo_objectdiagram-settings">
-                                <div>Setting 1</div>
-                                <div>Setting 2</div>
-                                <div>Setting 3</div>
-                                <div>Setting 4</div>
-                            </div>
-                        </div>
-                        <div class="jo_objectdiagram-canvas jo_scrollable"></div>
-                    </div>
-
-                    <div class="jo_tab jo_sequencediagram">
-                    </div> -->
 
                 </div>
 

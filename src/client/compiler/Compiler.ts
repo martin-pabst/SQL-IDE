@@ -2,6 +2,7 @@ import { Error, Lexer } from "./lexer/Lexer.js";
 import { File, Module, ModuleStore } from "./parser/Module.js";
 import { Parser } from "./parser/Parser.js";
 import { Main } from "../main/Main.js";
+import { MainBase } from "../main/MainBase.js";
 
 export enum CompilerStatus {
     compiling, error, compiledButNothingToRun, readyToRun
@@ -13,7 +14,7 @@ export class Compiler {
 
     atLeastOneModuleIsStartable: boolean;
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
     }
 
     compile(moduleStore: ModuleStore): Error[] {

@@ -8,6 +8,7 @@ import { MyCodeActionProvider } from "./MyCodeActionProvider.js";
 import { MyReferenceProvider } from "./MyReferenceProvider.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { defineVscSQL } from "./VscSql.js";
+import { MainBase } from "../MainBase.js";
 
 export class Editor {
 
@@ -19,7 +20,7 @@ export class Editor {
 
     dontPushNextCursorMove: number = 0;
 
-    constructor(public main: Main, private showMinimap: boolean, private isEmbedded: boolean) {
+    constructor(public main: MainBase, private showMinimap: boolean, private isEmbedded: boolean) {
     }
 
     initGUI($element: JQuery<HTMLElement>) {

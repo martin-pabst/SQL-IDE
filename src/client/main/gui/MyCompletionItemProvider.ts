@@ -3,6 +3,7 @@ import { Module } from "../../compiler/parser/Module.js";
 import { SymbolTable } from "../../compiler/parser/SymbolTable.js";
 import { Main } from "../Main.js";
 import { TokenType } from "../../compiler/lexer/Token.js";
+import { MainBase } from "../MainBase.js";
 
 export class MyCompletionItemProvider implements monaco.languages.CompletionItemProvider {
 
@@ -10,7 +11,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
     public triggerCharacters: string[] = ['.', 'abcdefghijklmnopqrstuvwxyzäöüß_ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ', ' '];
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase) {
     }
 
     first: boolean = true;

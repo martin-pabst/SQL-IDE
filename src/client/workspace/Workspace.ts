@@ -2,6 +2,7 @@ import { WorkspaceData } from "../communication/Data.js";
 import { Module, ModuleStore } from "../compiler/parser/Module.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { Main } from "../main/Main.js";
+import { MainBase } from "../main/MainBase.js";
 
 
 export class Workspace {
@@ -28,7 +29,7 @@ export class Workspace {
     sql_manipulateDatabaseStatements: string;
     sql_history: string;
 
-    constructor(name: string, private main: Main, owner_id: number){
+    constructor(name: string, private main: MainBase, owner_id: number){
         this.name = name;
         this.owner_id = owner_id;
         this.moduleStore = new ModuleStore(main);

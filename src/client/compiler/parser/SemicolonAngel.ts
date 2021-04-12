@@ -1,6 +1,7 @@
 import { Main } from "../../main/Main.js";
 import { TextPosition } from "../lexer/Token";
 import { Module } from "./Module";
+import { MainBase } from "../../main/MainBase.js";
 
 type SemicolonPosition = {
     position: TextPosition;
@@ -14,7 +15,7 @@ export class SemicolonAngel {
     semicolonPositions: SemicolonPosition[] = [];
     time: number;
 
-    constructor(private main: Main){
+    constructor(private main: MainBase){
 
     }
 

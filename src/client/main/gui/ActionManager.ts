@@ -1,4 +1,5 @@
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 export type ButtonToggler = (state: boolean) => void;
 
@@ -20,7 +21,7 @@ export class ActionManager {
 
     buttons: { [actionIdentifier: string]: JQuery<HTMLElement>[] } = {};
 
-    constructor(private $mainElement: JQuery<HTMLElement>, private main: Main){
+    constructor(private $mainElement: JQuery<HTMLElement>, private main: MainBase){
 
     }
 

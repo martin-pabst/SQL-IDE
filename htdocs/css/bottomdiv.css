@@ -47,6 +47,7 @@
 
 .jo_tabheading.jo_active {
     border-bottom: 1px solid var(--bottomdiv-tabheading-active);
+    font-weight: bold;
 }
 
 .jo_tabheading-right {
@@ -76,7 +77,7 @@
     position: relative;
 }
 
-.jo_pcodeTab {
+.jo_resultTab {
     font-family: Consolas, "Courier New", monospace;
     font-weight: normal;
     font-size: 12px;
@@ -87,9 +88,6 @@
     position: relative;
 }
 
-.jo_pcodeTab h3 {
-    margin-bottom: 0.5em;
-}
 
 .jo_label_destination:hover {
     cursor: pointer;
