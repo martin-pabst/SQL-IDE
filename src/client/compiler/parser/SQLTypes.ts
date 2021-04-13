@@ -28,6 +28,8 @@ export class SQLBaseType extends SQLType {
     constructor(public name: string, public parameterDescriptions: string[],
         public checkFunction: CheckFunction, public outputFunction: OutputFunction, public canCastToList: string[]) {
         super();
+        let ownIndex = canCastToList.indexOf(name);
+        if(ownIndex >= 0) canCastToList.splice(ownIndex, 1);
     }
 
     toString(): string {
@@ -175,43 +177,57 @@ export class SQLDerivedType extends SQLType {
 
     getBinaryResult(operator: TokenType, value1: any, value2: any): any {
         let result = this.baseType.getBinaryResult(operator, value1, value2);
-        if(this.name = "varchar") return result == null ? null : ("" + result).substr(0, this.parameterValues[0]);
-        if(this.name == "decimal") {
-            if(result == null) return null;
-            return Math.round(result * tens[this.parameterValues[1]])/tens[this.parameterValues[1]];
+        if (this.name = "varchar") return result == null ? null : ("" + result).substr(0, this.parameterValues[0]);
+        if (this.name == "decimal") {
+            if (result == null) return null;
+            return Math.round(result * tens[this.parameterValues[1]]) / tens[this.parameterValues[1]];
         }
 
         return result;
     }
 }
 
-var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= pv[0])`,
-    (v: string, pv) => v.substr(0, pv[0]), ["text"]);
+let textTypes = ["varchar", "text" ,"tinytext", "mediumtext", "longtext"];
 
-var textType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, ["varchar"]);
+var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= pv[0])`,
+    (v: string, pv) => v.substr(0, pv[0]), textTypes);
+
+var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var tinyTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var mediumTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var longTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+
+let floatTypes = ["decimal", "numeric", "double", "real", "float"];
 
 var decimalType = new SQLBaseType("decimal", ["Gesamtzahl der Stellen", "Nachkommastellen"], (ci, pv) => "",
     (v: number, pv) => { let vk = Math.trunc(v); let nk = v - vk; return "" + vk + (pv[1] > 0 ? "." + Math.round(nk * tens[pv[1]]) : "") },
-    ["numeric", "double"]);
+    floatTypes);
+var numericType = new SQLBaseType("numeric", ["Gesamtzahl der Stellen", "Nachkommastellen"], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
+var doubleType = new SQLBaseType("double", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
+var realType = new SQLBaseType("real", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
+var floatType = new SQLBaseType("float", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 
-var numericType = new SQLBaseType("numeric", [], (ci, pv) => "", (v: number, pv) => "" + v, ["decimal", "double"]);
+let inttypes = ["int", "integer", "tinyint", "smallint", "mediumint", "bigint"];
+let numberTypes = inttypes.concat(floatTypes);
 
-var doubleType = new SQLBaseType("double", [], (ci, pv) => "", (v: number, pv) => "" + v, ["decimal", "numeric"]);
-
-var intType = new SQLBaseType("int", [], (ci, pv) => "", (v: number, pv) => "" + v, ["decimal", "numeric", "double", "tinyint", "bigint"]);
-var tinyIntType = new SQLBaseType("tinyint", [], (ci, pv) => "", (v: number, pv) => "" + v, ["decimal", "numeric", "double", "int", "bigint"]);
-var bigIntType = new SQLBaseType("bigint", [], (ci, pv) => "", (v: number, pv) => "" + v, ["decimal", "numeric", "double", "int", "tinyint"]);
+var intType = new SQLBaseType("int", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var integerType = new SQLBaseType("integer", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var tinyIntType = new SQLBaseType("tinyint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var smallIntType = new SQLBaseType("smallint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var mediumIntType = new SQLBaseType("mediumint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var bigIntType = new SQLBaseType("bigint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
 
 var dateType = new SQLBaseType("date", [], (ci, pv) => `check(isDate(${ci}))`, (v: string, pv) => v, []);
-var dateTimeType = new SQLBaseType("datetime", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, []);
+var dateTimeType = new SQLBaseType("datetime", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, ["timestamp"]);
+var timestampType = new SQLBaseType("timestamp", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, ["datetime"]);
 
 var booleanType = new SQLBaseType("boolean", [], (ci, pv) => `check(${ci} == 0 or ${ci} == 1)`, (v, pv) => v == 1 ? "true" : "false",
     ["varchar", "text", "decimal", "numeric"]);
 
-SQLBaseType.addBaseTypes([varcharType, textType, 
-    decimalType, numericType, doubleType, 
-    dateType, dateTimeType, booleanType, 
-    intType, tinyIntType, bigIntType]);
+let numericTypes = [decimalType, numericType, doubleType, realType, floatType, intType, integerType, tinyIntType, smallIntType, mediumIntType, bigIntType];
+
+SQLBaseType.addBaseTypes([varcharType, textType, tinyTextType, mediumTextType, longTextType,
+    dateType, dateTimeType, timestampType, booleanType].concat(numericTypes));
 
 varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, textType, textType);
@@ -219,7 +235,6 @@ textType.addBinaryOperation(TokenType.concatenation, textType, textType);
 
 let numericBinaryOperators: TokenType[] = [TokenType.plus, TokenType.minus, TokenType.multiplication, TokenType.division, TokenType.modulo];
 let comparisonOperators: TokenType[] = [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual];
-let numericTypes = [decimalType, numericType, doubleType, intType, tinyIntType, bigIntType];
 
 for (let i = 0; i < numericTypes.length; i++) {
     for (let j = i; j < numericTypes.length; j++) {
