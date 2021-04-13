@@ -30,6 +30,7 @@ export type ColumnStructure = {
 
 export type TableStructure = {
     name: string;
+    size: number;
     columns: ColumnStructure[];
     completeSQL: string;
 }
@@ -146,7 +147,7 @@ export class DatabaseTool {
 
         this.executeQuery(sql, (result) => {
             let sql1 = "";
-            result[0].values.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\n`)
+            result[0].values.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
 
             this.executeQuery(sql1, (result1) => {
                 console.log("DB structure: ");
@@ -154,6 +155,7 @@ export class DatabaseTool {
 
                 that.databaseStructure = that.parseDatabaseStructure(result, result1)
 
+                callback(that.databaseStructure);
 
             }, (error) => {});
 
@@ -176,6 +178,7 @@ export class DatabaseTool {
 
             let tableStructure: TableStructure = {
                 name: tableName,
+                size: 0,
                 completeSQL: tableSQL,
                 columns: []
             }
@@ -191,6 +194,10 @@ export class DatabaseTool {
                 index++;
             }
             index++;
+            let size: number = columns[index].values[0][0];
+            index++;
+
+            tableStructure.size = size;
 
             columnArray.forEach(columnArray1 => {
                 let cid: number = columnArray1[0];

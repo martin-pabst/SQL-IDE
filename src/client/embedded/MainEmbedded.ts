@@ -15,6 +15,7 @@ import { TextPosition } from "../compiler/lexer/Token.js";
 import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -74,7 +75,7 @@ export class MainEmbedded implements MainBase {
 
     compiler: Compiler;
 
-    $runDiv: JQuery<HTMLElement>;
+    $dbTreeDiv: JQuery<HTMLElement>;
 
     $debuggerDiv: JQuery<HTMLElement>;
 
@@ -105,16 +106,24 @@ export class MainEmbedded implements MainBase {
 
     databaseTool: DatabaseTool;
 
+    databaseExplorer: DatabaseExplorer;
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
 
         this.initGUI($div);
 
+        this.databaseExplorer = new DatabaseExplorer(this,this.$dbTreeDiv);
+
         this.databaseTool = new DatabaseTool();
         if(this.config.databaseFilename != null){
             this.databaseTool.getSQLStatements(this.config.databaseFilename, (sql) => {
-                this.databaseTool.initializeWorker(sql, () => {console.log('success!')})
+                this.databaseTool.initializeWorker(sql, () => {
+                    
+                    this.databaseExplorer.refresh();
+
+                })
             })
         }
 
@@ -643,9 +652,9 @@ export class MainEmbedded implements MainBase {
         let $tabs = jQuery('<div class="jo_tabs jo_scrollable"></div>');
         let $vd = jQuery('<div class="jo_tab jo_scrollable jo_editorFontSize jo_db_list">DB-Liste</div>');
 
-        this.$runDiv = jQuery(`<div class="jo_tab jo_scrollable jo_editorFontSize jo_active jo_db_tree">DB-Baum</div>`);
+        this.$dbTreeDiv = jQuery(`<div class="jo_tab jo_scrollable jo_editorFontSize jo_active jo_db_tree">DB-Baum</div>`);
 
-        $tabs.append(this.$runDiv, $vd);
+        $tabs.append(this.$dbTreeDiv, $vd);
         this.$rightDivInner.append($tabs);
 
         makeTabs($rightDiv);

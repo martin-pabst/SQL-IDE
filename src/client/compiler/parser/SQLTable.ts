@@ -6,6 +6,7 @@ export class Column {
 
     references: Column;
     fromColumnStructure?: ColumnStructure;
+    notNull: boolean;
 
     constructor(public identifier: string, public type: SQLType, public table: Table, public isPrimaryKey: boolean, public isNullable: boolean){
 
@@ -25,11 +26,12 @@ export class Column {
         }
 
         let type: SQLType = SQLBaseType.getBaseType(baseTypeIdentifier);
-        if(parameterValues.length > 0){
+        if(parameterValues.length > 0 && type != null){
             type = new SQLDerivedType(<SQLBaseType>type, parameterValues);
         }
 
         let column = new Column(cs.name, type, table, cs.isPrimaryKey, !cs.isPrimaryKey);
+        column.notNull = cs.notNull;
         column.fromColumnStructure = cs;
 
         return column;
@@ -41,6 +43,8 @@ export class Table {
     
     public columns: Column[];
 
+    public size: number;
+
     constructor(public identifier: string){
 
     }
@@ -48,6 +52,7 @@ export class Table {
     private static fromTableStructure(ts: TableStructure): Table {
         let table: Table = new Table(ts.name);
         table.columns = ts.columns.map( column => Column.fromColumnStructure(column, table));
+        table.size = ts.size;
         return table;
     }
 
