@@ -76,6 +76,7 @@ export class DatabaseTool {
                 } else {
                     let queryErrorCallback = that.queryErrorCallbackMap.get(id);
                     if (queryErrorCallback != null) {
+                        console.log(event.data);
                         queryErrorCallback(event.data.error);
                     }
                 }
@@ -150,8 +151,8 @@ export class DatabaseTool {
             result[0].values.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
 
             this.executeQuery(sql1, (result1) => {
-                console.log("DB structure: ");
-                console.log(result1);
+                // console.log("DB structure: ");
+                // console.log(result1);
 
                 that.databaseStructure = that.parseDatabaseStructure(result, result1)
 
@@ -246,7 +247,7 @@ export class DatabaseTool {
             }
         }
 
-        console.log(this.databaseStructure);
+        // console.log(this.databaseStructure);
 
         return this.databaseStructure;
 

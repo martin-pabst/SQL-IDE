@@ -21,6 +21,13 @@ export enum TokenType {
     keywordAnd,
     keywordNot,
 
+    keywordJoin,
+    keywordLeft,
+    keywordRight,
+    keywordInner,
+    keywordOuter,
+    keywordOn,
+
     // brackets
     leftBracket, // ()
     rightBracket,
@@ -106,6 +113,13 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordAnd]: "and",
     [TokenType.keywordOr]: "or",
     [TokenType.keywordNot]: "not",
+
+    [TokenType.keywordJoin]: "join",
+    [TokenType.keywordLeft]: "left",
+    [TokenType.keywordRight]: "right",
+    [TokenType.keywordInner]: "inner",
+    [TokenType.keywordOuter]: "outer",
+    [TokenType.keywordOn]: "on",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -210,6 +224,19 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "by": TokenType.keywordBy,
     "having": TokenType.keywordHaving,
     "order": TokenType.keywordOrder,
+
+    "or": TokenType.keywordOr,
+    "and": TokenType.keywordAnd,
+    "not": TokenType.keywordNot,
+
+    "join": TokenType.keywordJoin,
+    "left": TokenType.keywordLeft,
+    "right": TokenType.keywordRight,
+    "inner": TokenType.keywordInner,
+    "outer": TokenType.keywordOuter,
+    "on": TokenType.keywordOn,
+
+
 };
 
 export var EscapeSequenceList: {[keyword: string]:string} = {

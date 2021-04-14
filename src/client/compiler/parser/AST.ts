@@ -8,8 +8,8 @@ export type ASTNode =
     
     export type StatementNode = SelectNode | UpdateNode;
 
-    export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
-    ConstantNode | IdentifierNode | SelectNode | BracketsNode;
+    export type TermNode = JoinNode | BinaryOpNode | UnaryOpNode | MethodcallNode | 
+    ConstantNode | IdentifierNode | SelectNode | BracketsNode | StarAttributeNode;
 
 export type SelectNode = {
     type: TokenType.keywordSelect,
@@ -64,6 +64,12 @@ export type IdentifierNode = {
     symbol?: Symbol
 }
 
+export type StarAttributeNode = {
+    type: TokenType.multiplication,
+    position: TextPosition,
+    symbol?: Symbol
+}
+
 export type ConstantNode = {
     type: TokenType.constantNode,
     position: TextPosition,
@@ -99,6 +105,19 @@ export type BinaryOpNode = {
     sqlType?: SQLType,
 
     operator: TokenType,
+    firstOperand: TermNode,
+    secondOperand: TermNode
+}
+
+export type JoinNode = {
+    type: TokenType.keywordJoin,
+    position: TextPosition,
+    sqlType?: SQLType,
+
+    leftRight?: TokenType.keywordLeft | TokenType.keywordRight,
+    innerOuter?: TokenType.keywordInner | TokenType.keywordOuter,
+    on?: TermNode,
+
     firstOperand: TermNode,
     secondOperand: TermNode
 }

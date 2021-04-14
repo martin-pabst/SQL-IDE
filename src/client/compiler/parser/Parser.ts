@@ -2,12 +2,14 @@ import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { ASTNode, BracketsNode, SelectNode, TermNode } from "./AST.js";
 import { Module } from "./Module.js";
+import { Column } from "./SQLTable.js";
 
 type ASTNodes = ASTNode[];
 
 export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
+        [TokenType.keywordJoin, TokenType.keywordLeft, TokenType.keywordRight, TokenType.keywordOuter, TokenType.keywordInner],
         [TokenType.keywordOr], [TokenType.keywordAnd],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
@@ -267,6 +269,10 @@ export class Parser {
 
             let st = this.parseStatement();
 
+            while(this.tt == TokenType.semicolon){
+                this.nextToken();
+            }
+
             if (st != null) {
                 mainProgram = mainProgram.concat(st);
             }
@@ -310,10 +316,62 @@ export class Parser {
 
     }
 
-    parseSelect(): ASTNode{
+    parseSelect(): ASTNode {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
-        
+
+        // Parse Column List
+        let columnList: TermNode[] = [];
+
+        while ([TokenType.identifier, TokenType.multiplication, TokenType.leftBracket].indexOf(this.tt) >= 0) {
+            if (this.tt == TokenType.multiplication) {
+                columnList.push({
+                    type: TokenType.multiplication,
+                    position: this.getCurrentPosition(),
+                });
+                this.nextToken();
+            } else {
+                let column = this.parseTerm();
+                if (column != null) {
+                    columnList.push(column);
+                }
+            }
+            if (this.tt == TokenType.keywordFrom) {
+                break;
+            }
+            this.expect(TokenType.comma, true);
+        }
+
+        if(columnList.length == 0){
+            this.pushError("Es fehlt die kommaseparierte Liste der gewünschten Spalten.", "error");
+        }
+
+        // parse from ...
+        if (!this.expect(TokenType.keywordFrom, true)) {
+            return null;
+        }
+
+        let tableList: TermNode[] = [];
+        while ([TokenType.identifier, TokenType.leftBracket].indexOf(this.tt) >= 0) {
+            let table = this.parseTerm();
+            if (table != null) {
+                tableList.push(table);
+            }
+            if (this.tt == TokenType.keywordWhere || this.tt == TokenType.semicolon) {
+                break;
+            }
+            this.expect(TokenType.comma, true);
+        }
+
+        // parse where...
+
+        let whereNode: TermNode = null;
+        if(this.tt == TokenType.keywordWhere){
+            this.nextToken();
+            whereNode = this.parseTerm();
+        }
+
+        // TODO: Group by, having, order
 
 
         let node: SelectNode = {
@@ -321,9 +379,9 @@ export class Parser {
             position: startPosition,
             endPosition: this.getCurrentPosition(),
             symbolTable: null,
-            columnList: [],
-            tableList: [],
-            whereNode: null,
+            columnList: columnList,
+            tableList: tableList,
+            whereNode: whereNode,
             parentStatement: null,
             subQueries: []
         }
@@ -360,22 +418,72 @@ export class Parser {
             first = false;
             let position = this.getCurrentPosition();
 
-            this.nextToken();
+            if (precedence == 0) {
 
-            let right: TermNode;
-            if (precedence < Parser.operatorPrecedence.length - 1) {
-                right = this.parseTermBinary(precedence + 1);
+                left = {
+                    type: TokenType.keywordJoin,
+                    position: position,
+                    firstOperand: left,
+                    secondOperand: null
+                }
+
+                let keywordJoinFound: boolean = false;
+                while (Parser.operatorPrecedence[0].indexOf(this.tt) >= 0) {
+                    switch (this.tt) {
+                        case TokenType.keywordLeft:
+                        case TokenType.keywordRight:
+                            if (left.leftRight == null) {
+                                left.leftRight = this.tt;
+                            } else {
+                                this.pushError("Ein Join kann nicht gleichzeitig left join und right join sein.", "error");
+                            }
+                            break;
+                        case TokenType.keywordOuter:
+                        case TokenType.keywordInner:
+                            if (left.innerOuter == null) {
+                                left.innerOuter = this.tt;
+                            } else {
+                                this.pushError("Ein Join kann nicht gleichzeitig inner join und outer join sein.", "error");
+                            }
+                            break;
+                        case TokenType.keywordJoin:
+                            if(keywordJoinFound){
+                                this.pushError("Das Schlüsselwort join darf hier nicht doppelt vorkommen.", "error");
+                            }
+                            keywordJoinFound = true;
+                            break;
+                    }
+                    this.nextToken();
+                }
+
+                left.secondOperand = this.parseUnary();   // only Table allowed
+
+                if (this.tt == TokenType.keywordOn) {
+                    this.nextToken();
+                    left.on = this.parseTermBinary(1);
+                }
+
             } else {
-                right = this.parseUnary();
+                this.nextToken();
+                let right: TermNode;
+                if (precedence < Parser.operatorPrecedence.length - 1) {
+                    right = this.parseTermBinary(precedence + 1);
+                } else {
+                    right = this.parseUnary();
+                }
+
+                left = {
+                    type: TokenType.binaryOp,
+                    position: position,
+                    operator: operator,
+                    firstOperand: left,
+                    secondOperand: right
+                };
+
             }
 
-            left = {
-                type: TokenType.binaryOp,
-                position: position,
-                operator: operator,
-                firstOperand: left,
-                secondOperand: right
-            };
+
+
         }
 
         return left;
@@ -391,7 +499,7 @@ export class Parser {
 
         switch (this.tt) {
             case TokenType.leftBracket:
-                return this.parseDotOrArrayChains(this.bracketOrCasting());
+                return this.bracketOrCasting();
             case TokenType.minus:
                 // case TokenType.not:
                 position = position;
@@ -448,9 +556,16 @@ export class Parser {
                         identifier: identifier1,
                         position: position
                     }
+                    //@ts-ignore
+                    if(this.tt == TokenType.dot){
+                        if(this.expect(TokenType.identifier, false)){
+                            
+                        }
+
+                    }
                 }
 
-                return this.parseDotOrArrayChains(term);
+                return term;
             default:
                 this.pushError("Erwartet wird eine Variable, ein Methodenaufruf oder this oder super. Gefunden wurde: " + this.cct.value);
                 return null;
@@ -551,7 +666,7 @@ export class Parser {
                         identifier: identifier,
                         commaPositions: parameters.commaPositions
                     }
-                } 
+                }
                 // else {
                 //     term = {
                 //         type: TokenType.pushAttribute,
