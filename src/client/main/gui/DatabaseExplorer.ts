@@ -76,12 +76,12 @@ export class DatabaseExplorer {
             if(collapsed){
                 $treeSwitch.removeClass('img_tree-collapsed-dark');
                 $treeSwitch.addClass('img_tree-expanded-dark');
-                $columns.show(200);
+                $columns.slideDown(300);
                 that.collapsedTables.delete(table.identifier);
             } else {
                 $treeSwitch.removeClass('img_tree-expanded-dark');
                 $treeSwitch.addClass('img_tree-collapsed-dark');
-                $columns.hide(200);                
+                $columns.slideUp(300);                
                 that.collapsedTables.set(table.identifier, true);
             }
         });
