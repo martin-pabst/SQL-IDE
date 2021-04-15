@@ -22,8 +22,9 @@ export enum TokenType {
     keywordNot,
 
     keywordJoin,
+    keywordNatural,
     keywordLeft,
-    keywordRight,
+    keywordCross,
     keywordInner,
     keywordOuter,
     keywordOn,
@@ -87,7 +88,9 @@ export enum TokenType {
     constantNode,
     callMethod,
     unaryOp,
-    binaryOp
+    binaryOp,
+    table,
+    subquery
 
 }
 
@@ -115,8 +118,9 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordNot]: "not",
 
     [TokenType.keywordJoin]: "join",
+    [TokenType.keywordNatural]: "natural",
     [TokenType.keywordLeft]: "left",
-    [TokenType.keywordRight]: "right",
+    [TokenType.keywordCross]: "cross",
     [TokenType.keywordInner]: "inner",
     [TokenType.keywordOuter]: "outer",
     [TokenType.keywordOn]: "on",
@@ -230,8 +234,9 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "not": TokenType.keywordNot,
 
     "join": TokenType.keywordJoin,
+    "natural": TokenType.keywordNatural,
     "left": TokenType.keywordLeft,
-    "right": TokenType.keywordRight,
+    "cross": TokenType.keywordCross,
     "inner": TokenType.keywordInner,
     "outer": TokenType.keywordOuter,
     "on": TokenType.keywordOn,

@@ -1,6 +1,6 @@
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
@@ -9,7 +9,6 @@ type ASTNodes = ASTNode[];
 export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
-        [TokenType.keywordJoin, TokenType.keywordLeft, TokenType.keywordRight, TokenType.keywordOuter, TokenType.keywordInner],
         [TokenType.keywordOr], [TokenType.keywordAnd],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
@@ -161,8 +160,8 @@ export class Parser {
         });
     }
 
-    expect(tt: TokenType, skip: boolean = true, invokeSemicolonAngel: boolean = false): boolean {
-        if (this.tt != tt) {
+    expect(tt: TokenType | TokenType[], skip: boolean = true, invokeSemicolonAngel: boolean = false): boolean {
+        if (this.tt != tt && !(Array.isArray(tt) && tt.indexOf(this.tt) >= 0)) {
             if (tt == TokenType.semicolon && this.tt == TokenType.endofSourcecode) {
                 return true;
             }
@@ -206,8 +205,13 @@ export class Parser {
                 }
             }
 
+            if(Array.isArray(tt)){
+                let expectedTokens = tt.map(token => TokenTypeReadable[token]).join(", ");
+                this.pushError("Erwartet wird eines der folgenden: " + expectedTokens + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
+            } else {
+                this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
+            }
 
-            this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             return false;
         }
 
@@ -269,7 +273,7 @@ export class Parser {
 
             let st = this.parseStatement();
 
-            while(this.tt == TokenType.semicolon){
+            while (this.tt == TokenType.semicolon) {
                 this.nextToken();
             }
 
@@ -316,57 +320,34 @@ export class Parser {
 
     }
 
-    parseSelect(): ASTNode {
+    parseSelect(): SelectNode {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
 
-        // Parse Column List
-        let columnList: TermNode[] = [];
-
-        while ([TokenType.identifier, TokenType.multiplication, TokenType.leftBracket].indexOf(this.tt) >= 0) {
-            if (this.tt == TokenType.multiplication) {
-                columnList.push({
-                    type: TokenType.multiplication,
-                    position: this.getCurrentPosition(),
-                });
-                this.nextToken();
-            } else {
-                let column = this.parseTerm();
-                if (column != null) {
-                    columnList.push(column);
-                }
-            }
-            if (this.tt == TokenType.keywordFrom) {
-                break;
-            }
-            this.expect(TokenType.comma, true);
+        let node: SelectNode = {
+            type: TokenType.keywordSelect,
+            position: startPosition,
+            endPosition: this.getCurrentPosition(),
+            symbolTable: null,
+            columnList: [],
+            fromNode: null,
+            whereNode: null,
+            parentStatement: null
         }
 
-        if(columnList.length == 0){
-            this.pushError("Es fehlt die kommaseparierte Liste der gewünschten Spalten.", "error");
-        }
+        node.columnList = this.parseColumnList([TokenType.keywordFrom]);
 
         // parse from ...
         if (!this.expect(TokenType.keywordFrom, true)) {
             return null;
         }
 
-        let tableList: TermNode[] = [];
-        while ([TokenType.identifier, TokenType.leftBracket].indexOf(this.tt) >= 0) {
-            let table = this.parseTerm();
-            if (table != null) {
-                tableList.push(table);
-            }
-            if (this.tt == TokenType.keywordWhere || this.tt == TokenType.semicolon) {
-                break;
-            }
-            this.expect(TokenType.comma, true);
-        }
+        node.fromNode = this.parseTableOrSubQuery();
 
         // parse where...
 
         let whereNode: TermNode = null;
-        if(this.tt == TokenType.keywordWhere){
+        if (this.tt == TokenType.keywordWhere) {
             this.nextToken();
             whereNode = this.parseTerm();
         }
@@ -374,19 +355,92 @@ export class Parser {
         // TODO: Group by, having, order
 
 
-        let node: SelectNode = {
-            type: TokenType.keywordSelect,
-            position: startPosition,
-            endPosition: this.getCurrentPosition(),
-            symbolTable: null,
-            columnList: columnList,
-            tableList: tableList,
-            whereNode: whereNode,
-            parentStatement: null,
-            subQueries: []
-        }
 
         return node;
+    }
+
+    parseTableOrSubQuery(): TableOrSubqueryNode {
+        
+        let leftSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery();
+
+        let joinStartsWithTokens = [TokenType.keywordJoin, TokenType.keywordNatural, TokenType.keywordLeft, TokenType.keywordInner, TokenType.keywordCross, TokenType.comma];
+
+        while(joinStartsWithTokens.indexOf(this.tt) >= 0){
+
+            [",", [[null, "natural"], [null, ["left", [null, outer ]]]]]
+
+
+        }
+
+
+    }
+
+    parseAtomicTableOrSubQuery(): TableOrSubqueryNode {
+
+        if(!this.expect([TokenType.identifier, TokenType.leftBracket], false)){
+            return null;
+        }
+
+        if(this.tt == TokenType.leftBracket){
+            this.nextToken();
+            let ret: TableOrSubqueryNode;
+            //@ts-ignore
+            if(this.tt == TokenType.keywordSelect){
+                let position = this.getCurrentPosition();
+                let selectStatement = this.parseSelect();
+                ret = {
+                    type: TokenType.subquery,
+                    alias: null,
+                    position: position,
+                    query: selectStatement
+                }
+            } else {
+                ret = this.parseTableOrSubQuery();
+            }
+            this.expect(TokenType.rightBracket, true);
+            return ret;
+        }
+
+        if(this.tt == TokenType.identifier){
+            let node: TableNode = {
+                type: TokenType.table,
+                identifier: <string>this.cct.value,
+                alias: null,
+                position: this.getCurrentPosition()
+            }
+            this.nextToken();
+            return node;
+        }
+
+    }
+
+    parseColumnList(tokenTypesAfterListEnd: TokenType[]): TermNode[] {
+        let columns: TermNode[] = [];
+
+        while ([TokenType.identifier, TokenType.multiplication, TokenType.leftBracket].indexOf(this.tt) >= 0) {
+            if (this.tt == TokenType.multiplication) {
+                columns.push({
+                    type: TokenType.multiplication,
+                    position: this.getCurrentPosition(),
+                });
+                this.nextToken();
+            } else {
+                let column = this.parseTerm();
+                if (column != null) {
+                    columns.push(column);
+                }
+            }
+            if (tokenTypesAfterListEnd.indexOf(this.tt) >= 0) {
+                break;
+            }
+            this.expect(TokenType.comma, true);
+        }
+
+        if (columns.length == 0) {
+            this.pushError("Es fehlt die kommaseparierte Liste der gewünschten Spalten.", "error");
+        }
+
+        return columns;
     }
 
 
@@ -418,70 +472,21 @@ export class Parser {
             first = false;
             let position = this.getCurrentPosition();
 
-            if (precedence == 0) {
-
-                left = {
-                    type: TokenType.keywordJoin,
-                    position: position,
-                    firstOperand: left,
-                    secondOperand: null
-                }
-
-                let keywordJoinFound: boolean = false;
-                while (Parser.operatorPrecedence[0].indexOf(this.tt) >= 0) {
-                    switch (this.tt) {
-                        case TokenType.keywordLeft:
-                        case TokenType.keywordRight:
-                            if (left.leftRight == null) {
-                                left.leftRight = this.tt;
-                            } else {
-                                this.pushError("Ein Join kann nicht gleichzeitig left join und right join sein.", "error");
-                            }
-                            break;
-                        case TokenType.keywordOuter:
-                        case TokenType.keywordInner:
-                            if (left.innerOuter == null) {
-                                left.innerOuter = this.tt;
-                            } else {
-                                this.pushError("Ein Join kann nicht gleichzeitig inner join und outer join sein.", "error");
-                            }
-                            break;
-                        case TokenType.keywordJoin:
-                            if(keywordJoinFound){
-                                this.pushError("Das Schlüsselwort join darf hier nicht doppelt vorkommen.", "error");
-                            }
-                            keywordJoinFound = true;
-                            break;
-                    }
-                    this.nextToken();
-                }
-
-                left.secondOperand = this.parseUnary();   // only Table allowed
-
-                if (this.tt == TokenType.keywordOn) {
-                    this.nextToken();
-                    left.on = this.parseTermBinary(1);
-                }
-
+            this.nextToken();
+            let right: TermNode;
+            if (precedence < Parser.operatorPrecedence.length - 1) {
+                right = this.parseTermBinary(precedence + 1);
             } else {
-                this.nextToken();
-                let right: TermNode;
-                if (precedence < Parser.operatorPrecedence.length - 1) {
-                    right = this.parseTermBinary(precedence + 1);
-                } else {
-                    right = this.parseUnary();
-                }
-
-                left = {
-                    type: TokenType.binaryOp,
-                    position: position,
-                    operator: operator,
-                    firstOperand: left,
-                    secondOperand: right
-                };
-
+                right = this.parseUnary();
             }
 
+            left = {
+                type: TokenType.binaryOp,
+                position: position,
+                operator: operator,
+                firstOperand: left,
+                secondOperand: right
+            };
 
 
         }
@@ -557,9 +562,9 @@ export class Parser {
                         position: position
                     }
                     //@ts-ignore
-                    if(this.tt == TokenType.dot){
-                        if(this.expect(TokenType.identifier, false)){
-                            
+                    if (this.tt == TokenType.dot) {
+                        if (this.expect(TokenType.identifier, false)) {
+
                         }
 
                     }

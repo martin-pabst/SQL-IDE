@@ -1,6 +1,7 @@
 import { TokenType, TextPosition, Token } from "../lexer/Token.js";
 import { SymbolTable } from "./SymbolTable.js";
 import { SQLType } from "./SQLTypes.js";
+import { Table } from "./SQLTable.js";
 
 
 export type ASTNode = 
@@ -8,19 +9,20 @@ export type ASTNode =
     
     export type StatementNode = SelectNode | UpdateNode;
 
-    export type TermNode = JoinNode | BinaryOpNode | UnaryOpNode | MethodcallNode | 
+    export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | SelectNode | BracketsNode | StarAttributeNode;
+
+    export type TableOrSubqueryNode = SubqueryNode | JoinNode | TableNode;
 
 export type SelectNode = {
     type: TokenType.keywordSelect,
     position: TextPosition,
     endPosition: TextPosition,
-    subQueries: SelectNode[], 
     parentStatement: StatementNode,
     symbolTable: SymbolTable,
     
     columnList: TermNode[],
-    tableList: TermNode[],
+    fromNode: TableOrSubqueryNode,
     whereNode: TermNode,
     groupByNode?: GroupByNode,
     havingNode?: HavingNode,
@@ -52,7 +54,6 @@ export type OrderByNode = {
 export type UpdateNode = {
     type: TokenType.keywordSelect,
     position: TextPosition,
-    subQueries: SelectNode[],
     parentStatement: StatementNode,
     symbolTable: SymbolTable  
 }
@@ -114,12 +115,32 @@ export type JoinNode = {
     position: TextPosition,
     sqlType?: SQLType,
 
-    leftRight?: TokenType.keywordLeft | TokenType.keywordRight,
-    innerOuter?: TokenType.keywordInner | TokenType.keywordOuter,
+    alias: string,
+
     on?: TermNode,
 
-    firstOperand: TermNode,
-    secondOperand: TermNode
+    firstOperand: TableOrSubqueryNode,
+    secondOperand: TableOrSubqueryNode
+}
+
+export type TableNode = {
+    type: TokenType.table,
+    position: TextPosition,
+    sqlType?: SQLType,
+
+    identifier: string,
+    alias: string,
+    table?: Table
+}
+
+export type SubqueryNode = {
+    type: TokenType.subquery,
+    position: TextPosition,
+    sqlType?: SQLType,
+
+    query: SelectNode,
+    alias: string,
+    table?: Table
 }
 
 export type BracketsNode = {
