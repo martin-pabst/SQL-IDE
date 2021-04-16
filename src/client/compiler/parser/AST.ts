@@ -10,7 +10,7 @@ export type ASTNode =
     export type StatementNode = SelectNode | UpdateNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
-    ConstantNode | IdentifierNode | SelectNode | BracketsNode | StarAttributeNode;
+    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode;
 
     export type TableOrSubqueryNode = SubqueryNode | JoinNode | TableNode;
 
@@ -25,29 +25,31 @@ export type SelectNode = {
     fromNode: TableOrSubqueryNode,
     whereNode: TermNode,
     groupByNode?: GroupByNode,
-    havingNode?: HavingNode,
-    orderByNode?: OrderByNode
+    orderByNode?: OrderByNode[],
+    limitNode?: LimitNode
 }
 
 export type GroupByNode = {
     type: TokenType.keywordGroup,
     position: TextPosition,
+
+    having?: TermNode,
     
     columnList: TermNode[],
 }
 
-export type HavingNode = {
-    type: TokenType.keywordHaving,
+export type LimitNode = {
+    type: TokenType.keywordLimit,
     position: TextPosition,
-    
-    condition: TermNode,
+    numberOfRows: TermNode,
+    offset?: TermNode
 }
 
 export type OrderByNode = {
     type: TokenType.keywordOrder,
     position: TextPosition,
-    
-    columnList: TermNode[],
+
+    column: TermNode
 }
 
 
@@ -56,6 +58,14 @@ export type UpdateNode = {
     position: TextPosition,
     parentStatement: StatementNode,
     symbolTable: SymbolTable  
+}
+
+export type DotNode = {
+    type: TokenType.dot,
+    position: TextPosition,
+    identifierLeft: IdentifierNode,
+    identifierRight: IdentifierNode,
+    symbol?: Symbol
 }
 
 export type IdentifierNode = {
@@ -114,8 +124,6 @@ export type JoinNode = {
     type: TokenType.keywordJoin,
     position: TextPosition,
     sqlType?: SQLType,
-
-    alias: string,
 
     on?: TermNode,
 

@@ -16,6 +16,11 @@ export enum TokenType {
     keywordBy,
     keywordHaving,
     keywordOrder,
+    keywordAscending,
+    keywordDescending,
+    keywordNulls,
+    keywordFirst,
+    keywordLast,
 
     keywordOr,
     keywordAnd,
@@ -28,6 +33,9 @@ export enum TokenType {
     keywordInner,
     keywordOuter,
     keywordOn,
+    keywordAs,
+    keywordLimit,
+    keywordOffset,
 
     // brackets
     leftBracket, // ()
@@ -112,6 +120,12 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordBy]: "by",
     [TokenType.keywordHaving]: "having",
     [TokenType.keywordOrder]: "order",
+    [TokenType.keywordAscending]: "ascending",
+    [TokenType.keywordDescending]: "descending",
+    [TokenType.keywordNulls]: "nulls",
+    [TokenType.keywordFirst]: "first",
+    [TokenType.keywordLast]: "last",
+
 
     [TokenType.keywordAnd]: "and",
     [TokenType.keywordOr]: "or",
@@ -124,6 +138,9 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordInner]: "inner",
     [TokenType.keywordOuter]: "outer",
     [TokenType.keywordOn]: "on",
+    [TokenType.keywordAs]: "as",
+    [TokenType.keywordLimit]: "limit",
+    [TokenType.keywordOffset]: "offset",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -228,6 +245,11 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "by": TokenType.keywordBy,
     "having": TokenType.keywordHaving,
     "order": TokenType.keywordOrder,
+    "asc": TokenType.keywordAscending,
+    "desc": TokenType.keywordDescending,
+    "nulls": TokenType.keywordNulls,
+    "first": TokenType.keywordFirst,
+    "last": TokenType.keywordLast,
 
     "or": TokenType.keywordOr,
     "and": TokenType.keywordAnd,
@@ -240,6 +262,9 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "inner": TokenType.keywordInner,
     "outer": TokenType.keywordOuter,
     "on": TokenType.keywordOn,
+    "as": TokenType.keywordAs,
+    "limit": TokenType.keywordLimit,
+    "offset": TokenType.keywordOffset,
 
 
 };

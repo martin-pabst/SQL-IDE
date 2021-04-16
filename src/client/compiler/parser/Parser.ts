@@ -1,10 +1,16 @@
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
 type ASTNodes = ASTNode[];
+
+type TokenTreeNode = {
+    type: "sequence" | "alternatives",
+    children: (TokenTreeNode | TokenType)[]
+} | TokenType;
+
 
 export class Parser {
 
@@ -205,7 +211,7 @@ export class Parser {
                 }
             }
 
-            if(Array.isArray(tt)){
+            if (Array.isArray(tt)) {
                 let expectedTokens = tt.map(token => TokenTypeReadable[token]).join(", ");
                 this.pushError("Erwartet wird eines der folgenden: " + expectedTokens + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             } else {
@@ -346,46 +352,142 @@ export class Parser {
 
         // parse where...
 
-        let whereNode: TermNode = null;
         if (this.tt == TokenType.keywordWhere) {
+            let position = this.getCurrentPosition();
             this.nextToken();
-            whereNode = this.parseTerm();
+            node.whereNode = this.parseTerm();
+            if(node.whereNode != null) node.whereNode.position = position;
         }
 
-        // TODO: Group by, having, order
+        if(this.tt == TokenType.keywordGroup){
+            node.groupByNode = this.parseGroupBy();
+        }
 
+        if(this.tt == TokenType.keywordOrder){
+            node.orderByNode = this.parseOrderBy();
+        }
 
+        if(this.tt == TokenType.keywordLimit){
+            node.limitNode = this.parseLimit();
+        }
 
         return node;
     }
 
-    parseTableOrSubQuery(): TableOrSubqueryNode {
+    parseLimit(): LimitNode {
+        let position = this.getCurrentPosition();
+        let numberOfRows: TermNode = this.parseTerm();
+        let ln: LimitNode = {
+            type: TokenType.keywordLimit,
+            position: position,
+            numberOfRows: numberOfRows
+        }
+        if(this.tt = TokenType.keywordOffset){
+            this.nextToken();
+            ln.offset = this.parseTerm();
+        }
+        return ln;
+    }
+
+    parseGroupBy(): GroupByNode {
+        let position = this.getCurrentPosition();
+        this.expect(TokenType.keywordGroup, true);
+        this.expect(TokenType.keywordBy, true);
+        let gbn: GroupByNode = {
+            type: TokenType.keywordGroup,
+            columnList: [],
+            position: position
+        }
+        gbn.columnList = this.parseColumnList([TokenType.keywordHaving, TokenType.keywordSelect, TokenType.keywordOrder, TokenType.keywordLimit, TokenType.rightBracket, TokenType.semicolon]);
+        if(this.tt = TokenType.keywordHaving){
+            this.nextToken();
+            gbn.having = this.parseTerm();
+        }
+        return gbn;
+    }
+
+    parseOrderBy(): OrderByNode[] {
+        this.expect(TokenType.keywordOrder, true);
+        this.expect(TokenType.keywordBy, true);
+
+        let obnList: OrderByNode[] = [];
+
+        do {
+            let column: TermNode = this.parseTerm();
+            let obn: OrderByNode = {
+                type: TokenType.keywordOrder,
+                position: this.getCurrentPosition(),
+                column: column
+            }
+            if([TokenType.keywordAscending, TokenType.keywordDescending].indexOf(this.tt) >= 0) this.nextToken();
+            if(this.tt == TokenType.keywordNulls){
+                this.nextToken();
+                this.expect([TokenType.keywordFirst, TokenType.keywordLast], true);
+            }
+            obnList.push(obn);
+        } while (this.tt = TokenType.comma);
         
+        return obnList;
+    }
+
+    parseTableOrSubQuery(): TableOrSubqueryNode {
+
         let leftSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery();
 
-        let joinStartsWithTokens = [TokenType.keywordJoin, TokenType.keywordNatural, TokenType.keywordLeft, TokenType.keywordInner, TokenType.keywordCross, TokenType.comma];
+        let position = this.getCurrentPosition();
 
-        while(joinStartsWithTokens.indexOf(this.tt) >= 0){
+        while (this.parseJoinOperator()) {
 
-            [",", [[null, "natural"], [null, ["left", [null, outer ]]]]]
+            let rightSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery();
 
+            leftSide = {
+                type: TokenType.keywordJoin,
+                firstOperand: leftSide,
+                secondOperand: rightSide,
+                position: position,
+            }
+
+            if(this.tt = TokenType.keywordOn){
+                leftSide.on = this.parseTerm();
+            }
 
         }
 
+        return leftSide;
 
+    }
+
+    parseJoinOperator(): boolean {
+        if (this.tt == TokenType.comma) return true;
+        if (this.tt == TokenType.keywordNatural) this.nextToken();
+        switch (this.tt) {
+            case TokenType.keywordLeft:
+                this.nextToken();
+                //@ts-ignore
+                if (this.tt == TokenType.keywordOuter) this.nextToken();
+                return this.expect(TokenType.keywordJoin, true);
+            case TokenType.keywordInner:
+            case TokenType.keywordCross:
+                this.nextToken();
+                return this.expect(TokenType.keywordJoin, true);
+            case TokenType.keywordJoin:
+                this.nextToken();
+                return true;
+            default: return false;
+        }
     }
 
     parseAtomicTableOrSubQuery(): TableOrSubqueryNode {
 
-        if(!this.expect([TokenType.identifier, TokenType.leftBracket], false)){
+        if (!this.expect([TokenType.identifier, TokenType.leftBracket], false)) {
             return null;
         }
 
-        if(this.tt == TokenType.leftBracket){
+        if (this.tt == TokenType.leftBracket) {
             this.nextToken();
             let ret: TableOrSubqueryNode;
             //@ts-ignore
-            if(this.tt == TokenType.keywordSelect){
+            if (this.tt == TokenType.keywordSelect) {
                 let position = this.getCurrentPosition();
                 let selectStatement = this.parseSelect();
                 ret = {
@@ -398,10 +500,21 @@ export class Parser {
                 ret = this.parseTableOrSubQuery();
             }
             this.expect(TokenType.rightBracket, true);
+            
+            
+            //@ts-ignore
+            if(this.tt == TokenType.keywordAs && ret.type == TokenType.subquery){
+                this.nextToken();
+                if(this.expect(TokenType.identifier, false)){
+                    ret.alias = <string>this.cct.value;
+                    this.nextToken();
+                }
+            }
+
             return ret;
         }
 
-        if(this.tt == TokenType.identifier){
+        if (this.tt == TokenType.identifier) {
             let node: TableNode = {
                 type: TokenType.table,
                 identifier: <string>this.cct.value,
@@ -409,10 +522,20 @@ export class Parser {
                 position: this.getCurrentPosition()
             }
             this.nextToken();
+
+            if(this.tt = TokenType.keywordAs){
+                this.nextToken();
+                if(this.expect(TokenType.identifier, false)){
+                    node.alias = <string>this.cct.value;
+                    this.nextToken();
+                }
+            }
+
             return node;
         }
 
     }
+
 
     parseColumnList(tokenTypesAfterListEnd: TokenType[]): TermNode[] {
         let columns: TermNode[] = [];
@@ -563,8 +686,20 @@ export class Parser {
                     }
                     //@ts-ignore
                     if (this.tt == TokenType.dot) {
-                        if (this.expect(TokenType.identifier, false)) {
-
+                        let position = this.getCurrentPosition();
+                        this.nextToken();
+                        this.expect(TokenType.identifier, false);
+                        let secondIdentifier: IdentifierNode = {
+                            type: TokenType.identifier,
+                            identifier: <string>this.cct.value,
+                            position: this.getCurrentPosition()
+                        }
+                        this.nextToken();
+                        term = {
+                            type: TokenType.dot,
+                            identifierLeft: <IdentifierNode>term,
+                            identifierRight: secondIdentifier,
+                            position: position
                         }
 
                     }
