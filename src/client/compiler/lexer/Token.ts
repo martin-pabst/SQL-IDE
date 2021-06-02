@@ -36,6 +36,8 @@ export enum TokenType {
     keywordAs,
     keywordLimit,
     keywordOffset,
+    keywordIn,
+    keywordNotIn,
 
     // brackets
     leftBracket, // ()
@@ -98,7 +100,8 @@ export enum TokenType {
     unaryOp,
     binaryOp,
     table,
-    subquery
+    subquery,
+    list
 
 }
 
@@ -141,6 +144,8 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordAs]: "as",
     [TokenType.keywordLimit]: "limit",
     [TokenType.keywordOffset]: "offset",
+    [TokenType.keywordIn]: "in",
+    [TokenType.keywordNotIn]: "not in",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -265,6 +270,8 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "as": TokenType.keywordAs,
     "limit": TokenType.keywordLimit,
     "offset": TokenType.keywordOffset,
+    "in": TokenType.keywordIn,
+    "not in": TokenType.keywordNotIn
 
 
 };

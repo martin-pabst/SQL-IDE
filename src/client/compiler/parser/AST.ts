@@ -10,7 +10,7 @@ export type ASTNode =
     export type StatementNode = SelectNode | UpdateNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
-    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode;
+    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
 
     export type TableOrSubqueryNode = SubqueryNode | JoinNode | TableNode;
 
@@ -139,6 +139,14 @@ export type TableNode = {
     identifier: string,
     alias: string,
     table?: Table
+}
+
+export type ListNode = {
+    type: TokenType.list,
+    position: TextPosition,
+    sqlType?: SQLType,
+
+    elements: ConstantNode[]
 }
 
 export type SubqueryNode = {

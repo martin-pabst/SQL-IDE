@@ -24,6 +24,7 @@ export class Lexer {
 
     tokenList: TokenList;
     nonSpaceLastTokenType: TokenType;
+    nonSpaceLastToken: Token;
 
     errorList: Error[];
     pos: number;
@@ -63,6 +64,7 @@ export class Lexer {
         this.line = 1;
         this.column = 1;
         this.nonSpaceLastTokenType = null;
+        this.nonSpaceLastToken = null;
 
 
         if (input.length == 0) {
@@ -254,8 +256,19 @@ export class Lexer {
             }
         }
 
+        if(tt == TokenType.keywordIn && this.nonSpaceLastTokenType == TokenType.keywordNot){
+            let newLength = column - this.nonSpaceLastToken.position.column + length;
+            this.nonSpaceLastToken.tt = TokenType.keywordNotIn;
+            this.nonSpaceLastToken.position = {column: this.nonSpaceLastToken.position.column, line: line, length: newLength};
+            this.nonSpaceLastToken.value = this.nonSpaceLastToken.value + " " + text;
+
+            this.nonSpaceLastTokenType = TokenType.keywordNotIn
+            return;
+        }
+
         if (!(this.spaceTokens.indexOf(tt) >= 0)) {
             this.nonSpaceLastTokenType = tt;
+            this.nonSpaceLastToken = t;
         }
 
         this.tokenList.push(t);

@@ -1,6 +1,7 @@
+import { timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
@@ -17,7 +18,8 @@ export class Parser {
     static operatorPrecedence: TokenType[][] = [
         [TokenType.keywordOr], [TokenType.keywordAnd],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
-        [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo]
+        [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo],
+        [TokenType.keywordIn, TokenType.keywordNotIn]
     ];
 
     module: Module;
@@ -399,7 +401,7 @@ export class Parser {
             position: position
         }
         gbn.columnList = this.parseColumnList([TokenType.keywordHaving, TokenType.keywordSelect, TokenType.keywordOrder, TokenType.keywordLimit, TokenType.rightBracket, TokenType.semicolon]);
-        if(this.tt = TokenType.keywordHaving){
+        if(this.tt == TokenType.keywordHaving){
             this.nextToken();
             gbn.having = this.parseTerm();
         }
@@ -411,8 +413,14 @@ export class Parser {
         this.expect(TokenType.keywordBy, true);
 
         let obnList: OrderByNode[] = [];
+        let first: boolean = true;
 
         do {
+            if(first){
+                first = false;
+            } else {
+                this.expect(TokenType.comma, true);
+            }
             let column: TermNode = this.parseTerm();
             let obn: OrderByNode = {
                 type: TokenType.keywordOrder,
@@ -425,7 +433,7 @@ export class Parser {
                 this.expect([TokenType.keywordFirst, TokenType.keywordLast], true);
             }
             obnList.push(obn);
-        } while (this.tt = TokenType.comma);
+        } while (this.tt == TokenType.comma);
         
         return obnList;
     }
@@ -523,7 +531,8 @@ export class Parser {
             }
             this.nextToken();
 
-            if(this.tt = TokenType.keywordAs){
+            //@ts-ignore
+            if(this.tt == TokenType.keywordAs){
                 this.nextToken();
                 if(this.expect(TokenType.identifier, false)){
                     node.alias = <string>this.cct.value;
@@ -627,7 +636,7 @@ export class Parser {
 
         switch (this.tt) {
             case TokenType.leftBracket:
-                return this.bracketOrCasting();
+                return this.bracket();
             case TokenType.minus:
                 // case TokenType.not:
                 position = position;
@@ -713,25 +722,63 @@ export class Parser {
 
     }
 
-    bracketOrCasting(): TermNode {
-
-        let position = this.getCurrentPosition();
-
-        this.nextToken(); // consume (
-
-
-        let term = this.parseTerm();
-        let rightBracketPosition = this.getCurrentPosition();
-        this.expect(TokenType.rightBracket, true);
-
-        let bracketsNode: BracketsNode = {
-            position: rightBracketPosition,
-            type: TokenType.rightBracket,
-            termInsideBrackets: term
+    parseList(): ListNode {
+        let node: ListNode = {
+            type: TokenType.list,
+            position: this.getCurrentPosition(),
+            elements: []
         }
 
+        let constantTypes = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
 
-        return bracketsNode;
+        while(constantTypes.indexOf(this.tt) >= 0){
+            node.elements.push({
+                type: TokenType.constantNode,
+                constant: this.cct.value,
+                constantType: this.tt,
+                position: this.cct.position
+            });
+            this.nextToken();
+            if(this.tt != TokenType.comma){
+                break;
+            }
+            this.nextToken();
+        }
+
+        return node;
+    }
+
+    bracket(): TermNode {
+
+        let position = this.getCurrentPosition();
+        let tokenBeforeBracket = this.lastToken;
+        this.nextToken(); // consume (
+
+        if(this.tt == TokenType.keywordSelect){
+            let selectNode = this.parseSelect();
+            this.expect(TokenType.rightBracket, true);
+            return selectNode;
+        } else if([TokenType.comma, TokenType.rightBracket].indexOf(this.ct[1].tt) >= 0 && 
+        [TokenType.keywordIn, TokenType.keywordNotIn].indexOf(tokenBeforeBracket.tt) >= 0 ){
+            let listNode = this.parseList();
+            this.expect(TokenType.rightBracket, true);
+            return listNode;
+        } else 
+        {
+            let term = this.parseTerm();
+            let rightBracketPosition = this.getCurrentPosition();
+            this.expect(TokenType.rightBracket, true);
+    
+            let bracketsNode: BracketsNode = {
+                position: rightBracketPosition,
+                type: TokenType.rightBracket,
+                termInsideBrackets: term
+            }
+    
+    
+            return bracketsNode;
+        }
+
 
 
     }
@@ -752,9 +799,17 @@ export class Parser {
         while (true) {
             let pos = this.pos;
 
-            let parameter = this.parseTerm();
-            if (parameter != null) {
-                parameters.push(parameter);
+            if(this.tt == TokenType.multiplication){
+                this.nextToken();
+                parameters.push({
+                    type: TokenType.multiplication,
+                    position: this.getCurrentPosition(),
+                });
+            } else {
+                let parameter = this.parseTerm();
+                if (parameter != null) {
+                    parameters.push(parameter);
+                }
             }
 
             if (this.tt != TokenType.comma) {
