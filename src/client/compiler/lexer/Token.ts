@@ -10,6 +10,9 @@ export enum TokenType {
     false,
     // keywords
     keywordSelect,
+    keywordInsert,
+    keywordInto,
+    keywordValues,
     keywordUpdate,
     keywordFrom,
     keywordWhere,
@@ -120,6 +123,9 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.false]: "false",
     // keywords
     [TokenType.keywordSelect]: "select",
+    [TokenType.keywordInsert]: "insert",
+    [TokenType.keywordInto]: "into",
+    [TokenType.keywordValues]: "values",
     [TokenType.keywordUpdate]: "update",
     [TokenType.keywordFrom]: "from",
     [TokenType.keywordWhere]: "where",
@@ -246,6 +252,9 @@ export var specialCharList: {[keyword: string]:TokenType} = {
 
 export var keywordList: {[keyword: string]:TokenType} = {
     "select": TokenType.keywordSelect,
+    "insert": TokenType.keywordInsert,
+    "into": TokenType.keywordInto,
+    "values": TokenType.keywordValues,
     "update": TokenType.keywordUpdate,
     "from": TokenType.keywordFrom,
     "where": TokenType.keywordWhere,

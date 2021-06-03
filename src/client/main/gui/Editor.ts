@@ -37,7 +37,7 @@ export class Editor {
                 { token: 'string.sql', foreground: '3DC9B0' },
                 { token: 'number', foreground: 'b5cea8' },
                 { token: 'type', foreground: '499cd6' },
-                { token: 'identifier', foreground: '40e040' },
+                { token: 'identifier', foreground: 'c2cccc' },
                 { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
                 { token: 'keyword', foreground: '68bed4', fontStyle: 'bold' },
                 // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },

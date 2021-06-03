@@ -1,7 +1,7 @@
 import { timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
@@ -332,6 +332,8 @@ export class Parser {
         switch (this.tt) {
             case TokenType.keywordSelect:
                 return this.parseSelect();
+            case TokenType.keywordInsert:
+                return this.parseInsert();
             default:
                 let s = TokenTypeReadable[this.tt];
                 if (s != this.cct.value) s += "(" + this.cct.value + ")";
@@ -343,6 +345,113 @@ export class Parser {
 
 
         return retStatements;
+
+    }
+
+    parseInsert(): InsertNode {
+
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "insert"
+
+        this.expect(TokenType.keywordInto, true);
+        
+        let node: InsertNode = {
+            type: TokenType.keywordInsert,
+            position: startPosition,
+            endPosition: this.getCurrentPosition(),
+            valuesPosition: null,
+            columnsPosition: null,
+            symbolTable: null,
+            columnList: [],
+            values: [],
+            table: null
+        }
+
+        if (this.tt == TokenType.identifier) {
+            node.table = {
+                type: TokenType.table,
+                identifier: <string>this.cct.value,
+                alias: null,
+                position: this.getCurrentPosition()
+            }
+            node.columnsPosition = {line: node.table.position.line, column: node.table.position.column + node.table.position.length, length: 0};
+            this.nextToken();
+        } else {
+            this.pushError("Hier wird der Bezeichner einer Tabelle erwartet. Gefunden wurde: " + this.cct.value, "error");
+        }
+
+        if(this.tt == TokenType.leftBracket){
+
+            this.nextToken();
+            //@ts-ignore
+            while(this.tt == TokenType.identifier){
+
+                node.columnList.push({
+                    type: TokenType.identifier,
+                    identifier: this.cct.value + "",
+                    position: this.getCurrentPosition()
+                })
+
+                this.nextToken();
+                if(!this.expect([TokenType.comma, TokenType.rightBracket], false)){
+                    break;
+                }
+            
+                //@ts-ignore
+                if(this.tt == TokenType.comma){
+                    this.nextToken();
+                }
+            }
+
+            this.expect(TokenType.rightBracket, true);
+        }
+
+        node.valuesPosition = this.getCurrentPosition();
+        this.expect(TokenType.keywordValues, true);
+
+        this.parseValueLists(node.values);
+
+        node.endPosition = this.getCurrentPosition();
+        
+        return node;
+    }
+
+    parseValueLists(values: ConstantNode[][]){
+        let insideListTokens = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant, TokenType.comma];
+
+        while(this.tt == TokenType.leftBracket){
+            let leftBracketPosition = this.getCurrentPosition();
+            this.nextToken();
+            let line: ConstantNode[] = [];
+            while(insideListTokens.indexOf(this.tt) >= 0){
+                //@ts-ignore
+                if(this.tt == TokenType.comma){
+                    this.pushError("Hier sollte kein Komma stehen", "error");
+                    this.nextToken();
+                } else {
+                    line.push({
+                        constantType: this.tt,
+                        position: this.getCurrentPosition(),
+                        constant: this.cct.value,
+                        type: TokenType.constantNode
+                    });
+                    this.expect(TokenType.comma, true);
+                }
+            }
+            this.expect(TokenType.rightBracket, true);
+            if(line.length == 0){
+                this.pushError("Eine Zeile kann nur dann in die Tabelle eingefügt werden, wenn sie mindestens einen Spaltenwert besitzt.", "error", leftBracketPosition);
+            }
+            if(this.tt == TokenType.leftBracket){
+                this.pushError("Es fehlt das Komma vor dieser öffnenden Klammer.");
+                continue;
+            }
+            if(this.tt != TokenType.comma){
+                break;
+            }
+            this.nextToken(); // consume comma
+            values.push(line);
+        }
 
     }
 
@@ -594,7 +703,6 @@ export class Parser {
         }
 
     }
-
 
     parseColumnList(tokenTypesAfterListEnd: TokenType[], allowAliases: boolean): ColumnNode[] {
         let columns: ColumnNode[] = [];

@@ -37,25 +37,29 @@ export class SymbolTable {
     extractDatabaseStructure(databaseStructure: DatabaseStructure) {
         for (let table of Table.fromTableStructureList(databaseStructure.tables)) {
 
-            this.storeSymbol({
-                identifier: table.identifier,
-                posOfDefinition: null,
-                referencedOnPositions: [],
-                table: table
-            });
-
-            for (let column of table.columns) {
-                this.storeSymbol({
-                    identifier: column.identifier,
-                    posOfDefinition: null,
-                    referencedOnPositions: [],
-                    column: column
-                });
-            }
+            this.storeTableSymbols(table);
 
         }
 
 
+    }
+
+    storeTableSymbols(table: Table){
+        this.storeSymbol({
+            identifier: table.identifier,
+            posOfDefinition: null,
+            referencedOnPositions: [],
+            table: table
+        });
+
+        for (let column of table.columns) {
+            this.storeSymbol({
+                identifier: column.identifier,
+                posOfDefinition: null,
+                referencedOnPositions: [],
+                column: column
+            });
+        }
     }
 
     storeSymbol(symbol: Symbol) {

@@ -1,8 +1,8 @@
 import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { Module } from "./Module.js";
+import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { BinaryOpNode, DotNode, IdentifierNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
+import { ASTNode, BinaryOpNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -37,11 +37,13 @@ export class SymbolResolver {
                 case TokenType.keywordSelect:
                     this.resolveSelect(astNode);
                     break;
+                case TokenType.keywordInsert:
+                    this.resolveInsert(astNode);
+                    break;
 
                 default:
                     break;
             }
-
 
         }
 
@@ -379,6 +381,75 @@ export class SymbolResolver {
         }
         
         return SQLBaseType.getBaseType("boolean");
+    }
+
+    resolveInsert(astNode: InsertNode) {
+
+        let table: Table = null;
+        let symbolTable = this.pushNewSymbolTable(astNode.position, astNode.endPosition);
+        if(astNode.table != null){
+            astNode.table.table = this.tables.find( t => t.identifier.toLowerCase() == astNode.table.identifier.toLocaleLowerCase());
+            if(astNode.table.table == null){
+                this.pushError("Die Tabelle " + astNode.table.identifier + " gibt es nicht.", "error", astNode.table.position);
+            } else {
+                table = astNode.table.table;
+                symbolTable.storeTableSymbols(table);
+            }
+        }
+
+        let tableCompletionTo = astNode.endPosition;
+        if(astNode.valuesPosition != null) tableCompletionTo = astNode.valuesPosition;
+        if(astNode.columnsPosition != null) tableCompletionTo = astNode.columnsPosition;
+        
+        this.module.addCompletionHint(astNode.position, tableCompletionTo, false, true, ["into", "values"]);
+        
+        if(table != null){
+            this.module.addCompletionHint(tableCompletionTo, astNode.valuesPosition == null ? astNode.endPosition : astNode.valuesPosition, true, false, ["values"]);
+        }
+
+        let tableSymbolTable = this.pushNewSymbolTable(astNode.position, tableCompletionTo);
+        tableSymbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+        this.symbolTableStack.pop();
+
+        let columns: Column[] = [];
+        // Parse column list
+        if(astNode.columnList.length == 0){
+            if(table != null){
+                columns = table.columns;
+            }
+        } else {
+            if(table != null){
+                for(let columnNode of astNode.columnList){
+                    let column = table.columns.find( c => c.identifier.toLowerCase() == columnNode.identifier.toLowerCase());
+                    if(column == null){
+                        this.pushError("Die Tabelle " + table.identifier + " besitzt keine Spalte mit dem Bezeichner " + columnNode.identifier + ".", "error", columnNode.position);
+                    } else {
+                        columns.push(column);
+                    }
+                }
+            }
+        }
+
+        if(columns.length > 0){
+            // Parse value lists
+            for(let valueList of astNode.values){
+                if(valueList.length != columns.length && valueList.length > 0){
+                    this.pushError("Erwartet werden " + columns.length + " Elemente, hier stehen aber " + valueList.length + " Elemente in der Liste.", "error", valueList[0].position);
+                } else {
+                    for(let i = 0; i < valueList.length; i++){
+                        let value = valueList[i];
+                        let column = columns[i];
+                        value.sqlType = SQLBaseType.fromConstantType(value.constantType);
+                        if(!value.sqlType.canCastTo(column.type)){
+                            this.pushError("Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.", "error", value.position);
+                        }
+                    }
+                }
+            }
+        }
+
+        this.symbolTableStack.pop();
+
     }
 
 

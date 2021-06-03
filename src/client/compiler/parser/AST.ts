@@ -7,7 +7,7 @@ import { Table } from "./SQLTable.js";
 export type ASTNode = 
     StatementNode | TermNode | ColumnNode
     
-    export type StatementNode = SelectNode | UpdateNode;
+    export type StatementNode = SelectNode | UpdateNode | InsertNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
@@ -37,6 +37,19 @@ export type SelectNode = {
     orderByNode?: OrderByNode[],
     limitNode?: LimitNode,
     sqlType?: SQLType
+}
+
+export type InsertNode = {
+    type: TokenType.keywordInsert,
+    position: TextPosition,
+    valuesPosition: TextPosition,
+    columnsPosition: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+
+    table: TableNode,
+    columnList: IdentifierNode[],
+    values: ConstantNode[][]
 }
 
 export type GroupByNode = {
