@@ -27,6 +27,4 @@ export interface MainBase {
 
     getDatabaseTool(): DatabaseTool;
 
-
-
 }

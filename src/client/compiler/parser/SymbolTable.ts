@@ -1,3 +1,4 @@
+import { DatabaseStructure } from "../../tools/DatabaseTools.js";
 import { TextPosition } from "../lexer/Token.js";
 import { Table, Column } from "./SQLTable.js";
 
@@ -5,20 +6,20 @@ export type Symbol = {
     identifier: string;
     table?: Table;
     column?: Column;
-
+    tableAlias?: string;
     posOfDefinition: TextPosition;
     referencedOnPositions: TextPosition[];
 }
 
 export class SymbolTable {
-
     parent: SymbolTable; // SymbolTable of parent scope
     positionFrom: TextPosition;
     positionTo: TextPosition;
 
     childSymbolTables: SymbolTable[] = [];
 
-    Symbols: Map<string, Symbol> = new Map();
+    private symbols: Map<string, Symbol[]> = new Map();
+    symbolList: Symbol[] = [];
 
     constructor(parentSymbolTable: SymbolTable, positionFrom: TextPosition, positionTo: TextPosition) {
 
@@ -33,7 +34,40 @@ export class SymbolTable {
         }
     }
 
+    extractDatabaseStructure(databaseStructure: DatabaseStructure) {
+        for (let table of Table.fromTableStructureList(databaseStructure.tables)) {
 
+            this.storeSymbol({
+                identifier: table.identifier,
+                posOfDefinition: null,
+                referencedOnPositions: [],
+                table: table
+            });
+
+            for (let column of table.columns) {
+                this.storeSymbol({
+                    identifier: column.identifier,
+                    posOfDefinition: null,
+                    referencedOnPositions: [],
+                    column: column
+                });
+            }
+
+        }
+
+
+    }
+
+    storeSymbol(symbol: Symbol) {
+        let list: Symbol[] = this.symbols.get(symbol.identifier);
+        if (list == null) {
+            list = [symbol];
+            this.symbols.set(symbol.identifier.toLowerCase(), list);
+        } else {
+            list.push(symbol);
+        }
+        this.symbolList.push(symbol);
+    }
 
     findTableAtPosition(line: number, column: number): SymbolTable {
 
@@ -78,6 +112,45 @@ export class SymbolTable {
 
     }
 
+    findTable(identifier: string): Symbol[] {
+
+        let symbolTable: SymbolTable = this;
+        while(symbolTable != null){
+
+            let symbols = symbolTable.symbols.get(identifier.toLowerCase());
+            if(symbols != null){
+                symbols = symbols.filter(s => s.table != null);
+                if(symbols.length > 0){
+                    return symbols;
+                }
+            }
+
+            symbolTable = symbolTable.parent;
+        }
+
+        return [];
+
+    }
+
+    findColumn(identifier: string): Symbol[] {
+
+        let symbolTable: SymbolTable = this;
+        while(symbolTable != null){
+
+            let symbols = symbolTable.symbols.get(identifier.toLowerCase());
+            if(symbols != null){
+                symbols = symbols.filter(s => s.column != null);
+                if(symbols.length > 0){
+                    return symbols;
+                }
+            }
+
+            symbolTable = symbolTable.parent;
+        }
+
+        return [];
+
+    }
 
 }
 

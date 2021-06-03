@@ -9,14 +9,17 @@ export abstract class SQLType {
 
     abstract getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType;
 
+    abstract getUnaryResultType(operator: TokenType): SQLType;
+
     abstract getBinaryResult(operator: TokenType, value1: any, value2: any): any;
 
     abstract toString(): string;
 
+    abstract getBaseTypeName(): string;
+
 }
 
 export class SQLBaseType extends SQLType {
-
     // Map<tokenType, Map<SecondType, ResultType>>
     binaryResultTypes: Map<TokenType, Map<SQLBaseType, SQLBaseType>> = new Map();
 
@@ -25,11 +28,36 @@ export class SQLBaseType extends SQLType {
     static baseTypes: SQLBaseType[] = [];
     static baseTypeMap: Map<string, SQLBaseType> = new Map();
 
+    public canCastToList: string[];
+
     constructor(public name: string, public parameterDescriptions: string[],
-        public checkFunction: CheckFunction, public outputFunction: OutputFunction, public canCastToList: string[]) {
+        public checkFunction: CheckFunction, public outputFunction: OutputFunction, canCastToList: string[]) {
         super();
-        let ownIndex = canCastToList.indexOf(name);
-        if(ownIndex >= 0) canCastToList.splice(ownIndex, 1);
+        this.canCastToList = canCastToList.slice(0);
+        let ownIndex = this.canCastToList.indexOf(name);
+        if(ownIndex >= 0) this.canCastToList.splice(ownIndex, 1);
+    }
+
+    static fromConstantType(tt: TokenType): SQLBaseType {
+        switch (tt) {
+            case TokenType.stringConstant:
+                return this.baseTypeMap.get("text");
+            case TokenType.integerConstant:
+                return this.baseTypeMap.get("integer");
+            case TokenType.floatingPointConstant:
+                return this.baseTypeMap.get("float");
+            case TokenType.charConstant:
+                return this.baseTypeMap.get("text");
+            case TokenType.booleanConstant:
+                return this.baseTypeMap.get("boolean");
+        
+            default:
+                break;
+        }
+    }
+
+    getBaseTypeName(): string {
+        return this.name;
     }
 
     toString(): string {
@@ -67,7 +95,7 @@ export class SQLBaseType extends SQLType {
 
         let bt2: SQLBaseType = type2 instanceof SQLBaseType ? type2 : type2["baseType"];
 
-        return this.canCastToList.indexOf(bt2.name) >= 0;
+        return this.canCastToList.indexOf(bt2.name) >= 0 || this.name == bt2.name;
 
     }
 
@@ -81,6 +109,10 @@ export class SQLBaseType extends SQLType {
 
         return map.get(bt2);
 
+    }
+
+    getUnaryResultType(operator: TokenType): SQLType {
+        if(this.unaryOperators.indexOf(operator)>= 0) return this;
     }
 
     getBinaryResult(operator: TokenType, value1: any, value2: any): any {
@@ -144,11 +176,16 @@ export class SQLDerivedType extends SQLType {
         return this.name;
     }
 
+    getBaseTypeName(): string {
+        return this.baseType.name;
+    }
+
+
     canCastTo(type2: SQLType): boolean {
 
         let bt2: SQLBaseType = type2 instanceof SQLBaseType ? type2 : type2["baseType"];
 
-        return this.baseType.canCastToList.indexOf(bt2.name) >= 0;
+        return this.baseType.canCastToList.indexOf(bt2.name) >= 0 || this.baseType.name == bt2.name;
 
     }
 
@@ -175,6 +212,10 @@ export class SQLDerivedType extends SQLType {
 
     }
 
+    getUnaryResultType(operator: TokenType): SQLType {
+        return this.baseType.getUnaryResultType(operator);
+    }
+
     getBinaryResult(operator: TokenType, value1: any, value2: any): any {
         let result = this.baseType.getBinaryResult(operator, value1, value2);
         if (this.name = "varchar") return result == null ? null : ("" + result).substr(0, this.parameterValues[0]);
@@ -193,9 +234,9 @@ var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `c
     (v: string, pv) => v.substr(0, pv[0]), textTypes);
 
 var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes);
-var tinyTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
-var mediumTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
-var longTextType = new SQLBaseType("text", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var tinyTextType = new SQLBaseType("tinyText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var mediumTextType = new SQLBaseType("mediumText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var longTextType = new SQLBaseType("longText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 
 let floatTypes = ["decimal", "numeric", "double", "real", "float"];
 

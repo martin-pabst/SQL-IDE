@@ -1,11 +1,11 @@
 import { TokenType, TextPosition, Token } from "../lexer/Token.js";
 import { SymbolTable } from "./SymbolTable.js";
-import { SQLType } from "./SQLTypes.js";
+import { SQLBaseType, SQLType } from "./SQLTypes.js";
 import { Table } from "./SQLTable.js";
 
 
 export type ASTNode = 
-    StatementNode | TermNode 
+    StatementNode | TermNode | ColumnNode
     
     export type StatementNode = SelectNode | UpdateNode;
 
@@ -14,6 +14,13 @@ export type ASTNode =
 
     export type TableOrSubqueryNode = SubqueryNode | JoinNode | TableNode;
 
+export type ColumnNode = {
+    type: TokenType.column | TokenType.allColumns,
+    position: TextPosition,
+    term: TermNode,
+    alias?: string
+}
+
 export type SelectNode = {
     type: TokenType.keywordSelect,
     position: TextPosition,
@@ -21,12 +28,15 @@ export type SelectNode = {
     parentStatement: StatementNode,
     symbolTable: SymbolTable,
     
-    columnList: TermNode[],
+    columnList: ColumnNode[],
     fromNode: TableOrSubqueryNode,
+    fromStartPosition?: TextPosition,
+    fromEndPosition?: TextPosition,
     whereNode: TermNode,
     groupByNode?: GroupByNode,
     orderByNode?: OrderByNode[],
-    limitNode?: LimitNode
+    limitNode?: LimitNode,
+    sqlType?: SQLType
 }
 
 export type GroupByNode = {
@@ -54,7 +64,7 @@ export type OrderByNode = {
 
 
 export type UpdateNode = {
-    type: TokenType.keywordSelect,
+    type: TokenType.keywordUpdate,
     position: TextPosition,
     parentStatement: StatementNode,
     symbolTable: SymbolTable  
@@ -65,20 +75,23 @@ export type DotNode = {
     position: TextPosition,
     identifierLeft: IdentifierNode,
     identifierRight: IdentifierNode,
-    symbol?: Symbol
+    symbol?: Symbol,
+    sqlType?: SQLType
 }
 
 export type IdentifierNode = {
     type: TokenType.identifier,
     position: TextPosition,
     identifier: string,
-    symbol?: Symbol
+    symbol?: Symbol,
+    sqlType?: SQLType
 }
 
 export type StarAttributeNode = {
-    type: TokenType.multiplication,
+    type: TokenType.allColumns,
     position: TextPosition,
-    symbol?: Symbol
+    symbol?: Symbol,
+    sqlType?: SQLType
 }
 
 export type ConstantNode = {

@@ -1,9 +1,10 @@
 import { Editor } from "./Editor.js";
-import { Module } from "../../compiler/parser/Module.js";
-import { SymbolTable } from "../../compiler/parser/SymbolTable.js";
+import { CompletionHint, Module } from "../../compiler/parser/Module.js";
+import { Symbol, SymbolTable } from "../../compiler/parser/SymbolTable.js";
 import { Main } from "../Main.js";
 import { TokenType } from "../../compiler/lexer/Token.js";
 import { MainBase } from "../MainBase.js";
+import { Column, Table } from "../../compiler/parser/SQLTable.js";
 
 export class MyCompletionItemProvider implements monaco.languages.CompletionItemProvider {
 
@@ -11,7 +12,10 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
     public triggerCharacters: string[] = ['.', 'abcdefghijklmnopqrstuvwxyzäöüß_ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ', ' '];
 
+    public keywordCompletionItems: Map<string, monaco.languages.CompletionItem> = new Map();
+
     constructor(private main: MainBase) {
+        this.setupKeywordCompletionItems();
     }
 
     first: boolean = true;
@@ -24,13 +28,9 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                 sw.toggleDetails();
                 this.first = false;
             }
-            // sw.toggleSuggestionDetails();
-            // this.main.monaco.trigger('keyboard', 'editor.action.toggleSuggestionDetails', {});
-            // this.main.monaco.trigger('keyboard', 'editor.action.triggerSuggest', {});
-            // this.main.monaco.trigger(monaco.KeyMod.CtrlCmd + monaco.KeyCode.Space, 'type', {});
         }, 300);
 
-        let module: Module = 
+        let module: Module =
             this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
 
         if (module == null) {
@@ -42,8 +42,158 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         let textUntilPosition = model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column });
         let textAfterPosition = model.getValueInRange({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber + 5, endColumn: 1 });
 
+        let symbolTable = module.mainSymbolTable.findTableAtPosition(position.lineNumber, position.column);
+        let completionHint: CompletionHint = module.getCompletionHint(position.lineNumber, position.column);
+        if(completionHint == null){
+            completionHint = {
+                fromColumn: 0,
+                toColumn: 0,
+                fromLine: 0,
+                toLine: 0,
+                hintColumns: true,
+                hintTables: true,
+                hintKeywords: []
+            }
+        }
+
+        let completionItems: monaco.languages.CompletionItem[] = [];
+        this.addKeywordCompletionItems(completionHint, completionItems);
+
+        let dotMatch = textUntilPosition.match(/.*\s([\wöäüÖÄÜß]*)(\.)([\wöäüÖÄÜß]*)$/);
+
+        let ibMatch = textAfterPosition.match(/^([\wöäüÖÄÜß]*)/);
+        let identifierAndBracketAfterCursor = "";
+        if (ibMatch != null && ibMatch.length > 0) {
+            identifierAndBracketAfterCursor = ibMatch[0];
+        }
+
+        if(dotMatch == null){
+            this.addIdentifierCompletionItems(completionHint, symbolTable, completionItems);
+        } else {
+            this.addDotCompletionItems(position, dotMatch, identifierAndBracketAfterCursor, symbolTable, completionItems);
+        }
+
+        return Promise.resolve({
+            suggestions: completionItems
+        });
+    }
+
+    addDotCompletionItems(position: monaco.Position, dotMatch: RegExpMatchArray, identifierAndBracketAfterCursor: string,
+         symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
+        let textAfterDot = dotMatch[3];
+        let textBeforeDot = dotMatch[1];
+        let dotColumn = position.column - textAfterDot.length - 1;
+        let rangeToReplace: monaco.IRange =
+        {
+            startLineNumber: position.lineNumber, startColumn: position.column - textAfterDot.length,
+            endLineNumber: position.lineNumber, endColumn: position.column + identifierAndBracketAfterCursor.length
+        }
+
+        for(let symbol of symbolTable.symbolList){
+            if(symbol.table != null){
+                let identifier: string = symbol.table.identifier;
+                if(symbol.tableAlias != null) identifier = symbol.tableAlias;
+                if(identifier.toLowerCase() == textBeforeDot){
+                    for(let column of symbol.table.columns){
+                        completionItems.push({
+                            label: column.identifier,
+                            detail: "Spalte " + column.identifier + " der Tabelle " + symbol.table.identifier,
+                            filterText: column.identifier,
+                            insertText: column.identifier,
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                            kind: monaco.languages.CompletionItemKind.Field,
+                            range: rangeToReplace
+                        })
+    
+                    }
+                }
+            }
+        }
 
     }
+
+    addIdentifierCompletionItems(completionHint: CompletionHint, symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
+
+        if(!(completionHint.hintTables || completionHint.hintColumns)){
+            return;
+        }
+
+        let st: SymbolTable = symbolTable;
+        let columns: { [identifier: string]: Symbol[] } = {};
+        let columnIdentifiers: string[] = [];
+
+        while (st != null) {
+            for (let symbol of st.symbolList) {
+                if (symbol.column != null) {
+                    let columnIdentifier = symbol.column.identifier;
+                    if (columns[columnIdentifier] == null) {
+                        columns[columnIdentifier] = [symbol];
+                        columnIdentifiers.push(columnIdentifier);
+                    } else {
+                        columns[columnIdentifier].push(symbol);
+                    }
+                } else if (symbol.table != null && completionHint.hintTables) {
+                    completionItems.push({
+                        label: symbol.identifier,
+                        detail: "Tabelle " + symbol.table.identifier,
+                        filterText: symbol.identifier,
+                        insertText: symbol.identifier,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                        kind: monaco.languages.CompletionItemKind.Class,
+                        range: undefined
+                    })
+                }
+            }
+            st = st.parent;
+        }
+
+        if(completionHint.hintColumns){
+            for (let ci of columnIdentifiers) {
+                let columList = columns[ci];
+                let withTable = columList.length > 1;
+                for (let cs of columList) {
+                    let text = cs.identifier;
+                    if (withTable && cs.identifier == cs.column.identifier.toLowerCase()) {
+                        text = (cs.tableAlias == null ? cs.column.table.identifier : cs.tableAlias) + "." + text;
+                    }
+                    completionItems.push({
+                        label: text,
+                        detail: "Die Spalte " + cs.column.identifier + " der Tabelle " + cs.column.table.identifier,
+                        filterText: text,
+                        insertText: text,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                        kind: monaco.languages.CompletionItemKind.Field,
+                        range: undefined
+                    })
+    
+                }
+            }
+        }
+    }
+
+    addKeywordCompletionItems(completionHint: CompletionHint, completionItems: monaco.languages.CompletionItem[]) {
+        for (let text of completionHint.hintKeywords) {
+
+            completionItems.push({
+                label: text,
+                detail: "",
+                filterText: text,
+                insertText: text,
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                kind: monaco.languages.CompletionItemKind.Keyword,
+                range: undefined
+            })
+
+            let ci = this.keywordCompletionItems.get(text);
+            if (ci != null) {
+                completionItems.push(ci);
+            }
+
+        }
+
+    }
+
+
 
     isStringLiteral(module: Module, position: monaco.Position) {
 
@@ -85,103 +235,40 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     }
 
 
-    getKeywordCompletion(symbolTable: SymbolTable): monaco.languages.CompletionItem[] {
-        let keywordCompletionItems: monaco.languages.CompletionItem[] = [];
-        if (!this.isConsole)
-            keywordCompletionItems = keywordCompletionItems.concat([
-                {
-                    label: "while(Bedingung){Anweisungen}",
-                    detail: "while-Wiederholung",
-                    filterText: 'while',
-                    // insertText: "while(${1:Bedingung}){\n\t$0\n}",
-                    insertText: "while($1){\n\t$0\n}",
-                    command: {
-                        id: "editor.action.triggerParameterHints",
-                        title: '123',
-                        arguments: []
-                    },
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
+    setupKeywordCompletionItems() {
+        this.keywordCompletionItems.set("select",
+            {
+                label: "select <Spalten> from <Tabellen> where <Bedingung>",
+                detail: "Select-Anweisung",
+                filterText: 'select',
+                // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+                insertText: `select $2 from $1\nwhere $0\n`,
+                command: {
+                    id: "editor.action.triggerParameterHints",
+                    title: '123',
+                    arguments: []
                 },
-                {
-                    label: "for(){}",
-                    // insertText: "for(${1:Startanweisung};${2:Solange-Bedingung};${3:Nach_jeder_Wiederholung}){\n\t${0:Anweisungen}\n}",
-                    insertText: "for( $1 ; $2 ; $3 ){\n\t$0\n}",
-                    detail: "for-Wiederholung",
-                    filterText: 'for',
-                    // command: {
-                    //     id: "editor.action.triggerParameterHints",
-                    //     title: '123',
-                    //     arguments: []
-                    // },    
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
-                },
-                {
-                    label: "for(int i = 0; i < 10; i++){}",
-                    // insertText: "for(${1:Startanweisung};${2:Solange-Bedingung};${3:Nach_jeder_Wiederholung}){\n\t${0:Anweisungen}\n}",
-                    insertText: "for(int ${1:i} = 0; ${1:i} < ${2:10}; ${1:i}++){\n\t$0\n}",
-                    detail: "Zähl-Wiederholung",
-                    filterText: 'for',
-                    // command: {
-                    //     id: "editor.action.triggerParameterHints",
-                    //     title: '123',
-                    //     arguments: []
-                    // },    
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
-                },
-                {
-                    label: "switch(){case...}",
-                    // insertText: "switch(${1:Selektor}){\n\tcase ${2:Wert_1}: {\n\t\t ${3:Anweisungen}\n\t\t}\n\tcase ${4:Wert_2}: {\n\t\t ${0:Anweisungen}\n\t\t}\n}",
-                    insertText: "switch($1){\n\tcase $2:\n\t\t $3\n\t\tbreak;\n\tcase $4:\n\t\t $5\n\t\tbreak;\n\tdefault:\n\t\t $0\n}",
-                    detail: "switch-Anweisung",
-                    filterText: 'switch',
-                    command: {
-                        id: "editor.action.triggerParameterHints",
-                        title: '123',
-                        arguments: []
-                    },
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
-                },
-                {
-                    label: "if(){}",
-                    // insertText: "if(${1:Bedingung}){\n\t${0:Anweisungen}\n}",
-                    insertText: "if($1){\n\t$0\n}",
-                    detail: "Bedingung",
-                    filterText: 'if',
-                    command: {
-                        id: "editor.action.triggerParameterHints",
-                        title: '123',
-                        arguments: []
-                    },
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
-                },
-                {
-                    label: "if(){} else {}",
-                    insertText: "if($1){\n\t$2\n}\nelse {\n\t$0\n}",
-                    detail: "Zweiseitige Bedingung",
-                    filterText: 'if',
-                    command: {
-                        id: "editor.action.triggerParameterHints",
-                        title: '123',
-                        arguments: []
-                    },
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    range: undefined
-                }]);
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                range: undefined
+            });
 
-
-
-        return keywordCompletionItems;
+        this.keywordCompletionItems.set("from",
+            {
+                label: "from <Tabellen> where <Bedingung>",
+                detail: "from-Teil der select-Anweisung",
+                filterText: 'from',
+                // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+                insertText: `from $1\nwhere $0\n`,
+                command: {
+                    id: "editor.action.triggerParameterHints",
+                    title: '123',
+                    arguments: []
+                },
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                range: undefined
+            });
 
     }
 

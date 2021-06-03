@@ -1,7 +1,7 @@
 import { timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
@@ -54,6 +54,8 @@ export class Parser {
 
         this.tokenList = m.tokenList;
         this.errorList = [];
+
+        m.completionHints = new Map();
 
         if (this.tokenList.length == 0) {
             this.module.sqlStatements = [];
@@ -275,12 +277,26 @@ export class Parser {
             length: 1
         }
 
+        let afterLastStatement: TextPosition = {
+            column: 0,
+            line: 0,
+            length: 0
+        }
+
         while (!this.isEnd()) {
 
             let oldPos = this.pos;
 
+            this.module.addCompletionHint(afterLastStatement, this.getCurrentPosition(),false, false,["select", "update", "create table", "insert into"]);
+
             let st = this.parseStatement();
 
+            afterLastStatement = {
+                line: this.lastToken.position.line,
+                column: this.lastToken.position.column + this.lastToken.position.length,
+                length: 0
+            }
+            
             while (this.tt == TokenType.semicolon) {
                 this.nextToken();
             }
@@ -297,6 +313,8 @@ export class Parser {
             }
 
         }
+
+        this.module.addCompletionHint(afterLastStatement, {line: mainProgramEnd.line + 10, column: 0, length: 0},false, false,["select", "update", "create table", "insert into"]);
 
         return {
             mainProgramAST: mainProgram,
@@ -332,6 +350,8 @@ export class Parser {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
 
+        let columnListStart = this.getCurrentPosition();
+
         let node: SelectNode = {
             type: TokenType.keywordSelect,
             position: startPosition,
@@ -343,35 +363,61 @@ export class Parser {
             parentStatement: null
         }
 
-        node.columnList = this.parseColumnList([TokenType.keywordFrom]);
+        node.columnList = this.parseColumnList([TokenType.keywordFrom], true);
 
+        let columnListKeywordArray = ["distinct", "as"];
+        this.module.addCompletionHint(columnListStart, this.getCurrentPosition(), true, true, columnListKeywordArray)
+        
         // parse from ...
         if (!this.expect(TokenType.keywordFrom, true)) {
+            columnListKeywordArray.push("from");
             return null;
         }
-
+        
+        node.fromStartPosition = {line: this.lastToken.position.line, column: this.lastToken.position.column + this.lastToken.position.length, length: 0};
         node.fromNode = this.parseTableOrSubQuery();
+
+        let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as"];
+        this.module.addCompletionHint(node.fromStartPosition, this.getCurrentPosition(), false, true, fromListKeywordArray)
+        node.fromEndPosition = this.getCurrentPosition();
 
         // parse where...
 
+        let whereKeywordArray = ["like"];
         if (this.tt == TokenType.keywordWhere) {
             let position = this.getCurrentPosition();
+            let whereStart = this.getCurrentPosition();
             this.nextToken();
             node.whereNode = this.parseTerm();
-            if(node.whereNode != null) node.whereNode.position = position;
+            this.module.addCompletionHint(whereStart, this.getCurrentPosition(), true, true, whereKeywordArray)
+                if (node.whereNode != null) node.whereNode.position = position;
+        } else {
+            fromListKeywordArray.push("where");
         }
 
-        if(this.tt == TokenType.keywordGroup){
+        let groupKeywordArray = [];
+        if (this.tt == TokenType.keywordGroup) {
+            let groupStart = this.getCurrentPosition();
             node.groupByNode = this.parseGroupBy();
+            this.module.addCompletionHint(groupStart, this.getCurrentPosition(), true, true, groupKeywordArray);
+        } else {
+            whereKeywordArray.push("group by");
         }
 
-        if(this.tt == TokenType.keywordOrder){
+        if (this.tt == TokenType.keywordOrder) {
+            let orderStart = this.getCurrentPosition();
             node.orderByNode = this.parseOrderBy();
+            this.module.addCompletionHint(orderStart, this.getCurrentPosition(), true, true, ["asc", "desc"]);
+        } else {
+            whereKeywordArray.push("order by");
+            groupKeywordArray.push("order by");
         }
 
-        if(this.tt == TokenType.keywordLimit){
+        if (this.tt == TokenType.keywordLimit) {
             node.limitNode = this.parseLimit();
-        }
+        } 
+
+        node.endPosition = this.getCurrentPosition();
 
         return node;
     }
@@ -384,7 +430,7 @@ export class Parser {
             position: position,
             numberOfRows: numberOfRows
         }
-        if(this.tt = TokenType.keywordOffset){
+        if (this.tt = TokenType.keywordOffset) {
             this.nextToken();
             ln.offset = this.parseTerm();
         }
@@ -400,8 +446,9 @@ export class Parser {
             columnList: [],
             position: position
         }
-        gbn.columnList = this.parseColumnList([TokenType.keywordHaving, TokenType.keywordSelect, TokenType.keywordOrder, TokenType.keywordLimit, TokenType.rightBracket, TokenType.semicolon]);
-        if(this.tt == TokenType.keywordHaving){
+        let tokenTypesAfterGroupBy = [TokenType.keywordHaving, TokenType.keywordSelect, TokenType.keywordOrder, TokenType.keywordLimit, TokenType.rightBracket, TokenType.semicolon];
+        gbn.columnList = this.parseColumnList(tokenTypesAfterGroupBy, false).map(columnNode => columnNode.term);
+        if (this.tt == TokenType.keywordHaving) {
             this.nextToken();
             gbn.having = this.parseTerm();
         }
@@ -416,7 +463,7 @@ export class Parser {
         let first: boolean = true;
 
         do {
-            if(first){
+            if (first) {
                 first = false;
             } else {
                 this.expect(TokenType.comma, true);
@@ -427,14 +474,14 @@ export class Parser {
                 position: this.getCurrentPosition(),
                 column: column
             }
-            if([TokenType.keywordAscending, TokenType.keywordDescending].indexOf(this.tt) >= 0) this.nextToken();
-            if(this.tt == TokenType.keywordNulls){
+            if ([TokenType.keywordAscending, TokenType.keywordDescending].indexOf(this.tt) >= 0) this.nextToken();
+            if (this.tt == TokenType.keywordNulls) {
                 this.nextToken();
                 this.expect([TokenType.keywordFirst, TokenType.keywordLast], true);
             }
             obnList.push(obn);
         } while (this.tt == TokenType.comma);
-        
+
         return obnList;
     }
 
@@ -455,7 +502,7 @@ export class Parser {
                 position: position,
             }
 
-            if(this.tt = TokenType.keywordOn){
+            if (this.tt == TokenType.keywordOn) {
                 leftSide.on = this.parseTerm();
             }
 
@@ -466,7 +513,10 @@ export class Parser {
     }
 
     parseJoinOperator(): boolean {
-        if (this.tt == TokenType.comma) return true;
+        if (this.tt == TokenType.comma){
+            this.nextToken();
+            return true;
+        } 
         if (this.tt == TokenType.keywordNatural) this.nextToken();
         switch (this.tt) {
             case TokenType.keywordLeft:
@@ -508,12 +558,12 @@ export class Parser {
                 ret = this.parseTableOrSubQuery();
             }
             this.expect(TokenType.rightBracket, true);
-            
-            
+
+
             //@ts-ignore
-            if(this.tt == TokenType.keywordAs && ret.type == TokenType.subquery){
+            if (this.tt == TokenType.keywordAs && ret.type == TokenType.subquery) {
                 this.nextToken();
-                if(this.expect(TokenType.identifier, false)){
+                if (this.expect(TokenType.identifier, false)) {
                     ret.alias = <string>this.cct.value;
                     this.nextToken();
                 }
@@ -532,9 +582,9 @@ export class Parser {
             this.nextToken();
 
             //@ts-ignore
-            if(this.tt == TokenType.keywordAs){
+            if (this.tt == TokenType.keywordAs) {
                 this.nextToken();
-                if(this.expect(TokenType.identifier, false)){
+                if (this.expect(TokenType.identifier, false)) {
                     node.alias = <string>this.cct.value;
                     this.nextToken();
                 }
@@ -546,20 +596,34 @@ export class Parser {
     }
 
 
-    parseColumnList(tokenTypesAfterListEnd: TokenType[]): TermNode[] {
-        let columns: TermNode[] = [];
+    parseColumnList(tokenTypesAfterListEnd: TokenType[], allowAliases: boolean): ColumnNode[] {
+        let columns: ColumnNode[] = [];
 
         while ([TokenType.identifier, TokenType.multiplication, TokenType.leftBracket].indexOf(this.tt) >= 0) {
             if (this.tt == TokenType.multiplication) {
                 columns.push({
-                    type: TokenType.multiplication,
+                    term: null,
+                    alias: null,
                     position: this.getCurrentPosition(),
+                    type: TokenType.allColumns
                 });
                 this.nextToken();
             } else {
-                let column = this.parseTerm();
-                if (column != null) {
+                let columnTerm = this.parseTerm();
+                if (columnTerm != null) {
+                    let column: ColumnNode = {
+                        type: TokenType.column,
+                        term: columnTerm,
+                        position: columnTerm.position
+                    }
                     columns.push(column);
+                    if (this.comesToken(TokenType.keywordAs)) {
+                        this.nextToken();
+                        if (this.expect(TokenType.identifier, false)) {
+                            column.alias = "" + this.cct.value;
+                        }
+                        this.nextToken();
+                    }
                 }
             }
             if (tokenTypesAfterListEnd.indexOf(this.tt) >= 0) {
@@ -636,7 +700,7 @@ export class Parser {
 
         switch (this.tt) {
             case TokenType.leftBracket:
-                return this.bracket();
+                return this.parseBracket();
             case TokenType.minus:
                 // case TokenType.not:
                 position = position;
@@ -716,7 +780,7 @@ export class Parser {
 
                 return term;
             default:
-                this.pushError("Erwartet wird eine Variable, ein Methodenaufruf oder this oder super. Gefunden wurde: " + this.cct.value);
+                this.pushError("Erwartet wird eine Variable, ein Methodenaufruf oder eine Konstante. Gefunden wurde: " + this.cct.value);
                 return null;
         }
 
@@ -731,7 +795,7 @@ export class Parser {
 
         let constantTypes = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
 
-        while(constantTypes.indexOf(this.tt) >= 0){
+        while (constantTypes.indexOf(this.tt) >= 0) {
             node.elements.push({
                 type: TokenType.constantNode,
                 constant: this.cct.value,
@@ -739,7 +803,7 @@ export class Parser {
                 position: this.cct.position
             });
             this.nextToken();
-            if(this.tt != TokenType.comma){
+            if (this.tt != TokenType.comma) {
                 break;
             }
             this.nextToken();
@@ -748,34 +812,33 @@ export class Parser {
         return node;
     }
 
-    bracket(): TermNode {
+    parseBracket(): TermNode {
 
         let position = this.getCurrentPosition();
         let tokenBeforeBracket = this.lastToken;
         this.nextToken(); // consume (
 
-        if(this.tt == TokenType.keywordSelect){
+        if (this.tt == TokenType.keywordSelect) {
             let selectNode = this.parseSelect();
             this.expect(TokenType.rightBracket, true);
             return selectNode;
-        } else if([TokenType.comma, TokenType.rightBracket].indexOf(this.ct[1].tt) >= 0 && 
-        [TokenType.keywordIn, TokenType.keywordNotIn].indexOf(tokenBeforeBracket.tt) >= 0 ){
+        } else if ([TokenType.comma, TokenType.rightBracket].indexOf(this.ct[1].tt) >= 0 &&
+            [TokenType.keywordIn, TokenType.keywordNotIn].indexOf(tokenBeforeBracket.tt) >= 0) {
             let listNode = this.parseList();
             this.expect(TokenType.rightBracket, true);
             return listNode;
-        } else 
-        {
+        } else {
             let term = this.parseTerm();
             let rightBracketPosition = this.getCurrentPosition();
             this.expect(TokenType.rightBracket, true);
-    
+
             let bracketsNode: BracketsNode = {
                 position: rightBracketPosition,
                 type: TokenType.rightBracket,
                 termInsideBrackets: term
             }
-    
-    
+
+
             return bracketsNode;
         }
 
@@ -799,10 +862,10 @@ export class Parser {
         while (true) {
             let pos = this.pos;
 
-            if(this.tt == TokenType.multiplication){
+            if (this.tt == TokenType.multiplication) {
                 this.nextToken();
                 parameters.push({
-                    type: TokenType.multiplication,
+                    type: TokenType.allColumns,
                     position: this.getCurrentPosition(),
                 });
             } else {

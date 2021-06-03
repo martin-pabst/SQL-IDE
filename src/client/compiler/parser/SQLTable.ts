@@ -41,7 +41,7 @@ export class Column {
 
 export class Table {
     
-    public columns: Column[];
+    public columns: Column[] = [];
 
     public size: number;
 

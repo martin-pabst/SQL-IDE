@@ -1,15 +1,387 @@
+import { DatabaseTool } from "../../tools/DatabaseTools.js";
+import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { Module } from "./Module.js";
+import { Symbol, SymbolTable } from "./SymbolTable.js";
+import { BinaryOpNode, DotNode, IdentifierNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
+import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
+import { Column, Table } from "./SQLTable.js";
+import { SQLBaseType, SQLType } from "./SQLTypes.js";
+import { SQLMethodStore } from "./SQLMethods.js";
 
 
 export class SymbolResolver {
 
-    constructor(public module: Module){
+    symbolTableStack: SymbolTable[] = [];
+    errorList: Error[];
+    module: Module;
+    databaseTool: DatabaseTool;
+    tables: Table[];
+
+    constructor(databaseTool: DatabaseTool) {
+        this.databaseTool = databaseTool;
+        this.tables = Table.fromTableStructureList(databaseTool.databaseStructure.tables);
+    }
+
+    start(module: Module) {
+        this.module = module;
+        this.symbolTableStack = [];
+        this.errorList = [];
+
+        module.mainSymbolTable = new SymbolTable(null, { column: 0, line: 0, length: 0 }, { column: 0, line: 100000, length: 0 })
+
+        this.symbolTableStack.push(module.mainSymbolTable);
+
+        for (let astNode of this.module.sqlStatements) {
+
+            switch (astNode.type) {
+                case TokenType.keywordSelect:
+                    this.resolveSelect(astNode);
+                    break;
+
+                default:
+                    break;
+            }
+
+
+        }
+
+        module.errors[2] = this.errorList;
 
     }
 
-    start(){
+    pushError(text: string, errorLevel: ErrorLevel = "error", position: TextPosition, quickFix?: QuickFix) {
+        // if (position == null) position = Object.assign({}, this.position);
+        this.errorList.push({
+            text: text,
+            position: position,
+            quickFix: quickFix,
+            level: errorLevel
+        });
+    }
+
+
+    getCurrentSymbolTable(): SymbolTable {
+        return this.symbolTableStack[this.symbolTableStack.length - 1];
+    }
+
+    pushNewSymbolTable(positionFrom: TextPosition, positionTo: TextPosition): SymbolTable {
+        let st: SymbolTable = new SymbolTable(this.getCurrentSymbolTable(), positionFrom, positionTo);
+        this.symbolTableStack.push(st);
+        return st;
+    }
+
+    resolveSelect(selectNode: SelectNode): Table {
+        let resultTable: Table = new Table(null);
+
+        selectNode.symbolTable = this.pushNewSymbolTable(selectNode.position, selectNode.endPosition);
+
+        // From
+        let joinedTables: Table[] = [];
+        this.resolveTableOrSubQuery(selectNode.fromNode, joinedTables);
+        if(selectNode.fromStartPosition != null){
+            let fromSymbolTable = new SymbolTable(this.getCurrentSymbolTable(), selectNode.fromStartPosition, selectNode.fromEndPosition);
+            fromSymbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+        }
+
+        // Column list
+        for (let columnNode of selectNode.columnList) {
+            if (columnNode.type == TokenType.allColumns) {
+                for (let table of joinedTables) {
+                    for (let column of table.columns) {
+                        let c: Column = new Column(column.identifier, column.type, resultTable, false, true);
+                        resultTable.columns.push(c);
+                    }
+                }
+            } else {
+                this.resolveTerm(columnNode.term);
+                let c1: Column = new Column(columnNode.alias, columnNode.term.sqlType, resultTable, false, true);
+                resultTable.columns.push(c1);
+                if(c1.identifier != null){
+                    selectNode.symbolTable.storeSymbol({
+                        identifier: c1.identifier,
+                        posOfDefinition: columnNode.term.position,
+                        referencedOnPositions: [],
+                        column: c1
+                    })
+                }
+            }
+        }
+
+        // where...
+        if(selectNode.whereNode != null){
+            let whereType = this.resolveTerm(selectNode.whereNode);
+            if(whereType != null && whereType.getBaseTypeName() != "boolean"){
+                this.pushError("Das Ergebnis des where-Teils einer select-Anweisung muss vom Typ boolean sein.", "error", selectNode.whereNode.position);
+            }
+        }
+
+
+        // TODO: group by, order by
+
+        this.symbolTableStack.pop();
+
+        return resultTable;
+    }
+
+    resolveTableOrSubQuery(tosNode: TableOrSubqueryNode, joinedTables: Table[]) {
+        if(tosNode == null) return;
+
+        switch (tosNode.type) {
+            case TokenType.table:
+                let tableList = this.tables.filter(t => t.identifier.toLowerCase() == tosNode.identifier.toLowerCase());
+                if (tableList.length == 0) {
+                    this.pushError(tosNode.identifier + " ist nicht der Name einer Tabelle.", "error", tosNode.position);
+                } else if (tableList.length > 1) {
+                    this.pushError("Der Bezeichner " + tosNode.identifier + " ist hier nicht eindeutig.", "error", tosNode.position);
+                }
+
+                let table: Table = tableList[0];
+                joinedTables.push(table);
+                this.storeTableIntoSymbolTable(table, tosNode.position, tosNode.alias);                
+                break;
+
+            case TokenType.keywordJoin:
+                this.resolveTableOrSubQuery(tosNode.firstOperand, joinedTables);
+                this.resolveTableOrSubQuery(tosNode.secondOperand, joinedTables);
+                break;
+
+            case TokenType.subquery:
+                tosNode.table = this.resolveSelect(tosNode.query);
+                joinedTables.push(tosNode.table);
+                if (tosNode.alias != null) {
+                    tosNode.table.identifier = tosNode.alias;
+                    this.storeTableIntoSymbolTable(tosNode.table, tosNode.position);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    storeTableIntoSymbolTable(table: Table, position: TextPosition, alias?: string) {
+        let symbolTable = this.getCurrentSymbolTable();
+        symbolTable.storeSymbol({
+            identifier: alias == null ? table.identifier.toLowerCase(): alias.toLowerCase(),
+            posOfDefinition: position,
+            table: table,
+            referencedOnPositions: []
+        });
+        for(let column of table.columns){
+            symbolTable.storeSymbol({
+                identifier: column.identifier.toLowerCase(),
+                posOfDefinition: null,
+                column: column,
+                tableAlias: alias,
+                referencedOnPositions: []
+            });
+        }
+    }
+
+    resolveTerm(node: TermNode): SQLType {
+        if(node == null) return null;
+
+        switch (node.type) {
+            case TokenType.binaryOp:
+                if([TokenType.keywordIn, TokenType.keywordNotIn].indexOf(node.operator) >= 0){
+                    return this.resolveNotIn(node);
+                }
+
+                let typeLeft = this.resolveTerm(node.firstOperand);
+                let typeRight = this.resolveTerm(node.secondOperand);
+                if(typeLeft != null && typeRight != null){
+                    let resultType = typeLeft.getBinaryResultType(node.operator, typeRight);
+                    if(resultType == null){
+                        this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für die Datentypen " + typeLeft.toString() + " und " + typeRight.toString() + " nicht definiert.", "error", node.position);
+                    }
+                    return resultType;
+                } else {
+                    return null;
+                }   
+                break;
+            case TokenType.unaryOp:
+                let operandType = this.resolveTerm(node.operand);
+                if(operandType != null){
+                    let resultType1 = operandType.getUnaryResultType(node.operator);
+                    if(resultType1 == null){
+                        this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für einen Operanden des Datentyps " + operandType.toString() + " nicht definiert.", "error", node.position);
+                    }
+                    return resultType1;
+                } else {
+                    return null;
+                }
+                break;
+            case TokenType.callMethod:
+                return this.resolveMethodCall(node);
+                break;
+                //    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
+
+            case TokenType.constantNode:
+                node.sqlType = SQLBaseType.fromConstantType(node.constantType);
+                return node.sqlType;
+                break;
+            case TokenType.identifier:
+                return this.resolveIdentifier(node);
+                break;
+            case TokenType.dot:
+                return this.resolveDot(node);
+                break;
+            case TokenType.keywordSelect:
+                let selectTable = this.resolveSelect(node);
+                if(selectTable.columns.length != 1){
+                    this.pushError("Die Ergebnistabelle einer Unterabfrage an dieser Stelle muss genau eine Spalte besitzen.", "error", node.position);
+                    return null;
+                }
+                return selectTable.columns[0].type;
+                break;
+            case TokenType.rightBracket:   // BracketsNode
+                node.sqlType = this.resolveTerm(node.termInsideBrackets);
+                return node.sqlType;
+            break;
+            case TokenType.allColumns:
+                this.pushError("Das Zeichen * kann hier nicht verwendet werden.", "error", node.position);
+                break;
+                case TokenType.list:
+                this.pushError("Eine Liste wird hier nicht erwartet.", "error", node.position);
+                break;
+            default:
+                break;
+        }
+
+
+
+
+    }
+
+    resolveDot(node: DotNode): SQLType {
+        let tableSymbols = this.getCurrentSymbolTable().findTable(node.identifierLeft.identifier);
+        if(tableSymbols.length == 0){
+            this.pushError("Die Tabelle " + node.identifierLeft.identifier + " kann nicht gefunden werden.", "error", node.identifierLeft.position);
+            return null;
+        }
+        if(tableSymbols.length > 1){
+            this.pushError("Der Tabellenbezeichner " + node.identifierLeft.identifier + " ist nicht eindeutig.", "error", node.identifierLeft.position);
+            return null;
+        }
+        let table = tableSymbols[0].table;
         
+        let columns = table.columns.filter(c => c.identifier.toLowerCase() == node.identifierRight.identifier.toLowerCase());
+
+        if(columns.length == 0){
+            this.pushError("Die Tabelle " + node.identifierLeft.identifier + " hat keine Spalte mit dem Bezeichner " + node.identifierRight.identifier + ".", "error", node.identifierRight.position);
+            return;
+        }
+
+        if(columns.length > 1){
+            this.pushError("Die Tabelle " + node.identifierLeft.identifier + " hat mehrere Spalten mit dem Bezeichner " + node.identifierRight.identifier + ".", "error", node.identifierRight.position);
+            return;
+        }
+
+        let column = columns[0];
+        node.sqlType = column.type;
+        return column.type;
+
     }
+
+    resolveIdentifier(node: IdentifierNode): SQLType {
+        let symbols = this.getCurrentSymbolTable().findColumn(node.identifier);
+        if(symbols.length == 0){
+            this.pushError("Der Bezeichner " + node.identifier + " ist an dieser Stelle nicht bekannt.", "error", node.position);
+            return null;
+        }
+        if(symbols.length > 1){
+            this.pushError("Der Bezeichner " + node.identifier + " ist nicht eindeutig.", "error", node.position);
+            return null;
+        }
+
+        let symbol = symbols[0];
+        node.sqlType = symbol.column.type;
+        return symbol.column.type;
+}
+    
+    resolveMethodCall(node: MethodcallNode): SQLType {
+
+        let methodStore = SQLMethodStore.getInstance();
+        let methods = methodStore.getMethods(node.identifier);
+
+        methods = methods.filter(m => m.parameters.length == node.operands.length);
+        if(node.operands.length == 1 && node.operands[0].type == TokenType.allColumns){
+            methods = methods.filter( m => m.acceptsStarParameter);
+            node.sqlType = methods[0].returnType;
+            return node.sqlType;
+        }
+
+        if(methods.length == 0){
+            this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
+            return null;
+        }
+
+        for(let operand of node.operands){
+            if(this.resolveTerm(operand) == null){
+                node.sqlType = methods[0].returnType;
+                return node.sqlType;
+            }
+        }
+
+        for(let method of methods){
+            let found = true;
+            for(let i = 0; i < method.parameters.length; i++){
+                let methodParameter = method.parameters[i];
+                let operand = node.operands[i];
+                if(!operand.sqlType.canCastTo(methodParameter.type)){
+                    found = false;
+                    break;
+                }
+            }
+            if(found){
+                node.sqlType = method.returnType;
+                return node.sqlType;
+            }
+        }
+
+        this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
+        return null;
+
+    }
+
+    resolveNotIn(node: BinaryOpNode): SQLType {
+
+        if(node.firstOperand == null || node.secondOperand == null) return null;
+
+        let operatorString = TokenTypeReadable[node.operator];
+
+        this.resolveTerm(node.firstOperand);
+        let leftType = node.firstOperand.sqlType;
+        if(leftType != null){
+            if(node.secondOperand.type == TokenType.keywordSelect){
+                let selectNode = node.secondOperand;
+                if(selectNode.columnList.length != 1){
+                    this.pushError("Wenn rechts vom Operator '" + operatorString + "' eine Unterabfrage steht, muss die Ergebnistabelle dieser Unterabfrage genau eine Spalte haben.", "error", selectNode.position);
+                }
+                this.resolveSelect(selectNode);
+                let pType = selectNode.columnList[0].term.sqlType;
+                if(!pType.canCastTo(leftType)){
+                    this.pushError("Der Datentyp der Ergebnisspalte der Unterabfrage ist " + pType.toString() + ". Dieser kann nicht in den Datentyp " + leftType.toString() + " umgewandelt werden.", "error", selectNode.position);
+                }
+            } else if(node.secondOperand.type == TokenType.list){
+                let listNode = node.secondOperand;
+                for(let element of listNode.elements){
+                    let elementType = SQLBaseType.fromConstantType(element.constantType);
+                    element.sqlType = elementType;
+                    if(!elementType.canCastTo(leftType)){
+                        this.pushError("Der Datentyp des Listenelements " + element.constant + " ist " + elementType.toString() + ". Er kann nicht in den Datentype " + leftType.toString() + " des Operanden auf der linken Seite des Operators '" + operatorString + "' umgewandelt werden.", "error", element.position);
+                    }
+                }
+            } else {
+                this.pushError("Der rechte Operand der Operatoren 'in' und 'not in' muss eine Unterabfrage oder eine Liste sein.", "error", node.secondOperand.position);
+            }
+            
+        }
+        
+        return SQLBaseType.getBaseType("boolean");
+    }
+
 
 
 }
+

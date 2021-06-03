@@ -3,6 +3,7 @@ import { File, Module, ModuleStore } from "./parser/Module.js";
 import { Parser } from "./parser/Parser.js";
 import { Main } from "../main/Main.js";
 import { MainBase } from "../main/MainBase.js";
+import { SymbolResolver } from "./parser/SymbolResolver.js";
 
 export enum CompilerStatus {
     compiling, error, compiledButNothingToRun, readyToRun
@@ -49,6 +50,14 @@ export class Compiler {
             parser.parse(m);
         }
         
+        // 3rd pass: check symbols and types
+        let databaseTool = this.main.getDatabaseTool();
+        let symbolResolver: SymbolResolver = new SymbolResolver(databaseTool);
+
+        for(let m of moduleStore.getModules(false)){
+            symbolResolver.start(m);
+        }
+
         let dt = performance.now() - t0;
         dt = Math.round(dt * 100) / 100;
 

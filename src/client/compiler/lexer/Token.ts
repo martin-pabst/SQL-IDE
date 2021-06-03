@@ -10,6 +10,7 @@ export enum TokenType {
     false,
     // keywords
     keywordSelect,
+    keywordUpdate,
     keywordFrom,
     keywordWhere,
     keywordGroup,
@@ -101,7 +102,9 @@ export enum TokenType {
     binaryOp,
     table,
     subquery,
-    list
+    list,
+    column,
+    allColumns, // *
 
 }
 
@@ -117,6 +120,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.false]: "false",
     // keywords
     [TokenType.keywordSelect]: "select",
+    [TokenType.keywordUpdate]: "update",
     [TokenType.keywordFrom]: "from",
     [TokenType.keywordWhere]: "where",
     [TokenType.keywordGroup]: "group",
@@ -242,6 +246,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
 
 export var keywordList: {[keyword: string]:TokenType} = {
     "select": TokenType.keywordSelect,
+    "update": TokenType.keywordUpdate,
     "from": TokenType.keywordFrom,
     "where": TokenType.keywordWhere,
     "true": TokenType.true,

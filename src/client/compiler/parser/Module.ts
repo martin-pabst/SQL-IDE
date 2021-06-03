@@ -8,6 +8,17 @@ import { Main } from "../../main/Main.js";
 import { ASTNode } from "./AST.js";
 import { MainBase } from "../../main/MainBase.js";
 
+
+export type CompletionHint = {
+    fromLine: number,
+    fromColumn: number,
+    toLine: number, 
+    toColumn: number,
+    hintColumns: boolean,
+    hintTables: boolean,
+    hintKeywords: string[]
+}
+
 export type File = {
     name: string,
     id?: number,
@@ -58,11 +69,14 @@ export class Module {
     sqlStatements: ASTNode[];
     mainSymbolTable: SymbolTable;
 
+
     identifierPositions: { [line: number]: IdentifierPosition[] } = {};
     methodCallPositions: { [line: number]: MethodCallPosition[] } = {};
 
     static uriMap: { [name: string]: number } = {};
     bracketError: string;
+
+    completionHints: Map<number, CompletionHint[]> = new Map(); // Map from line numbers to hints
 
     constructor(file: File, public main: MainBase) {
         if (file == null || this.main == null) return; // used by AdhocCompiler and ApiDoc
@@ -117,6 +131,61 @@ export class Module {
 
     }
 
+    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean, hintTables: boolean, hintKeywords: string[]){
+        let ch: CompletionHint = {
+            fromColumn: fromPosition.column,
+            fromLine: fromPosition.line,
+            toColumn: toPosition.column,
+            toLine: toPosition.line,
+            hintColumns: hintColumns, 
+            hintTables: hintTables,
+            hintKeywords: hintKeywords
+        }
+
+        for(let i = ch.fromLine; i <= ch.toLine; i++){
+            let chList = this.completionHints.get(i);
+            if(chList == null){
+                chList = [];
+                this.completionHints.set(i, chList);
+            }
+            chList.push(ch);
+        }
+    }
+
+    getCompletionHint(line: number, column: number){
+        let chList = this.completionHints.get(line);
+        
+        if(chList == null || chList.length == 0){
+            return null;
+        }
+
+        let pos = line * 1000 + column;
+        chList = chList.filter(ch => pos >= ch.fromLine * 1000 + ch.fromColumn && pos <= ch.toLine * 1000 + ch.toColumn);
+        if(chList.length == 0){
+            return;
+        }
+
+        // take CompletionHint with smallest range:
+        let bestCh: CompletionHint = chList[0];
+        for(let i = 1; i < chList.length; i++){
+            let ch = chList[i];
+            if(ch.fromLine < bestCh.fromLine || ch.toLine > bestCh.toLine){
+                break;
+            }
+
+            if(ch.fromLine == bestCh.fromLine && ch.fromColumn < bestCh.fromColumn){
+                break;
+            }
+
+            if(ch.toLine == bestCh.toLine && ch.toColumn > bestCh.toColumn){
+                break;
+            }
+
+            bestCh = ch;
+        }
+
+        return bestCh;
+    }
 
 
     static restoreFromData(f: FileData, main: MainBase): Module {
