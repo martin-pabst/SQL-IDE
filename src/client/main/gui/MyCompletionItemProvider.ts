@@ -33,7 +33,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         let module: Module =
             this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
 
-        if (module == null) {
+        if (module == null || module.mainSymbolTable == null) {
             return null;
         }
 
@@ -71,6 +71,24 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             this.addIdentifierCompletionItems(completionHint, symbolTable, completionItems);
         } else {
             this.addDotCompletionItems(position, dotMatch, identifierAndBracketAfterCursor, symbolTable, completionItems);
+        }
+
+        let word = model.getWordUntilPosition(position);
+        let replaceWordRange = {startColumn: word.startColumn, startLineNumber: position.lineNumber, endColumn: word.endColumn, endLineNumber: position.lineNumber};
+        let insertAfterCursorRange = {startColumn: position.column, startLineNumber: position.lineNumber, endColumn: position.column, endLineNumber: position.lineNumber}
+
+        for(let item of completionItems){
+            if(item.range == null){
+                if(item.insertText.startsWith(",")){
+                    item.range = insertAfterCursorRange;
+                } else {
+                    item.range = replaceWordRange;
+                }
+            }
+        }
+
+        if(completionHint.dontHint != null){
+            completionItems = completionItems.filter(item => completionHint.dontHint.indexOf(item.insertText) < 0);
         }
 
         return Promise.resolve({
@@ -118,6 +136,8 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             return;
         }
 
+        let tableIdentifiers: {[identifier: string]: boolean} = {};
+
         let st: SymbolTable = symbolTable;
         let columns: { [identifier: string]: Symbol[] } = {};
         let columnIdentifiers: string[] = [];
@@ -133,15 +153,18 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                         columns[columnIdentifier].push(symbol);
                     }
                 } else if (symbol.table != null && completionHint.hintTables) {
-                    completionItems.push({
-                        label: symbol.identifier,
-                        detail: "Tabelle " + symbol.table.identifier,
-                        filterText: symbol.identifier,
-                        insertText: symbol.identifier,
-                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                        kind: monaco.languages.CompletionItemKind.Class,
-                        range: undefined
-                    })
+                    if(!tableIdentifiers[symbol.identifier]){
+                        completionItems.push({
+                            label: symbol.identifier,
+                            detail: "Tabelle " + symbol.table.identifier,
+                            filterText: symbol.identifier,
+                            insertText: symbol.identifier,
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                            kind: monaco.languages.CompletionItemKind.Class,
+                            range: undefined
+                        });
+                        tableIdentifiers[symbol.identifier] = true;
+                    }
                 }
             }
             st = st.parent;

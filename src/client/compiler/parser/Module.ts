@@ -16,7 +16,8 @@ export type CompletionHint = {
     toColumn: number,
     hintColumns: boolean,
     hintTables: boolean,
-    hintKeywords: string[]
+    hintKeywords: string[],
+    dontHint?: string[]
 }
 
 export type File = {
@@ -131,7 +132,7 @@ export class Module {
 
     }
 
-    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean, hintTables: boolean, hintKeywords: string[]){
+    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean, hintTables: boolean, hintKeywords: string[], dontHint?: string[]){
         let ch: CompletionHint = {
             fromColumn: fromPosition.column,
             fromLine: fromPosition.line,
@@ -139,7 +140,8 @@ export class Module {
             toLine: toPosition.line,
             hintColumns: hintColumns, 
             hintTables: hintTables,
-            hintKeywords: hintKeywords
+            hintKeywords: hintKeywords,
+            dontHint: dontHint
         }
 
         for(let i = ch.fromLine; i <= ch.toLine; i++){

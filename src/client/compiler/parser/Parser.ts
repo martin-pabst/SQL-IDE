@@ -60,6 +60,7 @@ export class Parser {
         if (this.tokenList.length == 0) {
             this.module.sqlStatements = [];
             this.module.errors[1] = this.errorList;
+            this.module.addCompletionHint({line: 0, column: 0, length: 0}, {line: 20, column: 100, length: 0}, false, false, ["select", "insert into", "update", "create table", "drop table"]);
             return;
         }
 
@@ -258,6 +259,12 @@ export class Parser {
         return Object.assign({}, this.position);
     }
 
+    getCurrentPositionPlus(deltaColumns: number): TextPosition {
+        let pos = this.getCurrentPosition();
+        pos.column += deltaColumns;
+        return pos;
+    }
+
     getEndOfCurrentToken(): TextPosition {
 
         let position = this.getCurrentPosition();
@@ -383,24 +390,27 @@ export class Parser {
         if(this.tt == TokenType.leftBracket){
 
             this.nextToken();
+            let first: boolean = true;
             //@ts-ignore
-            while(this.tt == TokenType.identifier){
+            while(first || this.tt == TokenType.comma){
 
-                node.columnList.push({
-                    type: TokenType.identifier,
-                    identifier: this.cct.value + "",
-                    position: this.getCurrentPosition()
-                })
-
-                this.nextToken();
-                if(!this.expect([TokenType.comma, TokenType.rightBracket], false)){
-                    break;
+                if(!first){
+                    this.nextToken(); // consume comma
                 }
-            
+                first = false;
+
                 //@ts-ignore
-                if(this.tt == TokenType.comma){
-                    this.nextToken();
+                if(this.tt == TokenType.identifier){
+                    node.columnList.push({
+                        type: TokenType.identifier,
+                        identifier: this.cct.value + "",
+                        position: this.getCurrentPosition()
+                    })
+    
+                } else {
+                    this.pushError("Erwartet wird der Bezeichner einer Spalte. Gefunden wurde: " + this.cct.value, "error");
                 }
+                this.nextToken();
             }
 
             this.expect(TokenType.rightBracket, true);
@@ -417,16 +427,28 @@ export class Parser {
     }
 
     parseValueLists(values: ConstantNode[][]){
-        let insideListTokens = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant, TokenType.comma];
+        let insideListTokens = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
 
-        while(this.tt == TokenType.leftBracket){
+        let outerFirst: boolean = true;
+
+        while(outerFirst || this.tt == TokenType.comma){
+            if(!outerFirst){
+                this.nextToken(); // consume comma
+            }
+            outerFirst = false;
             let leftBracketPosition = this.getCurrentPosition();
-            this.nextToken();
+            this.expect(TokenType.leftBracket, true);
             let line: ConstantNode[] = [];
-            while(insideListTokens.indexOf(this.tt) >= 0){
+            let first: boolean = true;
+            //@ts-ignore
+            while(first || this.tt == TokenType.comma){
+                if(!first){
+                    this.nextToken(); // consume comma
+                }
+                first = false;
                 //@ts-ignore
-                if(this.tt == TokenType.comma){
-                    this.pushError("Hier sollte kein Komma stehen", "error");
+                if(insideListTokens.indexOf(this.tt) < 0){
+                    this.pushError("Erwartet wird eine Konstante oder null. Gefunden wurde: " + this.cct.value, "error");
                     this.nextToken();
                 } else {
                     line.push({
@@ -435,22 +457,15 @@ export class Parser {
                         constant: this.cct.value,
                         type: TokenType.constantNode
                     });
-                    this.expect(TokenType.comma, true);
+                    this.nextToken();
                 }
             }
             this.expect(TokenType.rightBracket, true);
             if(line.length == 0){
                 this.pushError("Eine Zeile kann nur dann in die Tabelle eingefügt werden, wenn sie mindestens einen Spaltenwert besitzt.", "error", leftBracketPosition);
+            } else {
+                values.push(line);
             }
-            if(this.tt == TokenType.leftBracket){
-                this.pushError("Es fehlt das Komma vor dieser öffnenden Klammer.");
-                continue;
-            }
-            if(this.tt != TokenType.comma){
-                break;
-            }
-            this.nextToken(); // consume comma
-            values.push(line);
         }
 
     }
@@ -474,8 +489,8 @@ export class Parser {
 
         node.columnList = this.parseColumnList([TokenType.keywordFrom], true);
 
-        let columnListKeywordArray = ["distinct", "as"];
-        this.module.addCompletionHint(columnListStart, this.getCurrentPosition(), true, true, columnListKeywordArray)
+        let columnListKeywordArray = ["distinct", "as", "*"];
+        this.module.addCompletionHint(columnListStart, this.getCurrentPositionPlus(1), true, true, columnListKeywordArray)
         
         // parse from ...
         if (!this.expect(TokenType.keywordFrom, true)) {
@@ -484,10 +499,13 @@ export class Parser {
         }
         
         node.fromStartPosition = {line: this.lastToken.position.line, column: this.lastToken.position.column + this.lastToken.position.length, length: 0};
-        node.fromNode = this.parseTableOrSubQuery();
+        
+        let dontHint: string[] = [];
+        node.fromNode = this.parseTableOrSubQuery(dontHint);
 
-        let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as"];
-        this.module.addCompletionHint(node.fromStartPosition, this.getCurrentPosition(), false, true, fromListKeywordArray)
+        let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
+        fromListKeywordArray.splice(fromListKeywordArray.indexOf(this.lastToken.value + ""), 1);
+        this.module.addCompletionHint(node.fromStartPosition, this.getCurrentPositionPlus(2), false, true, fromListKeywordArray, dontHint)
         node.fromEndPosition = this.getCurrentPosition();
 
         // parse where...
@@ -498,7 +516,7 @@ export class Parser {
             let whereStart = this.getCurrentPosition();
             this.nextToken();
             node.whereNode = this.parseTerm();
-            this.module.addCompletionHint(whereStart, this.getCurrentPosition(), true, true, whereKeywordArray)
+            this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(2), true, true, whereKeywordArray)
                 if (node.whereNode != null) node.whereNode.position = position;
         } else {
             fromListKeywordArray.push("where");
@@ -527,6 +545,7 @@ export class Parser {
         } 
 
         node.endPosition = this.getCurrentPosition();
+        node.endPosition.column += 3;
 
         return node;
     }
@@ -594,15 +613,15 @@ export class Parser {
         return obnList;
     }
 
-    parseTableOrSubQuery(): TableOrSubqueryNode {
+    parseTableOrSubQuery(dontHint: string[]): TableOrSubqueryNode {
 
-        let leftSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery();
+        let leftSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery(dontHint);
 
         let position = this.getCurrentPosition();
 
         while (this.parseJoinOperator()) {
 
-            let rightSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery();
+            let rightSide: TableOrSubqueryNode = this.parseAtomicTableOrSubQuery(dontHint);
 
             leftSide = {
                 type: TokenType.keywordJoin,
@@ -644,7 +663,7 @@ export class Parser {
         }
     }
 
-    parseAtomicTableOrSubQuery(): TableOrSubqueryNode {
+    parseAtomicTableOrSubQuery(dontHint: string[]): TableOrSubqueryNode {
 
         if (!this.expect([TokenType.identifier, TokenType.leftBracket], false)) {
             return null;
@@ -664,7 +683,7 @@ export class Parser {
                     query: selectStatement
                 }
             } else {
-                ret = this.parseTableOrSubQuery();
+                ret = this.parseTableOrSubQuery(dontHint);
             }
             this.expect(TokenType.rightBracket, true);
 
@@ -675,6 +694,7 @@ export class Parser {
                 if (this.expect(TokenType.identifier, false)) {
                     ret.alias = <string>this.cct.value;
                     this.nextToken();
+                    dontHint.push(ret.alias);
                 }
             }
 
@@ -688,6 +708,7 @@ export class Parser {
                 alias: null,
                 position: this.getCurrentPosition()
             }
+            dontHint.push(node.identifier);
             this.nextToken();
 
             //@ts-ignore
@@ -696,7 +717,9 @@ export class Parser {
                 if (this.expect(TokenType.identifier, false)) {
                     node.alias = <string>this.cct.value;
                     this.nextToken();
+                    dontHint.push(node.alias);
                 }
+
             }
 
             return node;

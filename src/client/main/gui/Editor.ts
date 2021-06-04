@@ -40,6 +40,7 @@ export class Editor {
                 { token: 'identifier', foreground: 'c2cccc' },
                 { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
                 { token: 'keyword', foreground: '68bed4', fontStyle: 'bold' },
+                { token: 'delimiter', foreground: 'e8eb38' }
                 // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },
             ],
             colors: {

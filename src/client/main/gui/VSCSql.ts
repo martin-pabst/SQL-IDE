@@ -112,7 +112,8 @@ export function defineVscSQL() {
                 [/[()]/, '@brackets'],
                 [/[a-z_$äöü][\w$äöüßÄÖÜ]*(?=\()/, {
                     cases: {
-                        '@builtinFunctions': 'functions'
+                        '@builtinFunctions': 'functions',
+                        '@default': 'identifier'
                     }
                 }],
                 [/[\w@#$]+/, {

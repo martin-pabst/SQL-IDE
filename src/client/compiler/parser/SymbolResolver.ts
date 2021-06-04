@@ -135,11 +135,12 @@ export class SymbolResolver {
                     this.pushError(tosNode.identifier + " ist nicht der Name einer Tabelle.", "error", tosNode.position);
                 } else if (tableList.length > 1) {
                     this.pushError("Der Bezeichner " + tosNode.identifier + " ist hier nicht eindeutig.", "error", tosNode.position);
+                } else {
+                    let table: Table = tableList[0];
+                    joinedTables.push(table);
+                    this.storeTableIntoSymbolTable(table, tosNode.position, tosNode.alias);                
                 }
 
-                let table: Table = tableList[0];
-                joinedTables.push(table);
-                this.storeTableIntoSymbolTable(table, tosNode.position, tosNode.alias);                
                 break;
 
             case TokenType.keywordJoin:

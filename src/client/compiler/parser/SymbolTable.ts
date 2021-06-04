@@ -109,8 +109,8 @@ export class SymbolTable {
             return false;
         }
 
-        if (line == this.positionFrom.line) return column >= this.positionFrom.column;
-        if (line == this.positionTo.line) return column <= this.positionTo.column;
+        if (line == this.positionFrom.line && column < this.positionFrom.column) return false;
+        if (line == this.positionTo.line && column > this.positionTo.column) return false;
 
         return true;
 

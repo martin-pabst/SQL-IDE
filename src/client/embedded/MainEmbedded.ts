@@ -568,7 +568,7 @@ export class MainEmbedded implements MainBase {
         if (this.currentWorkspace == null) return;
 
         if (this.currentWorkspace.moduleStore.isDirty() &&
-            this.compiler.compilerStatus != CompilerStatus.compiling) {
+            this.compiler.compilerStatus != CompilerStatus.compiling && this.getDatabaseTool().databaseStructure != null) {
             try {
 
                 this.compiler.compile(this.currentWorkspace.moduleStore);
