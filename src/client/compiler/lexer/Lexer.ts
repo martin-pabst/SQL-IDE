@@ -44,6 +44,13 @@ export class Lexer {
     bracketError: string;
     correspondingBracket: { [key: number]: TokenType } = {};
 
+    tokenTypesToMerge: {first: TokenType, second: TokenType, merged: TokenType}[] = [
+        {first: TokenType.keywordNotIn, second: TokenType.keywordIn, merged: TokenType.keywordNotIn},
+        {first: TokenType.keywordIs, second: TokenType.keywordNot, merged: TokenType.isNot},
+        {first: TokenType.isNot, second: TokenType.keywordNull, merged: TokenType.isNotNull},
+        {first: TokenType.keywordIs, second: TokenType.keywordNull, merged: TokenType.isNull},
+    ]
+
     constructor() {
         this.correspondingBracket[TokenType.leftBracket] = TokenType.rightBracket;
         this.correspondingBracket[TokenType.leftCurlyBracket] = TokenType.rightCurlyBracket;
@@ -256,14 +263,16 @@ export class Lexer {
             }
         }
 
-        if(tt == TokenType.keywordIn && this.nonSpaceLastTokenType == TokenType.keywordNot){
-            let newLength = column - this.nonSpaceLastToken.position.column + length;
-            this.nonSpaceLastToken.tt = TokenType.keywordNotIn;
-            this.nonSpaceLastToken.position = {column: this.nonSpaceLastToken.position.column, line: line, length: newLength};
-            this.nonSpaceLastToken.value = this.nonSpaceLastToken.value + " " + text;
-
-            this.nonSpaceLastTokenType = TokenType.keywordNotIn
-            return;
+        for(let tripel of this.tokenTypesToMerge){
+            if(tt == tripel.second && this.nonSpaceLastTokenType == tripel.first){
+                let newLength = column - this.nonSpaceLastToken.position.column + length;
+                this.nonSpaceLastToken.tt = tripel.merged;
+                this.nonSpaceLastToken.position = {column: this.nonSpaceLastToken.position.column, line: line, length: newLength};
+                this.nonSpaceLastToken.value = this.nonSpaceLastToken.value + " " + text;
+    
+                this.nonSpaceLastTokenType = tripel.merged;
+                return;
+            }
         }
 
         if (!(this.spaceTokens.indexOf(tt) >= 0)) {

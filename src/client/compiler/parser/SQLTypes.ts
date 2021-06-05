@@ -112,6 +112,7 @@ export class SQLBaseType extends SQLType {
     }
 
     getUnaryResultType(operator: TokenType): SQLType {
+        if([TokenType.isNull, TokenType.isNotNull].indexOf(operator) >= 0) return booleanType;
         if(this.unaryOperators.indexOf(operator)>= 0) return this;
     }
 
@@ -267,6 +268,9 @@ var booleanType = new SQLBaseType("boolean", [], (ci, pv) => `check(${ci} == 0 o
 
 let numericTypes = [decimalType, numericType, doubleType, realType, floatType, intType, integerType, tinyIntType, smallIntType, mediumIntType, bigIntType];
 
+let baseTypes = [varcharType, textType, tinyTextType, mediumTextType, longTextType,
+    dateType, dateTimeType, timestampType, booleanType].concat(numericTypes);
+
 SQLBaseType.addBaseTypes([varcharType, textType, tinyTextType, mediumTextType, longTextType,
     dateType, dateTimeType, timestampType, booleanType].concat(numericTypes));
 
@@ -300,3 +304,5 @@ let booleanOperations = [TokenType.keywordAnd, TokenType.keywordOr];
 booleanType.addBinaryOperation(booleanOperations, booleanType, booleanType);
 
 booleanType.unaryOperators = [TokenType.keywordNot];
+
+baseTypes.forEach(bt => bt.unaryOperators = bt.unaryOperators.concat([TokenType.isNull, TokenType.isNotNull]));

@@ -25,6 +25,8 @@ export enum TokenType {
     keywordNulls,
     keywordFirst,
     keywordLast,
+    keywordIs,
+    keywordNull,
 
     keywordOr,
     keywordAnd,
@@ -108,7 +110,9 @@ export enum TokenType {
     list,
     column,
     allColumns, // *
-
+    isNull,
+    isNot, // used by lexer to lex "is not null" into one token
+    isNotNull,
 }
 
 export var TokenTypeReadable: {[tt: number]: string} = {
@@ -138,6 +142,8 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordNulls]: "nulls",
     [TokenType.keywordFirst]: "first",
     [TokenType.keywordLast]: "last",
+    [TokenType.keywordIs]: "is",
+    [TokenType.keywordNull]: "null",
 
 
     [TokenType.keywordAnd]: "and",
@@ -269,6 +275,8 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "nulls": TokenType.keywordNulls,
     "first": TokenType.keywordFirst,
     "last": TokenType.keywordLast,
+    "is": TokenType.keywordIs,
+    "null": TokenType.keywordNull,
 
     "or": TokenType.keywordOr,
     "and": TokenType.keywordAnd,

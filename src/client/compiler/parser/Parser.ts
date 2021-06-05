@@ -1,7 +1,7 @@
 import { timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 
@@ -343,6 +343,7 @@ export class Parser {
                 return this.parseInsert();
             default:
                 let s = TokenTypeReadable[this.tt];
+                if(s == null) s = "";
                 if (s != this.cct.value) s += "(" + this.cct.value + ")";
                 s += " wird hier nicht erwartet.";
                 this.pushError(s);
@@ -906,6 +907,14 @@ export class Parser {
                             position: position
                         }
 
+                    } else if([TokenType.isNull, TokenType.isNotNull].indexOf(this.tt) >= 0){
+                        term = {
+                            type: TokenType.unaryOp,
+                            operand: term,
+                            operator: this.tt,
+                            position: position
+                        };
+                        this.nextToken();
                     }
                 }
 
