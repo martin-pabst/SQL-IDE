@@ -110,7 +110,7 @@ export class SymbolTable {
         }
 
         if (line == this.positionFrom.line && column < this.positionFrom.column) return false;
-        if (line == this.positionTo.line && column > this.positionTo.column) return false;
+        if (line == this.positionTo.line && column > this.positionTo.column + 1) return false;
 
         return true;
 

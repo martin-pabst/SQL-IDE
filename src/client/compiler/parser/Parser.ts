@@ -216,12 +216,18 @@ export class Parser {
                 }
             }
 
+            let expectedValuesArray: string[];
+            
             if (Array.isArray(tt)) {
-                let expectedTokens = tt.map(token => TokenTypeReadable[token]).join(", ");
+                expectedValuesArray = tt.map(token => TokenTypeReadable[token]);
+                let expectedTokens = expectedValuesArray.join(", ");
                 this.pushError("Erwartet wird eines der folgenden: " + expectedTokens + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             } else {
+                expectedValuesArray = [TokenTypeReadable[tt]];
                 this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             }
+
+            this.module.addCompletionHint(this.getEndOfPosition(this.lastToken.position), this.getCurrentPositionPlus(1), false, false, expectedValuesArray);
 
             return false;
         }
@@ -232,6 +238,15 @@ export class Parser {
 
         return true;
     }
+
+    getEndOfPosition(p: TextPosition): TextPosition {
+        return {
+            line: p.line,
+            column: p.column + p.length,
+            length: 0
+        }
+    }
+
     isOperatorOrDot(tt: TokenType): boolean {
         if (tt == TokenType.dot) return true;
         for (let op of Parser.operatorPrecedence) {
@@ -438,7 +453,9 @@ export class Parser {
             }
             outerFirst = false;
             let leftBracketPosition = this.getCurrentPosition();
-            this.expect(TokenType.leftBracket, true);
+            if(!this.expect(TokenType.leftBracket, true)){
+                break;
+            }
             let line: ConstantNode[] = [];
             let first: boolean = true;
             //@ts-ignore
@@ -518,7 +535,7 @@ export class Parser {
             this.nextToken();
             node.whereNode = this.parseTerm();
             this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(2), true, true, whereKeywordArray)
-                if (node.whereNode != null) node.whereNode.position = position;
+                // if (node.whereNode != null) node.whereNode.position = position;
         } else {
             fromListKeywordArray.push("where");
         }

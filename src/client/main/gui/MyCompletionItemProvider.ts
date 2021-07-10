@@ -10,7 +10,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
     isConsole: boolean;
 
-    public triggerCharacters: string[] = ['.', 'abcdefghijklmnopqrstuvwxyzäöüß_ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ', ' '];
+    public triggerCharacters: string[] = ['.', 'abcdefghijklmnopqrstuvwxyzäöüß_ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ', ' ', ','];
 
     public keywordCompletionItems: Map<string, monaco.languages.CompletionItem> = new Map();
 

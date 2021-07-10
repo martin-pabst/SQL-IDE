@@ -169,21 +169,17 @@ export class Module {
 
         // take CompletionHint with smallest range:
         let bestCh: CompletionHint = chList[0];
+        let bestRangeLength  = (bestCh.toLine - bestCh.fromLine)*1000 + (bestCh.toColumn - bestCh.fromColumn);
+
         for(let i = 1; i < chList.length; i++){
             let ch = chList[i];
-            if(ch.fromLine < bestCh.fromLine || ch.toLine > bestCh.toLine){
-                break;
+            let rangeLength = (ch.toLine - ch.fromLine) * 1000 + (ch.toColumn - ch.fromColumn);
+
+            if(rangeLength < bestRangeLength){
+                bestCh = ch;
+                bestRangeLength = rangeLength;
             }
 
-            if(ch.fromLine == bestCh.fromLine && ch.fromColumn < bestCh.fromColumn){
-                break;
-            }
-
-            if(ch.toLine == bestCh.toLine && ch.toColumn > bestCh.toColumn){
-                break;
-            }
-
-            bestCh = ch;
         }
 
         return bestCh;

@@ -182,7 +182,8 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.singleQuote]: "'", 
     [TokenType.doubleQuote]: "\"", // ']: "", "
     [TokenType.lower]: "<", 
-    [TokenType.greater]: ">", 
+    [TokenType.greater]: ">",
+    [TokenType.equal]: "=", 
     [TokenType.lowerOrEqual]: "<=", 
     [TokenType.greaterOrEqual]: ">=", 
     [TokenType.concatenation]: "||", 
