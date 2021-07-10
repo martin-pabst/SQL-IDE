@@ -44,7 +44,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
         let symbolTable = module.mainSymbolTable.findTableAtPosition(position.lineNumber, position.column);
         let completionHint: CompletionHint = module.getCompletionHint(position.lineNumber, position.column);
-        if(completionHint == null){
+        if (completionHint == null) {
             completionHint = {
                 fromColumn: 0,
                 toColumn: 0,
@@ -67,19 +67,19 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             identifierAndBracketAfterCursor = ibMatch[0];
         }
 
-        if(dotMatch == null){
+        if (dotMatch == null) {
             this.addIdentifierCompletionItems(completionHint, symbolTable, completionItems);
         } else {
             this.addDotCompletionItems(position, dotMatch, identifierAndBracketAfterCursor, symbolTable, completionItems);
         }
 
         let word = model.getWordUntilPosition(position);
-        let replaceWordRange = {startColumn: word.startColumn, startLineNumber: position.lineNumber, endColumn: word.endColumn, endLineNumber: position.lineNumber};
-        let insertAfterCursorRange = {startColumn: position.column, startLineNumber: position.lineNumber, endColumn: position.column, endLineNumber: position.lineNumber}
+        let replaceWordRange = { startColumn: word.startColumn, startLineNumber: position.lineNumber, endColumn: word.endColumn, endLineNumber: position.lineNumber };
+        let insertAfterCursorRange = { startColumn: position.column, startLineNumber: position.lineNumber, endColumn: position.column, endLineNumber: position.lineNumber }
 
-        for(let item of completionItems){
-            if(item.range == null){
-                if(item.insertText.startsWith(",")){
+        for (let item of completionItems) {
+            if (item.range == null) {
+                if (item.insertText.startsWith(",")) {
                     item.range = insertAfterCursorRange;
                 } else {
                     item.range = replaceWordRange;
@@ -87,7 +87,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             }
         }
 
-        if(completionHint.dontHint != null){
+        if (completionHint.dontHint != null) {
             completionItems = completionItems.filter(item => completionHint.dontHint.indexOf(item.insertText) < 0);
         }
 
@@ -97,7 +97,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     }
 
     addDotCompletionItems(position: monaco.Position, dotMatch: RegExpMatchArray, identifierAndBracketAfterCursor: string,
-         symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
+        symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
         let textAfterDot = dotMatch[3];
         let textBeforeDot = dotMatch[1];
         let dotColumn = position.column - textAfterDot.length - 1;
@@ -107,12 +107,12 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             endLineNumber: position.lineNumber, endColumn: position.column + identifierAndBracketAfterCursor.length
         }
 
-        for(let symbol of symbolTable.symbolList){
-            if(symbol.table != null){
+        for (let symbol of symbolTable.symbolList) {
+            if (symbol.table != null) {
                 let identifier: string = symbol.table.identifier;
-                if(symbol.tableAlias != null) identifier = symbol.tableAlias;
-                if(identifier.toLowerCase() == textBeforeDot){
-                    for(let column of symbol.table.columns){
+                if (symbol.tableAlias != null) identifier = symbol.tableAlias;
+                if (identifier.toLowerCase() == textBeforeDot) {
+                    for (let column of symbol.table.columns) {
                         completionItems.push({
                             label: column.identifier,
                             detail: "Spalte " + column.identifier + " der Tabelle " + symbol.table.identifier,
@@ -122,7 +122,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                             kind: monaco.languages.CompletionItemKind.Field,
                             range: rangeToReplace
                         })
-    
+
                     }
                 }
             }
@@ -132,11 +132,11 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
     addIdentifierCompletionItems(completionHint: CompletionHint, symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
 
-        if(!(completionHint.hintTables || completionHint.hintColumns)){
+        if (!(completionHint.hintTables || completionHint.hintColumns)) {
             return;
         }
 
-        let tableIdentifiers: {[identifier: string]: boolean} = {};
+        let tableIdentifiers: { [identifier: string]: boolean } = {};
 
         let st: SymbolTable = symbolTable;
         let columns: { [identifier: string]: Symbol[] } = {};
@@ -153,7 +153,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                         columns[columnIdentifier].push(symbol);
                     }
                 } else if (symbol.table != null && completionHint.hintTables) {
-                    if(!tableIdentifiers[symbol.identifier]){
+                    if (!tableIdentifiers[symbol.identifier]) {
                         completionItems.push({
                             label: symbol.identifier,
                             detail: "Tabelle " + symbol.table.identifier,
@@ -170,7 +170,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             st = st.parent;
         }
 
-        if(completionHint.hintColumns){
+        if (completionHint.hintColumns) {
             for (let ci of columnIdentifiers) {
                 let columList = columns[ci];
                 let withTable = columList.length > 1;
@@ -188,7 +188,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                         kind: monaco.languages.CompletionItemKind.Field,
                         range: undefined
                     })
-    
+
                 }
             }
         }
@@ -197,15 +197,28 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     addKeywordCompletionItems(completionHint: CompletionHint, completionItems: monaco.languages.CompletionItem[]) {
         for (let text of completionHint.hintKeywords) {
 
-            completionItems.push({
-                label: text,
-                detail: "",
-                filterText: text,
-                insertText: text,
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                kind: monaco.languages.CompletionItemKind.Keyword,
-                range: undefined
-            })
+            if (text == "(") {
+                completionItems.push({
+                    label: "()",
+                    detail: "",
+                    filterText: "(",
+                    insertText: "($0)",
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    kind: monaco.languages.CompletionItemKind.Snippet,
+                    range: undefined
+                })
+            } else {
+                completionItems.push({
+                    label: text,
+                    detail: "",
+                    filterText: text,
+                    insertText: text,
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                    kind: monaco.languages.CompletionItemKind.Keyword,
+                    range: undefined
+                })
+            }
+
 
             let ci = this.keywordCompletionItems.get(text);
             if (ci != null) {

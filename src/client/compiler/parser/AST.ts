@@ -5,9 +5,9 @@ import { Table } from "./SQLTable.js";
 
 
 export type ASTNode = 
-    StatementNode | TermNode | ColumnNode
+    StatementNode | TermNode | ColumnNode | CreateTableColumnNode
     
-    export type StatementNode = SelectNode | UpdateNode | InsertNode;
+    export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
@@ -50,6 +50,33 @@ export type InsertNode = {
     table: TableNode,
     columnList: IdentifierNode[],
     values: ConstantNode[][]
+}
+
+export type CreateTableNode = {
+    type: TokenType.keywordCreate,
+    position: TextPosition,
+    identifier: string,
+    symbolTable: SymbolTable,
+
+    columnList: CreateTableColumnNode[],
+    combinedPrimaryKeyColumns: string[],
+    foreignKeyInfoList: ForeignKeyInfo[]
+}
+
+export type ForeignKeyInfo = {
+    column: string,
+    referencesTable: string,
+    referencesColumn: string
+}
+
+export type CreateTableColumnNode = {
+    type: TokenType.columnDef,
+    position: TextPosition,
+    identifier: string,
+    isPrimary: boolean,
+    baseType: SQLBaseType,
+    referencesTable?: string,
+    referencesColumn?: string
 }
 
 export type GroupByNode = {
