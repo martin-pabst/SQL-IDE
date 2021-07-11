@@ -83,7 +83,7 @@ export class SymbolResolver {
         // From
         let joinedTables: Table[] = [];
         this.resolveTableOrSubQuery(selectNode.fromNode, joinedTables);
-        if(selectNode.fromStartPosition != null){
+        if (selectNode.fromStartPosition != null) {
             let fromSymbolTable = new SymbolTable(this.getCurrentSymbolTable(), selectNode.fromStartPosition, selectNode.fromEndPosition);
             fromSymbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
         }
@@ -101,7 +101,7 @@ export class SymbolResolver {
                 this.resolveTerm(columnNode.term);
                 let c1: Column = new Column(columnNode.alias, columnNode.term.sqlType, resultTable, false, true);
                 resultTable.columns.push(c1);
-                if(c1.identifier != null){
+                if (c1.identifier != null) {
                     selectNode.symbolTable.storeSymbol({
                         identifier: c1.identifier,
                         posOfDefinition: columnNode.term.position,
@@ -113,9 +113,9 @@ export class SymbolResolver {
         }
 
         // where...
-        if(selectNode.whereNode != null){
+        if (selectNode.whereNode != null) {
             let whereType = this.resolveTerm(selectNode.whereNode);
-            if(whereType != null && whereType.getBaseTypeName() != "boolean"){
+            if (whereType != null && whereType.getBaseTypeName() != "boolean") {
                 this.pushError("Das Ergebnis des where-Teils einer select-Anweisung muss vom Typ boolean sein.", "error", selectNode.whereNode.position);
             }
         }
@@ -134,24 +134,44 @@ export class SymbolResolver {
         createTableNode.symbolTable = this.pushNewSymbolTable(createTableNode.position, createTableNode.endPosition);
         createTableNode.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
-        for(let columnNode of createTableNode.columnList){
-            if(createTableNode.columnList.filter(c => c.identifier == columnNode.identifier).length > 1){
+        let thisTable: Table = {
+            identifier: createTableNode.identifier,
+            columns: null,
+            size: 0
+        }
+
+        thisTable.columns = createTableNode.columnList.map(c => {
+            return {
+                identifier: c.identifier,
+                isNullable: false,
+                isPrimaryKey: c.isPrimary,
+                notNull: false,
+                references: null,
+                table: thisTable,
+                type: c.baseType
+            }
+        });
+
+        createTableNode.symbolTable.storeTableSymbols(thisTable);
+
+        for (let columnNode of createTableNode.columnList) {
+            if (createTableNode.columnList.filter(c => c.identifier == columnNode.identifier).length > 1) {
                 this.pushError("Der Spaltenbezeichner " + columnNode.identifier + " darf in einer Tabelle nur ein einziges Mal verwendet werden", "error", columnNode.position);
             }
 
-            if(columnNode.referencesTable != null && columnNode.baseType != null){
+            if (columnNode.referencesTable != null && columnNode.baseType != null) {
                 let tables = this.getCurrentSymbolTable().findTable(columnNode.referencesTable);
-                if(tables.length == 1){
+                if (tables.length == 1) {
                     let table = tables[0].table;
                     let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
-                    if(column != null && column.type != null){
-                        if(!column.isPrimaryKey){
+                    if (column != null && column.type != null) {
+                        if (!column.isPrimaryKey) {
                             this.pushError("Die referenzierte Spalte " + columnNode.referencesTable + "." + columnNode.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
                         }
-                        if(!column.type.canCastTo(columnNode.baseType)){
-                            this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier  +
-                             " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
-                              column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
+                        if (!column.type.canCastTo(columnNode.baseType)) {
+                            this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
+                                " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                                column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
                         }
                     }
                 }
@@ -159,23 +179,23 @@ export class SymbolResolver {
 
         }
 
-        for(let fki of createTableNode.foreignKeyInfoList){
+        for (let fki of createTableNode.foreignKeyInfoList) {
 
             let columnNode = createTableNode.columnList.find(cn => cn.identifier == fki.column);
-            if(columnNode == null) continue;
+            if (columnNode == null) continue;
 
             let tables = this.getCurrentSymbolTable().findTable(fki.referencesTable);
-            if(tables.length == 1){
+            if (tables.length == 1) {
                 let table = tables[0].table;
                 let column = table.columns.find(c => c.identifier == fki.referencesColumn);
-                if(column != null && column.type != null){
-                    if(!column.isPrimaryKey){
+                if (column != null && column.type != null) {
+                    if (!column.isPrimaryKey) {
                         this.pushError("Die referenzierte Spalte " + fki.referencesTable + "." + fki.referencesColumn + " ist kein Primärschlüssel.", "warning", fki.referencesPosition);
                     }
-                    if(!column.type.canCastTo(columnNode.baseType)){
-                        this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier  +
-                         " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
-                          column.identifier + " umgewandelt werden.", "error", fki.referencesPosition);
+                    if (!column.type.canCastTo(columnNode.baseType)) {
+                        this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
+                            " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                            column.identifier + " umgewandelt werden.", "error", fki.referencesPosition);
                     }
                 }
             }
@@ -188,7 +208,7 @@ export class SymbolResolver {
     }
 
     resolveTableOrSubQuery(tosNode: TableOrSubqueryNode, joinedTables: Table[]) {
-        if(tosNode == null) return;
+        if (tosNode == null) return;
 
         switch (tosNode.type) {
             case TokenType.table:
@@ -200,7 +220,7 @@ export class SymbolResolver {
                 } else {
                     let table: Table = tableList[0];
                     joinedTables.push(table);
-                    this.storeTableIntoSymbolTable(table, tosNode.position, tosNode.alias);                
+                    this.storeTableIntoSymbolTable(table, tosNode.position, tosNode.alias);
                 }
 
                 break;
@@ -227,12 +247,12 @@ export class SymbolResolver {
     storeTableIntoSymbolTable(table: Table, position: TextPosition, alias?: string) {
         let symbolTable = this.getCurrentSymbolTable();
         symbolTable.storeSymbol({
-            identifier: alias == null ? table.identifier.toLowerCase(): alias.toLowerCase(),
+            identifier: alias == null ? table.identifier.toLowerCase() : alias.toLowerCase(),
             posOfDefinition: position,
             table: table,
             referencedOnPositions: []
         });
-        for(let column of table.columns){
+        for (let column of table.columns) {
             symbolTable.storeSymbol({
                 identifier: column.identifier.toLowerCase(),
                 posOfDefinition: null,
@@ -244,31 +264,31 @@ export class SymbolResolver {
     }
 
     resolveTerm(node: TermNode): SQLType {
-        if(node == null) return null;
+        if (node == null) return null;
 
         switch (node.type) {
             case TokenType.binaryOp:
-                if([TokenType.keywordIn, TokenType.keywordNotIn].indexOf(node.operator) >= 0){
+                if ([TokenType.keywordIn, TokenType.keywordNotIn].indexOf(node.operator) >= 0) {
                     return this.resolveNotIn(node);
                 }
 
                 let typeLeft = this.resolveTerm(node.firstOperand);
                 let typeRight = this.resolveTerm(node.secondOperand);
-                if(typeLeft != null && typeRight != null){
+                if (typeLeft != null && typeRight != null) {
                     let resultType = typeLeft.getBinaryResultType(node.operator, typeRight);
-                    if(resultType == null){
+                    if (resultType == null) {
                         this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für die Datentypen " + typeLeft.toString() + " und " + typeRight.toString() + " nicht definiert.", "error", node.position);
                     }
                     return resultType;
                 } else {
                     return null;
-                }   
+                }
                 break;
             case TokenType.unaryOp:
                 let operandType = this.resolveTerm(node.operand);
-                if(operandType != null){
+                if (operandType != null) {
                     let resultType1 = operandType.getUnaryResultType(node.operator);
-                    if(resultType1 == null){
+                    if (resultType1 == null) {
                         this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für einen Operanden des Datentyps " + operandType.toString() + " nicht definiert.", "error", node.position);
                     }
                     return resultType1;
@@ -279,7 +299,7 @@ export class SymbolResolver {
             case TokenType.callMethod:
                 return this.resolveMethodCall(node);
                 break;
-                //    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
+            //    ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
 
             case TokenType.constantNode:
                 node.sqlType = SQLBaseType.fromConstantType(node.constantType);
@@ -293,7 +313,7 @@ export class SymbolResolver {
                 break;
             case TokenType.keywordSelect:
                 let selectTable = this.resolveSelect(node);
-                if(selectTable.columns.length != 1){
+                if (selectTable.columns.length != 1) {
                     this.pushError("Die Ergebnistabelle einer Unterabfrage an dieser Stelle muss genau eine Spalte besitzen.", "error", node.position);
                     return null;
                 }
@@ -302,11 +322,11 @@ export class SymbolResolver {
             case TokenType.rightBracket:   // BracketsNode
                 node.sqlType = this.resolveTerm(node.termInsideBrackets);
                 return node.sqlType;
-            break;
+                break;
             case TokenType.allColumns:
                 this.pushError("Das Zeichen * kann hier nicht verwendet werden.", "error", node.position);
                 break;
-                case TokenType.list:
+            case TokenType.list:
                 this.pushError("Eine Liste wird hier nicht erwartet.", "error", node.position);
                 break;
             default:
@@ -320,24 +340,24 @@ export class SymbolResolver {
 
     resolveDot(node: DotNode): SQLType {
         let tableSymbols = this.getCurrentSymbolTable().findTable(node.identifierLeft.identifier);
-        if(tableSymbols.length == 0){
+        if (tableSymbols.length == 0) {
             this.pushError("Die Tabelle " + node.identifierLeft.identifier + " kann nicht gefunden werden.", "error", node.identifierLeft.position);
             return null;
         }
-        if(tableSymbols.length > 1){
+        if (tableSymbols.length > 1) {
             this.pushError("Der Tabellenbezeichner " + node.identifierLeft.identifier + " ist nicht eindeutig.", "error", node.identifierLeft.position);
             return null;
         }
         let table = tableSymbols[0].table;
-        
+
         let columns = table.columns.filter(c => c.identifier.toLowerCase() == node.identifierRight.identifier.toLowerCase());
 
-        if(columns.length == 0){
+        if (columns.length == 0) {
             this.pushError("Die Tabelle " + node.identifierLeft.identifier + " hat keine Spalte mit dem Bezeichner " + node.identifierRight.identifier + ".", "error", node.identifierRight.position);
             return;
         }
 
-        if(columns.length > 1){
+        if (columns.length > 1) {
             this.pushError("Die Tabelle " + node.identifierLeft.identifier + " hat mehrere Spalten mit dem Bezeichner " + node.identifierRight.identifier + ".", "error", node.identifierRight.position);
             return;
         }
@@ -350,11 +370,11 @@ export class SymbolResolver {
 
     resolveIdentifier(node: IdentifierNode): SQLType {
         let symbols = this.getCurrentSymbolTable().findColumn(node.identifier);
-        if(symbols.length == 0){
+        if (symbols.length == 0) {
             this.pushError("Der Bezeichner " + node.identifier + " ist an dieser Stelle nicht bekannt.", "error", node.position);
             return null;
         }
-        if(symbols.length > 1){
+        if (symbols.length > 1) {
             this.pushError("Der Bezeichner " + node.identifier + " ist nicht eindeutig.", "error", node.position);
             return null;
         }
@@ -362,43 +382,43 @@ export class SymbolResolver {
         let symbol = symbols[0];
         node.sqlType = symbol.column.type;
         return symbol.column.type;
-}
-    
+    }
+
     resolveMethodCall(node: MethodcallNode): SQLType {
 
         let methodStore = SQLMethodStore.getInstance();
         let methods = methodStore.getMethods(node.identifier);
 
         methods = methods.filter(m => m.parameters.length == node.operands.length);
-        if(node.operands.length == 1 && node.operands[0].type == TokenType.allColumns){
-            methods = methods.filter( m => m.acceptsStarParameter);
+        if (node.operands.length == 1 && node.operands[0].type == TokenType.allColumns) {
+            methods = methods.filter(m => m.acceptsStarParameter);
             node.sqlType = methods[0].returnType;
             return node.sqlType;
         }
 
-        if(methods.length == 0){
+        if (methods.length == 0) {
             this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
             return null;
         }
 
-        for(let operand of node.operands){
-            if(this.resolveTerm(operand) == null){
+        for (let operand of node.operands) {
+            if (this.resolveTerm(operand) == null) {
                 node.sqlType = methods[0].returnType;
                 return node.sqlType;
             }
         }
 
-        for(let method of methods){
+        for (let method of methods) {
             let found = true;
-            for(let i = 0; i < method.parameters.length; i++){
+            for (let i = 0; i < method.parameters.length; i++) {
                 let methodParameter = method.parameters[i];
                 let operand = node.operands[i];
-                if(!operand.sqlType.canCastTo(methodParameter.type)){
+                if (!operand.sqlType.canCastTo(methodParameter.type)) {
                     found = false;
                     break;
                 }
             }
-            if(found){
+            if (found) {
                 node.sqlType = method.returnType;
                 return node.sqlType;
             }
@@ -411,38 +431,38 @@ export class SymbolResolver {
 
     resolveNotIn(node: BinaryOpNode): SQLType {
 
-        if(node.firstOperand == null || node.secondOperand == null) return null;
+        if (node.firstOperand == null || node.secondOperand == null) return null;
 
         let operatorString = TokenTypeReadable[node.operator];
 
         this.resolveTerm(node.firstOperand);
         let leftType = node.firstOperand.sqlType;
-        if(leftType != null){
-            if(node.secondOperand.type == TokenType.keywordSelect){
+        if (leftType != null) {
+            if (node.secondOperand.type == TokenType.keywordSelect) {
                 let selectNode = node.secondOperand;
-                if(selectNode.columnList.length != 1){
+                if (selectNode.columnList.length != 1) {
                     this.pushError("Wenn rechts vom Operator '" + operatorString + "' eine Unterabfrage steht, muss die Ergebnistabelle dieser Unterabfrage genau eine Spalte haben.", "error", selectNode.position);
                 }
                 this.resolveSelect(selectNode);
                 let pType = selectNode.columnList[0].term.sqlType;
-                if(!pType.canCastTo(leftType)){
+                if (!pType.canCastTo(leftType)) {
                     this.pushError("Der Datentyp der Ergebnisspalte der Unterabfrage ist " + pType.toString() + ". Dieser kann nicht in den Datentyp " + leftType.toString() + " umgewandelt werden.", "error", selectNode.position);
                 }
-            } else if(node.secondOperand.type == TokenType.list){
+            } else if (node.secondOperand.type == TokenType.list) {
                 let listNode = node.secondOperand;
-                for(let element of listNode.elements){
+                for (let element of listNode.elements) {
                     let elementType = SQLBaseType.fromConstantType(element.constantType);
                     element.sqlType = elementType;
-                    if(!elementType.canCastTo(leftType)){
+                    if (!elementType.canCastTo(leftType)) {
                         this.pushError("Der Datentyp des Listenelements " + element.constant + " ist " + elementType.toString() + ". Er kann nicht in den Datentype " + leftType.toString() + " des Operanden auf der linken Seite des Operators '" + operatorString + "' umgewandelt werden.", "error", element.position);
                     }
                 }
             } else {
                 this.pushError("Der rechte Operand der Operatoren 'in' und 'not in' muss eine Unterabfrage oder eine Liste sein.", "error", node.secondOperand.position);
             }
-            
+
         }
-        
+
         return SQLBaseType.getBaseType("boolean");
     }
 
@@ -450,9 +470,9 @@ export class SymbolResolver {
 
         let table: Table = null;
         let symbolTable = this.pushNewSymbolTable(astNode.position, astNode.endPosition);
-        if(astNode.table != null){
-            astNode.table.table = this.tables.find( t => t.identifier.toLowerCase() == astNode.table.identifier.toLocaleLowerCase());
-            if(astNode.table.table == null){
+        if (astNode.table != null) {
+            astNode.table.table = this.tables.find(t => t.identifier.toLowerCase() == astNode.table.identifier.toLocaleLowerCase());
+            if (astNode.table.table == null) {
                 this.pushError("Die Tabelle " + astNode.table.identifier + " gibt es nicht.", "error", astNode.table.position);
             } else {
                 table = astNode.table.table;
@@ -461,12 +481,12 @@ export class SymbolResolver {
         }
 
         let tableCompletionTo = astNode.endPosition;
-        if(astNode.valuesPosition != null) tableCompletionTo = astNode.valuesPosition;
-        if(astNode.columnsPosition != null) tableCompletionTo = astNode.columnsPosition;
-        
+        if (astNode.valuesPosition != null) tableCompletionTo = astNode.valuesPosition;
+        if (astNode.columnsPosition != null) tableCompletionTo = astNode.columnsPosition;
+
         this.module.addCompletionHint(astNode.position, tableCompletionTo, false, true, ["into", "values"]);
-        
-        if(table != null){
+
+        if (table != null) {
             this.module.addCompletionHint(tableCompletionTo, astNode.valuesPosition == null ? astNode.endPosition : astNode.valuesPosition, true, false, ["values"]);
         }
 
@@ -476,15 +496,15 @@ export class SymbolResolver {
 
         let columns: Column[] = [];
         // Parse column list
-        if(astNode.columnList.length == 0){
-            if(table != null){
+        if (astNode.columnList.length == 0) {
+            if (table != null) {
                 columns = table.columns;
             }
         } else {
-            if(table != null){
-                for(let columnNode of astNode.columnList){
-                    let column = table.columns.find( c => c.identifier.toLowerCase() == columnNode.identifier.toLowerCase());
-                    if(column == null){
+            if (table != null) {
+                for (let columnNode of astNode.columnList) {
+                    let column = table.columns.find(c => c.identifier.toLowerCase() == columnNode.identifier.toLowerCase());
+                    if (column == null) {
                         this.pushError("Die Tabelle " + table.identifier + " besitzt keine Spalte mit dem Bezeichner " + columnNode.identifier + ".", "error", columnNode.position);
                     } else {
                         columns.push(column);
@@ -493,17 +513,17 @@ export class SymbolResolver {
             }
         }
 
-        if(columns.length > 0){
+        if (columns.length > 0) {
             // Parse value lists
-            for(let valueList of astNode.values){
-                if(valueList.length != columns.length && valueList.length > 0){
+            for (let valueList of astNode.values) {
+                if (valueList.length != columns.length && valueList.length > 0) {
                     this.pushError("Erwartet werden " + columns.length + " Elemente, hier stehen aber " + valueList.length + " Elemente in der Liste.", "error", valueList[0].position);
                 } else {
-                    for(let i = 0; i < valueList.length; i++){
+                    for (let i = 0; i < valueList.length; i++) {
                         let value = valueList[i];
                         let column = columns[i];
                         value.sqlType = SQLBaseType.fromConstantType(value.constantType);
-                        if(!value.sqlType.canCastTo(column.type)){
+                        if (!value.sqlType.canCastTo(column.type)) {
                             this.pushError("Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.", "error", value.position);
                         }
                     }

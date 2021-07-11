@@ -403,7 +403,6 @@ export class Parser {
 
         if (!this.expect(TokenType.leftBracket, true)) return node;
 
-        let endTokens: TokenType[] = [TokenType.rightBracket, TokenType.keywordCreate, TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordInsert, TokenType.keywordDrop];
         let primaryKeyAlreadyDefined: boolean = false;
         let first: boolean = true;
 
