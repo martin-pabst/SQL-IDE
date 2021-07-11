@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { ASTNode, BinaryOpNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
+import { ASTNode, BinaryOpNode, CreateTableNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -39,6 +39,9 @@ export class SymbolResolver {
                     break;
                 case TokenType.keywordInsert:
                     this.resolveInsert(astNode);
+                    break;
+                case TokenType.keywordCreate:
+                    this.resolveCreateTable(astNode);
                     break;
 
                 default:
@@ -119,6 +122,65 @@ export class SymbolResolver {
 
 
         // TODO: group by, order by
+
+        this.symbolTableStack.pop();
+
+        return resultTable;
+    }
+
+    resolveCreateTable(createTableNode: CreateTableNode): Table {
+        let resultTable: Table = new Table(null);
+
+        createTableNode.symbolTable = this.pushNewSymbolTable(createTableNode.position, createTableNode.endPosition);
+        createTableNode.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+
+        for(let columnNode of createTableNode.columnList){
+            if(createTableNode.columnList.filter(c => c.identifier == columnNode.identifier).length > 1){
+                this.pushError("Der Spaltenbezeichner " + columnNode.identifier + " darf in einer Tabelle nur ein einziges Mal verwendet werden", "error", columnNode.position);
+            }
+
+            if(columnNode.referencesTable != null && columnNode.baseType != null){
+                let tables = this.getCurrentSymbolTable().findTable(columnNode.referencesTable);
+                if(tables.length == 1){
+                    let table = tables[0].table;
+                    let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
+                    if(column != null && column.type != null){
+                        if(!column.isPrimaryKey){
+                            this.pushError("Die referenzierte Spalte " + columnNode.referencesTable + "." + columnNode.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
+                        }
+                        if(!column.type.canCastTo(columnNode.baseType)){
+                            this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier  +
+                             " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                              column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        for(let fki of createTableNode.foreignKeyInfoList){
+
+            let columnNode = createTableNode.columnList.find(cn => cn.identifier == fki.column);
+            if(columnNode == null) continue;
+
+            let tables = this.getCurrentSymbolTable().findTable(fki.referencesTable);
+            if(tables.length == 1){
+                let table = tables[0].table;
+                let column = table.columns.find(c => c.identifier == fki.referencesColumn);
+                if(column != null && column.type != null){
+                    if(!column.isPrimaryKey){
+                        this.pushError("Die referenzierte Spalte " + fki.referencesTable + "." + fki.referencesColumn + " ist kein Primärschlüssel.", "warning", fki.referencesPosition);
+                    }
+                    if(!column.type.canCastTo(columnNode.baseType)){
+                        this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier  +
+                         " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                          column.identifier + " umgewandelt werden.", "error", fki.referencesPosition);
+                    }
+                }
+            }
+
+        }
 
         this.symbolTableStack.pop();
 

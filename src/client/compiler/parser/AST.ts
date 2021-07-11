@@ -55,6 +55,7 @@ export type InsertNode = {
 export type CreateTableNode = {
     type: TokenType.keywordCreate,
     position: TextPosition,
+    endPosition: TextPosition,
     identifier: string,
     symbolTable: SymbolTable,
 
@@ -66,7 +67,8 @@ export type CreateTableNode = {
 export type ForeignKeyInfo = {
     column: string,
     referencesTable: string,
-    referencesColumn: string
+    referencesColumn: string,
+    referencesPosition: TextPosition
 }
 
 export type CreateTableColumnNode = {
@@ -76,7 +78,8 @@ export type CreateTableColumnNode = {
     isPrimary: boolean,
     baseType: SQLBaseType,
     referencesTable?: string,
-    referencesColumn?: string
+    referencesColumn?: string,
+    referencesPosition?: TextPosition
 }
 
 export type GroupByNode = {

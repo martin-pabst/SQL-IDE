@@ -7,6 +7,7 @@ import { SymbolTable } from "./SymbolTable.js";
 import { Main } from "../../main/Main.js";
 import { ASTNode } from "./AST.js";
 import { MainBase } from "../../main/MainBase.js";
+import { stringToDate } from "../../tools/StringTools.js";
 
 
 export type CompletionHint = {
@@ -15,6 +16,7 @@ export type CompletionHint = {
     toLine: number, 
     toColumn: number,
     hintColumns: boolean,
+    hintColumnsOfTable?: string,
     hintTables: boolean,
     hintKeywords: string[],
     dontHint?: string[]
@@ -132,13 +134,14 @@ export class Module {
 
     }
 
-    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean, hintTables: boolean, hintKeywords: string[], dontHint?: string[]){
+    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean|string, hintTables: boolean, hintKeywords: string[], dontHint?: string[]){
         let ch: CompletionHint = {
             fromColumn: fromPosition.column,
             fromLine: fromPosition.line,
             toColumn: toPosition.column,
             toLine: toPosition.line,
-            hintColumns: hintColumns, 
+            hintColumns: (typeof hintColumns == "boolean")? hintColumns : true, 
+            hintColumnsOfTable: (typeof hintColumns == "string")? hintColumns : null,
             hintTables: hintTables,
             hintKeywords: hintKeywords,
             dontHint: dontHint

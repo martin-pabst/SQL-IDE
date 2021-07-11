@@ -228,7 +228,7 @@ export class Parser {
                 this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             }
 
-            if(tt != TokenType.identifier){
+            if (tt != TokenType.identifier) {
                 this.module.addCompletionHint(this.getEndOfPosition(this.lastToken.position), this.getCurrentPositionPlus(1), false, false, expectedValuesArray);
             }
 
@@ -317,8 +317,8 @@ export class Parser {
             let st = this.parseStatement();
 
             afterLastStatement = {
-                line: this.lastToken.position.line,
-                column: this.lastToken.position.column + this.lastToken.position.length,
+                line: this.lastToken.position.line + 1,
+                column: 0,
                 length: 0
             }
 
@@ -394,6 +394,7 @@ export class Parser {
             type: TokenType.keywordCreate,
             identifier: identifier,
             position: startPosition,
+            endPosition: null,
             columnList: [],
             symbolTable: null,
             combinedPrimaryKeyColumns: [],
@@ -404,8 +405,11 @@ export class Parser {
 
         let endTokens: TokenType[] = [TokenType.rightBracket, TokenType.keywordCreate, TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordInsert, TokenType.keywordDrop];
         let primaryKeyAlreadyDefined: boolean = false;
+        let first: boolean = true;
 
-        while (!(this.isEnd() || endTokens.indexOf(this.tt) >= 0)) {
+        while (this.tt != TokenType.rightBracket) {
+            if (!first) this.expect(TokenType.comma, true);
+            first = false;
             switch (this.tt) {
                 case TokenType.keywordPrimary:
                     if (primaryKeyAlreadyDefined) this.pushError("Je Tabelle darf nur ein einziger Primärschlüssel definiert werden.", "error", this.getCurrentPosition());
@@ -414,53 +418,61 @@ export class Parser {
                     break;
                 case TokenType.keywordForeign:
                     this.parseForeignKeyTerm(node);
+                    break;
                 case TokenType.identifier:
-                    node.columnList.push(this.parseColumnDefinition(primaryKeyAlreadyDefined));
+                    let columnNode = this.parseColumnDefinition(primaryKeyAlreadyDefined);
+                    node.columnList.push(columnNode);
+                    primaryKeyAlreadyDefined = primaryKeyAlreadyDefined || columnNode.isPrimary;
+                    break;
                 default:
                     this.pushError(TokenTypeReadable[this.tt] + " wird hier nicht erwartet.", "error");
-                    this.nextToken();
                     break;
             }
             if (!this.comesToken(TokenType.comma)) {
                 break;
-            } else {
-                this.nextToken(); // skip comma
             }
         }
 
         this.expect(TokenType.rightBracket, true);
 
+        node.endPosition = this.getCurrentPosition();
+
         return node;
     }
 
     parseForeignKeyTerm(node: CreateTableNode) {
+        let referencesPos = this.getCurrentPosition();
         this.nextToken();
         this.expect(TokenType.keywordKey);
 
-        if(this.comesToken(TokenType.identifier)){
+        if (this.comesToken(TokenType.identifier)) {
             let fki: ForeignKeyInfo = {
                 column: <string>this.cct.value,
                 referencesColumn: null,
-                referencesTable: null
+                referencesTable: null,
+                referencesPosition: referencesPos
             }
             this.nextToken();
             this.expect(TokenType.keywordReferences, false);
-            let pos0 = this.getCurrentPosition();
-            this.nextToken();
-            this.module.addCompletionHint(this.getEndOfPosition(pos0), this.getCurrentPosition(), false, true, []);
-            if (this.expect(TokenType.identifier), false) {
+            this.nextToken(); // skip "references"
+            this.addCompletionHintHere(false, true, []);
+            if (this.expect(TokenType.identifier, false)) {
                 fki.referencesTable = <string>this.cct.value;
                 this.nextToken();
+                let pos0 = this.lastToken.position;
+                let pos1 = this.getCurrentPosition();
+                this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, fki.referencesTable, false, []);
+                
                 if (this.expect(TokenType.leftBracket, true)) {
-    
-                    if (this.expect(TokenType.identifier), false) {
+
+                    if (this.expect(TokenType.identifier, false)) {
                         fki.referencesColumn = <string>this.cct.value;
                         this.nextToken();
                         node.foreignKeyInfoList.push(fki);
                     } else {
                         this.pushError("Erwartet wird der Bezeichner einer Spalte. Gefunden wurde: " + this.cct.value);
                     }
-    
+
                     this.expect(TokenType.rightBracket, true);
                 }
             } else {
@@ -479,17 +491,24 @@ export class Parser {
         }
         this.nextToken(); // skip "primary"
         this.expect(TokenType.keywordKey, true);
+
+        let columns: string[] = node.columnList.map(c => c.identifier);
+
+        this.addCompletionHintHere(false, false, columns);
         if (this.comesToken(TokenType.leftBracket)) {
+            this.addCompletionHintHere(false, false, columns);
             this.nextToken();
 
             while (true) {
                 if (this.comesToken(TokenType.identifier)) {
                     node.combinedPrimaryKeyColumns.push(<string>this.cct.value);
                     this.nextToken();
+                    this.addCompletionHintHere(false, false, columns, 1);
                     if (!this.comesToken(TokenType.comma)) {
                         break;
                     } else {
                         this.nextToken();
+                        this.addCompletionHintHere(false, false, columns);
                     }
                 } else {
                     this.pushError("Der Bezeichner einer Spalte wird erwartet. Gefunden wurde: " + this.cct.value);
@@ -523,7 +542,17 @@ export class Parser {
 
     }
 
+    addCompletionHintHere(hintColumns: boolean | string, hintTables: boolean, hints: string[], additionalColumns: number = 0) {
+        let pos0 = this.lastToken.position;
+        let pos1 = this.getCurrentPosition();
+        pos1.column += 1 + additionalColumns
+        this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, hintColumns, hintTables, hints);
+    }
+
     parseType(node: CreateTableColumnNode, primaryKeyAlreadyDefined: boolean) {
+
+        let datatypes = SQLBaseType.baseTypes.map(type => type.toString());
+        this.addCompletionHintHere(false, false, datatypes);
 
         if (!this.expect(TokenType.identifier, false)) {
             this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + this.cct.value);
@@ -531,12 +560,14 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
-        this.nextToken();
+        
+        
         let type = SQLBaseType.getBaseType(identifier);
         if (type == null) {
             this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + identifier);
         }
         node.baseType = type;
+        this.nextToken();
 
         if (this.tt == TokenType.leftBracket) {
             this.nextToken();
@@ -545,8 +576,10 @@ export class Parser {
             while (this.tt == TokenType.integerConstant) {
                 parameters.push(<number>this.cct.value);
                 this.nextToken();
+                //@ts-ignore
                 if (this.tt != TokenType.comma) break;
                 this.nextToken();
+                //@ts-ignore
                 if (this.tt != TokenType.integerConstant) {
                     this.pushError("Erwartet wird eine ganze Zahl, gefunden wurde: " + this.cct.value);
                     break;
@@ -564,24 +597,44 @@ export class Parser {
         // references table(column)
         // not null
 
+        this.addCompletionHintHere(false, false, ["primary key", "references", "not null"]);
+
+        if (this.comesToken(TokenType.keywordNot)) {
+            this.nextToken();
+            if (!this.expect(TokenType.keywordNull, true)) {
+                this.addCompletionHintHere(false, false, ["null"]);
+            } else {
+                this.addCompletionHintHere(false, false, ["references"]);
+            }
+        }
+
         switch (this.tt) {
             case TokenType.keywordPrimary:
                 if (primaryKeyAlreadyDefined) this.pushError("In einer Tabelle darf es nur einen einzigen primary key geben.");
-                this.nextToken(); this.expect(TokenType.keywordKey, true);
+                this.nextToken(); // skip "primary"
+                if (!this.expect(TokenType.keywordKey, true)) {
+                    this.addCompletionHintHere(false, false, ["key"]);
+                } else {
+                    this.addCompletionHintHere(false, false, ["autoincrement, \n"])
+                }
                 node.isPrimary = true;
                 //@ts-ignore
                 if (this.tt == TokenType.keywordAutoincrement) this.nextToken();
                 break;
             case TokenType.keywordReferences:
-                let pos0 = this.getCurrentPosition();
-                this.nextToken();
-                this.module.addCompletionHint(this.getEndOfPosition(pos0), this.getCurrentPosition(), false, true, []);
-                if (this.expect(TokenType.identifier), false) {
+                node.referencesPosition = this.getCurrentPosition();
+                this.nextToken(); // skip "references"
+                this.addCompletionHintHere(false, true, []);
+                if (this.expect(TokenType.identifier, false)) {
                     node.referencesTable = <string>this.cct.value;
                     this.nextToken();
-                    if (this.expect(TokenType.leftBracket, true)) {
+                    let pos0 = this.lastToken.position;
+                    let pos1 = this.getCurrentPosition();
+                    this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, node.referencesTable, false, []);
 
-                        if (this.expect(TokenType.identifier), false) {
+                    if (this.expect(TokenType.leftBracket, true)) {
+                
+                        if (this.expect(TokenType.identifier, false)) {
                             node.referencesColumn = <string>this.cct.value;
                             this.nextToken();
                         } else {
@@ -593,11 +646,6 @@ export class Parser {
                 } else {
                     this.pushError("Erwartet wird der Bezeichner einer Tabelle. Gefunden wurde: " + this.cct.value);
                 }
-        }
-
-        if (this.comesToken(TokenType.keywordNot)) {
-            this.nextToken();
-            this.expect(TokenType.keywordNull, true);
         }
 
     }

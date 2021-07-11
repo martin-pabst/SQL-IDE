@@ -113,6 +113,7 @@ export function defineVscSQL() {
                 [/[a-z_$äöü][\w$äöüßÄÖÜ]*(?=\()/, {
                     cases: {
                         '@builtinFunctions': 'functions',
+                        '@keywords': 'keyword',
                         '@default': 'identifier'
                     }
                 }],
