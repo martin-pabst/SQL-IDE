@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { ASTNode, BinaryOpNode, CreateTableNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode } from "./Ast.js";
+import { ASTNode, BinaryOpNode, CreateTableNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -43,7 +43,9 @@ export class SymbolResolver {
                 case TokenType.keywordCreate:
                     this.resolveCreateTable(astNode);
                     break;
-
+                case TokenType.keywordUpdate:
+                    this.resolveUpdate(astNode);
+                    break;
                 default:
                     break;
             }
@@ -128,8 +130,43 @@ export class SymbolResolver {
         return resultTable;
     }
 
-    resolveCreateTable(createTableNode: CreateTableNode): Table {
-        let resultTable: Table = new Table(null);
+    resolveUpdate(node: UpdateNode){
+        node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
+        node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+
+        let table = node.symbolTable.findTable(node.tableIdentifier);
+        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+
+        for(let i = 0; i < node.columnIdentifiers.length; i++){
+            let ci = node.columnIdentifiers[i];
+            let ciPos = node.columnIdentifierPositions[i];
+            let value = node.values[i];
+
+            if(ci == null) continue;
+            let column = table.columns.find(c => c.identifier == ci);
+
+            if(column == null){
+                this.pushError(ci + " ist kein Bezeichner einer Spalte der Tabelle " + node.tableIdentifier + ".", "error", ciPos);
+            }
+
+            if(value == null) continue;
+            let symbolTable = this.pushNewSymbolTable(node.valuePosBegin[i], node.valuePosEnd[i]);
+            symbolTable.storeTableSymbols(table);
+            this.resolveTerm(value);
+
+        }
+
+        if(node.whereNode != null){
+            let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
+            symbolTable.storeTableSymbols(table);
+            this.resolveTerm(node.whereNode);
+        }
+
+    }
+
+
+
+    resolveCreateTable(createTableNode: CreateTableNode){
 
         createTableNode.symbolTable = this.pushNewSymbolTable(createTableNode.position, createTableNode.endPosition);
         createTableNode.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
@@ -160,7 +197,7 @@ export class SymbolResolver {
             }
 
             if (columnNode.referencesTable != null && columnNode.baseType != null) {
-                let tables = this.getCurrentSymbolTable().findTable(columnNode.referencesTable);
+                let tables = this.getCurrentSymbolTable().findTables(columnNode.referencesTable);
                 if (tables.length == 1) {
                     let table = tables[0].table;
                     let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
@@ -184,7 +221,7 @@ export class SymbolResolver {
             let columnNode = createTableNode.columnList.find(cn => cn.identifier == fki.column);
             if (columnNode == null) continue;
 
-            let tables = this.getCurrentSymbolTable().findTable(fki.referencesTable);
+            let tables = this.getCurrentSymbolTable().findTables(fki.referencesTable);
             if (tables.length == 1) {
                 let table = tables[0].table;
                 let column = table.columns.find(c => c.identifier == fki.referencesColumn);
@@ -204,7 +241,6 @@ export class SymbolResolver {
 
         this.symbolTableStack.pop();
 
-        return resultTable;
     }
 
     resolveTableOrSubQuery(tosNode: TableOrSubqueryNode, joinedTables: Table[]) {
@@ -339,7 +375,7 @@ export class SymbolResolver {
     }
 
     resolveDot(node: DotNode): SQLType {
-        let tableSymbols = this.getCurrentSymbolTable().findTable(node.identifierLeft.identifier);
+        let tableSymbols = this.getCurrentSymbolTable().findTables(node.identifierLeft.identifier);
         if (tableSymbols.length == 0) {
             this.pushError("Die Tabelle " + node.identifierLeft.identifier + " kann nicht gefunden werden.", "error", node.identifierLeft.position);
             return null;

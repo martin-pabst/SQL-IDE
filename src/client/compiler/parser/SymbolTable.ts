@@ -116,7 +116,13 @@ export class SymbolTable {
 
     }
 
-    findTable(identifier: string): Symbol[] {
+    findTable(identifier: string): Table {
+        let tables = this.findTables(identifier);
+        if(tables.length == 0) return null;
+        return tables[0].table;
+    }
+
+    findTables(identifier: string): Symbol[] {
 
         let symbolTable: SymbolTable = this;
         while(symbolTable != null){

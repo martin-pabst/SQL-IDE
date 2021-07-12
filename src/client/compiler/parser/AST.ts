@@ -109,8 +109,18 @@ export type OrderByNode = {
 export type UpdateNode = {
     type: TokenType.keywordUpdate,
     position: TextPosition,
-    parentStatement: StatementNode,
-    symbolTable: SymbolTable  
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+    tableIdentifier: string,
+    tableIdentifierPosition: TextPosition, 
+    columnIdentifiers: string[],
+    columnIdentifierPositions: TextPosition[],
+    values: TermNode[],
+    valuePosBegin: TextPosition[],
+    valuePosEnd: TextPosition[],
+    whereNode: TermNode,
+    whereNodeBegin: TextPosition,
+    whereNodeEnd: TextPosition  
 }
 
 export type DotNode = {

@@ -1,7 +1,7 @@
 import { param, timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 import { SQLBaseType } from "./SQLTypes.js";
@@ -263,10 +263,12 @@ export class Parser {
         return this.cct == this.endToken;
     }
 
-    comesToken(token: TokenType | TokenType[]): boolean {
+    comesToken(token: TokenType | TokenType[], skip: boolean = false): boolean {
 
         if (!Array.isArray(token)) {
-            return this.tt == token;
+            let ret: boolean = this.tt == token;
+            if(ret && skip) this.nextToken();
+            return ret;
         }
 
         return token.indexOf(this.tt) >= 0;
@@ -361,6 +363,8 @@ export class Parser {
                 return this.parseInsert();
             case TokenType.keywordCreate:
                 return this.parseCreateTable();
+            case TokenType.keywordUpdate:
+                return this.parseUpdate();
             default:
                 let s = TokenTypeReadable[this.tt];
                 if (s == null) s = "";
@@ -377,8 +381,71 @@ export class Parser {
     }
 
 
-    parseCreateTable(): CreateTableNode {
+    parseUpdate(): UpdateNode {
 
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "update"
+
+        let node: UpdateNode = {
+            type: TokenType.keywordUpdate,
+            position: startPosition,
+            endPosition: null,
+            symbolTable: null,
+            tableIdentifier: "",
+            tableIdentifierPosition: null,
+            columnIdentifiers: [],
+            columnIdentifierPositions: [],
+            values: [],
+            valuePosBegin: [],
+            valuePosEnd: [],
+            whereNode: null,
+            whereNodeBegin: null,
+            whereNodeEnd: null
+        }
+
+        this.addCompletionHintHere(false, true, [], 1);
+        if(!this.expect(TokenType.identifier, false)) return null;
+        
+        node.tableIdentifier = <string>this.cct.value;
+        node.tableIdentifierPosition = this.getCurrentPosition();
+        this.nextToken();
+        node.endPosition = this.getCurrentPosition();
+
+        this.addCompletionHintHere(false, false, ["set\n\t"], 1);
+        if(!this.expect(TokenType.keywordSet)) return node;
+        do {
+            this.addCompletionHintHere(node.tableIdentifier, false, [], 1);
+            if(this.tt != TokenType.identifier){
+                this.pushError("Hier wird der Bezeichner derjenigen Spalte der Tabelle " + node.tableIdentifier + " erwaretet, deren Wert verändert werden soll.", "error");
+                break;
+            }
+            
+            node.columnIdentifiers.push(<string>this.cct.value);
+            node.columnIdentifierPositions.push(this.getCurrentPosition());
+            this.nextToken();
+            
+            this.expect(TokenType.equal, true);
+            
+            node.valuePosBegin.push(this.getCurrentPosition());
+            node.values.push(this.parseTerm());
+            node.valuePosEnd.push(this.getCurrentPosition());
+            
+        } while (this.comesToken(TokenType.comma, true));
+        
+        node.endPosition = this.getCurrentPosition();
+        if(!this.expect(TokenType.keywordWhere, true)) return node;
+        
+        node.whereNodeBegin = this.getCurrentPosition();
+        node.whereNode = this.parseTerm();
+        node.whereNodeEnd = this.getCurrentPosition();
+        
+        node.endPosition = this.getCurrentPosition();
+        return node;
+        
+    }    
+    
+    parseCreateTable(): CreateTableNode {
+        
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "create"
 
