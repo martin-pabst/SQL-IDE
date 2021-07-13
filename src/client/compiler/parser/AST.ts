@@ -7,7 +7,8 @@ import { Table } from "./SQLTable.js";
 export type ASTNode = 
     StatementNode | TermNode | ColumnNode | CreateTableColumnNode
     
-    export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode;
+    export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | 
+            DeleteNode | DropTableNode | AlterTableNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
@@ -105,6 +106,46 @@ export type OrderByNode = {
     column: TermNode
 }
 
+
+export type AlterTableKind = "renameTable" | "renameColumn" | "addColumn" | "dropColumn";
+
+export type AlterTableNode = {
+    type: TokenType.keywordAlter,
+    position: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+    tableIdentifier: string,
+    tableIdentifierPosition: TextPosition, 
+
+    kind: AlterTableKind,
+    newTableName?: string, // case "renameTable"
+    oldColumnName?: string, // case "renameColumn" | "dropColumn"
+    oldColumnPosition?: TextPosition;
+    newColumnName?: string, // case "renameColumn" | "addColumn"
+    columnDef?: CreateTableColumnNode  // case "addColumn"
+    columnDefBegin?: TextPosition;
+}
+
+export type DropTableNode = {
+    type: TokenType.keywordDrop,
+    position: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+    tableIdentifier: string,
+    tableIdentifierPosition: TextPosition, 
+}
+
+export type DeleteNode = {
+    type: TokenType.keywordDelete,
+    position: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+    tableIdentifier: string,
+    tableIdentifierPosition: TextPosition, 
+    whereNode: TermNode,
+    whereNodeBegin: TextPosition,
+    whereNodeEnd: TextPosition  
+}
 
 export type UpdateNode = {
     type: TokenType.keywordUpdate,

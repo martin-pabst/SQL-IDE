@@ -1,7 +1,7 @@
 import { param, timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 import { SQLBaseType } from "./SQLTypes.js";
@@ -61,7 +61,7 @@ export class Parser {
         if (this.tokenList.length == 0) {
             this.module.sqlStatements = [];
             this.module.errors[1] = this.errorList;
-            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20, column: 100, length: 0 }, false, false, ["select", "insert into", "update", "create table", "drop table"]);
+            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20, column: 100, length: 0 }, false, false, ["select", "insert into", "update", "create table", "delete from", "alter table", "drop table"]);
             return;
         }
 
@@ -267,7 +267,7 @@ export class Parser {
 
         if (!Array.isArray(token)) {
             let ret: boolean = this.tt == token;
-            if(ret && skip) this.nextToken();
+            if (ret && skip) this.nextToken();
             return ret;
         }
 
@@ -335,9 +335,10 @@ export class Parser {
 
             // emergency-forward:
             if (this.pos == oldPos) {
-                let beginStatementTokens: TokenType[] = 
-                [TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordCreate, TokenType.keywordInsert];
-                while(!this.isEnd() && beginStatementTokens.indexOf(this.tt) < 0){
+                let beginStatementTokens: TokenType[] =
+                    [TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordCreate, TokenType.keywordInsert,
+                    TokenType.keywordDelete, TokenType.keywordDrop, TokenType.keywordAlter];
+                while (!this.isEnd() && beginStatementTokens.indexOf(this.tt) < 0) {
                     this.nextToken();
                 }
             }
@@ -368,6 +369,12 @@ export class Parser {
                 return this.parseCreateTable();
             case TokenType.keywordUpdate:
                 return this.parseUpdate();
+            case TokenType.keywordDelete:
+                return this.parseDelete();
+            case TokenType.keywordDrop:
+                return this.parseDropTable();
+            case TokenType.keywordAlter:
+                return this.parseAlterTable();
             default:
                 let s = TokenTypeReadable[this.tt];
                 if (s == null) s = "";
@@ -383,6 +390,192 @@ export class Parser {
 
     }
 
+
+    parseAlterTable(): AlterTableNode {
+
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "Delete"
+
+        let node: AlterTableNode = {
+            type: TokenType.keywordAlter,
+            kind: null,
+            position: startPosition,
+            endPosition: this.getEndOfPosition(this.getCurrentPosition()),
+            symbolTable: null,
+            tableIdentifier: null,
+            tableIdentifierPosition: null,
+        }
+
+        if (!this.expect(TokenType.keywordTable, true)) {
+            this.addCompletionHintHere(false, false, ["table"], 1);
+        }
+
+        this.addCompletionHintHere(false, true, [], 1);
+        if (!this.expect(TokenType.identifier, false)) return node;
+
+        node.tableIdentifier = <string>this.cct.value;
+        node.tableIdentifierPosition = this.getCurrentPosition();
+        this.nextToken();
+        node.endPosition = this.getCurrentPosition();
+
+        this.addCompletionHintHere(false, false, ["rename to", "rename column", "add column", "drop column"], 1);
+
+        switch (this.tt) {
+            case TokenType.keywordRename: this.parseRenameTableOrColumn(node); break;
+            case TokenType.keywordAdd: this.parseAddColumn(node); break;
+            case TokenType.keywordDrop: this.parseDropColumn(node); break;
+            default:
+                this.pushError("Erwartet wird rename to, rename column, add column oder drop column");
+        }
+
+        return node;
+    }
+
+    parseRenameTableOrColumn(node: AlterTableNode) {
+
+        this.nextToken();
+
+        switch (this.tt) {
+            case TokenType.keywordTo:
+                this.nextToken();
+                node.kind = "renameTable";
+                if (this.comesToken(TokenType.identifier)) {
+                    node.newTableName = <string>this.cct.value;
+                    this.nextToken();
+                } else {
+                    this.pushError("Erwartet wird der neue Tabellenname.");
+                }
+                return;
+            case TokenType.column:
+                this.nextToken();
+                if (!this.comesToken(TokenType.identifier)) {
+                    this.pushError("Erwartet wird der Name einer Spalte der Tabelle " + node.tableIdentifier + ".");
+                    return;
+                }
+                case TokenType.identifier:
+                node.kind = "renameColumn";
+                node.oldColumnName = <string>this.cct.value;
+                node.oldColumnPosition = this.getCurrentPosition();
+                this.addCompletionHintHere(node.tableIdentifier, false, []);
+                this.nextToken();
+                if (!this.expect(TokenType.keywordTo, true)) return;
+                if (this.comesToken(TokenType.identifier)) {
+                    node.newColumnName = <string>this.cct.value;
+                    this.nextToken();
+                } else {
+                    this.pushError("Erwartet wird der neue Spaltenname.");
+                }
+                return;
+            default:
+                this.pushError("Erwartet wird das Schlüsselwort 'to' (zum Umbenennen der Tabelle) oder das Schlüsselwor 'column' (zum Umbenennen einer Spalte).")
+                return;
+        }
+
+
+
+    }
+
+
+    parseDropColumn(node: AlterTableNode) {
+        this.nextToken(); // skip 'drop'
+        this.comesToken(TokenType.keywordColumn, true);
+        node.oldColumnPosition = this.getCurrentPosition();
+        this.addCompletionHintHere(node.tableIdentifier, false, []);
+
+        node.kind = "dropColumn";
+
+        if (this.comesToken(TokenType.identifier)) {
+            node.oldColumnName = <string>this.cct.value;
+            this.nextToken();
+        } else {
+            this.pushError("Erwartet wird der Bezeichner der Spalte, die gelöscht werden soll.");
+        }
+
+    }
+
+    parseAddColumn(node: AlterTableNode) {
+        this.nextToken(); // skip 'add'
+        node.kind = "addColumn";
+        this.comesToken(TokenType.keywordColumn, true);
+        node.columnDefBegin = this.getCurrentPosition();
+        node.columnDef = this.parseColumnDefinition(false);
+    }
+
+    parseDropTable(): DropTableNode {
+
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "Delete"
+
+        let node: DropTableNode = {
+            type: TokenType.keywordDrop,
+            position: startPosition,
+            endPosition: this.getEndOfPosition(this.getCurrentPosition()),
+            symbolTable: null,
+            tableIdentifier: null,
+            tableIdentifierPosition: null
+        }
+
+        if (!this.expect(TokenType.keywordTable, true)) {
+            this.addCompletionHintHere(false, false, ["table"], 1);
+        }
+
+        this.addCompletionHintHere(false, true, [], 1, "", ";");
+        if (!this.expect(TokenType.identifier, false)) return node;
+
+        node.tableIdentifier = <string>this.cct.value;
+        node.tableIdentifierPosition = this.getCurrentPosition();
+        this.nextToken();
+        node.endPosition = this.getCurrentPosition();
+
+        return node;
+
+    }
+
+    parseDelete(): DeleteNode {
+
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "Delete"
+
+        let node: DeleteNode = {
+            type: TokenType.keywordDelete,
+            position: startPosition,
+            endPosition: this.getEndOfPosition(this.getCurrentPosition()),
+            symbolTable: null,
+            tableIdentifier: null,
+            tableIdentifierPosition: null,
+            whereNode: null,
+            whereNodeBegin: null,
+            whereNodeEnd: null
+        }
+
+        if (!this.expect(TokenType.keywordFrom, true)) {
+            this.addCompletionHintHere(false, false, ["from"], 1);
+        }
+
+        this.addCompletionHintHere(false, true, [], 1, "", " where\n\t");
+        if (!this.expect(TokenType.identifier, false)) return node;
+
+        node.tableIdentifier = <string>this.cct.value;
+        node.tableIdentifierPosition = this.getCurrentPosition();
+        this.nextToken();
+        node.endPosition = this.getCurrentPosition();
+
+        this.addCompletionHintHere(false, false, ["where\n\t"], 1);
+        if (!this.expect(TokenType.keywordWhere)) return node;
+
+        node.endPosition = this.getCurrentPosition();
+
+
+        node.whereNodeBegin = this.getEndOfPosition(this.lastToken.position);
+        node.whereNode = this.parseTerm();
+        node.whereNodeEnd = this.getCurrentPosition();
+
+        this.module.addCompletionHint(node.whereNodeBegin, this.getCurrentPositionPlus(3), node.tableIdentifier, false, []);
+
+        node.endPosition = this.getCurrentPosition();
+        return node;
+
+    }
 
     parseUpdate(): UpdateNode {
 
@@ -407,45 +600,45 @@ export class Parser {
         }
 
         this.addCompletionHintHere(false, true, [], 1, "", " set\n\t");
-        if(!this.expect(TokenType.identifier, false)) return node;
-        
+        if (!this.expect(TokenType.identifier, false)) return node;
+
         node.tableIdentifier = <string>this.cct.value;
         node.tableIdentifierPosition = this.getCurrentPosition();
         this.nextToken();
         node.endPosition = this.getCurrentPosition();
 
         this.addCompletionHintHere(false, false, ["set\n\t"], 1);
-        if(!this.expect(TokenType.keywordSet)) return node;
+        if (!this.expect(TokenType.keywordSet)) return node;
         let first: boolean = true;
         do {
-            this.addCompletionHintHere(node.tableIdentifier, false, first?[]:['where'], 1, null, " = ");
+            this.addCompletionHintHere(node.tableIdentifier, false, first ? [] : ['where'], 1, null, " = ");
             first = false;
-            if(this.tt != TokenType.identifier){
+            if (this.tt != TokenType.identifier) {
                 this.pushError("Hier wird der Bezeichner derjenigen Spalte der Tabelle " + node.tableIdentifier + " erwaretet, deren Wert verändert werden soll.", "error");
                 break;
             }
-            
+
             node.columnIdentifiers.push(<string>this.cct.value);
             node.columnIdentifierPositions.push(this.getCurrentPosition());
             this.nextToken();
-            
+
             this.expect(TokenType.equal, true);
-            
+
             node.valuePosBegin.push(this.getCurrentPosition());
             node.values.push(this.parseTerm());
             node.valuePosEnd.push(this.getCurrentPosition());
-            
+
         } while (this.comesToken(TokenType.comma, true));
-        
+
         node.endPosition = this.getCurrentPosition();
 
-        if(this.lastToken.tt != TokenType.comma || this.comesToken(TokenType.keywordWhere)){
-            if(!this.expect(TokenType.keywordWhere, true)) return node;
-            
+        if (this.lastToken.tt != TokenType.comma || this.comesToken(TokenType.keywordWhere)) {
+            if (!this.expect(TokenType.keywordWhere, true)) return node;
+
             node.whereNodeBegin = this.getEndOfPosition(this.lastToken.position);
             node.whereNode = this.parseTerm();
             node.whereNodeEnd = this.getCurrentPosition();
-            
+
             this.module.addCompletionHint(node.whereNodeBegin, node.whereNodeEnd, node.tableIdentifier, false, []);
 
             node.endPosition = this.getCurrentPosition();
@@ -453,11 +646,11 @@ export class Parser {
             this.comesToken(TokenType.keywordWhere, true); // skip where, if present
         }
         return node;
-        
-    }    
-    
+
+    }
+
     parseCreateTable(): CreateTableNode {
-        
+
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "create"
 
@@ -540,7 +733,7 @@ export class Parser {
                 let pos0 = this.lastToken.position;
                 let pos1 = this.getCurrentPosition();
                 this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, fki.referencesTable, false, []);
-                
+
                 if (this.expect(TokenType.leftBracket, true)) {
 
                     if (this.expect(TokenType.identifier, false)) {
@@ -638,8 +831,8 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
-        
-        
+
+
         let type = SQLBaseType.getBaseType(identifier);
         if (type == null) {
             this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + identifier);
@@ -711,7 +904,7 @@ export class Parser {
                     this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, node.referencesTable, false, []);
 
                     if (this.expect(TokenType.leftBracket, true)) {
-                
+
                         if (this.expect(TokenType.identifier, false)) {
                             node.referencesColumn = <string>this.cct.value;
                             this.nextToken();

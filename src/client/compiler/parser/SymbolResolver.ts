@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { ASTNode, BinaryOpNode, CreateTableNode, DotNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
+import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -36,16 +36,33 @@ export class SymbolResolver {
             switch (astNode.type) {
                 case TokenType.keywordSelect:
                     this.resolveSelect(astNode);
+                    this.symbolTableStack.pop();
                     break;
                 case TokenType.keywordInsert:
                     this.resolveInsert(astNode);
+                    this.symbolTableStack.pop();
                     break;
                 case TokenType.keywordCreate:
                     this.resolveCreateTable(astNode);
+                    this.symbolTableStack.pop();
                     break;
                 case TokenType.keywordUpdate:
                     this.resolveUpdate(astNode);
+                    this.symbolTableStack.pop();
                     break;
+                case TokenType.keywordDelete:
+                    this.resolveDelete(astNode);
+                    this.symbolTableStack.pop();
+                    break;
+                case TokenType.keywordDrop:
+                    this.resolveDropTable(astNode);
+                    this.symbolTableStack.pop();
+                    break;
+                case TokenType.keywordAlter:
+                    this.resolveAlterTable(astNode)
+                    this.symbolTableStack.pop();
+                    break;
+                    
                 default:
                     break;
             }
@@ -125,17 +142,64 @@ export class SymbolResolver {
 
         // TODO: group by, order by
 
-        this.symbolTableStack.pop();
-
         return resultTable;
     }
 
-    resolveUpdate(node: UpdateNode){
+    resolveDropTable(node: DropTableNode){
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
         if(node.tableIdentifier == null) return;
 
+        let table = node.symbolTable.findTable(node.tableIdentifier);
+        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+
+    }
+
+    resolveDelete(node: DeleteNode){
+        node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
+        node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+
+        if(node.tableIdentifier == null) return;
+
+        let table = node.symbolTable.findTable(node.tableIdentifier);
+        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+
+        // if(node.whereNodeBegin != null){
+        //     let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
+        //     symbolTable.storeTableSymbols(table);
+        // }
+
+        if(node.whereNode != null){
+            this.resolveTerm(node.whereNode);
+        }
+
+    }
+
+
+    resolveAlterTable(node: AlterTableNode){
+        node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
+        node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+
+        if(node.tableIdentifier == null) {
+            return;
+        }
+
+        let table = node.symbolTable.findTable(node.tableIdentifier);
+        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+
+        
+
+    }
+    
+    resolveUpdate(node: UpdateNode){
+        node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
+        node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
+        
+        if(node.tableIdentifier == null) {
+            return;
+        }
+        
         let table = node.symbolTable.findTable(node.tableIdentifier);
         if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
@@ -155,6 +219,7 @@ export class SymbolResolver {
             let symbolTable = this.pushNewSymbolTable(node.valuePosBegin[i], node.valuePosEnd[i]);
             symbolTable.storeTableSymbols(table);
             this.resolveTerm(value);
+            this.symbolTableStack.pop();
 
         }
 
@@ -166,6 +231,7 @@ export class SymbolResolver {
         if(node.whereNode != null){
             this.resolveTerm(node.whereNode);
         }
+        this.symbolTableStack.pop();
 
     }
 
@@ -244,7 +310,6 @@ export class SymbolResolver {
 
         }
 
-        this.symbolTableStack.pop();
 
     }
 
@@ -533,7 +598,6 @@ export class SymbolResolver {
 
         let tableSymbolTable = this.pushNewSymbolTable(astNode.position, tableCompletionTo);
         tableSymbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
-        this.symbolTableStack.pop();
 
         let columns: Column[] = [];
         // Parse column list

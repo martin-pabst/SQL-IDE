@@ -9,6 +9,11 @@ export enum TokenType {
     true,
     false,
     // keywords
+    keywordRename,
+    keywordTo,
+    keywordAlter,
+    keywordAdd,
+    keywordDelete,
     keywordSelect,
     keywordInsert,
     keywordInto,
@@ -137,6 +142,11 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.true]: "true",
     [TokenType.false]: "false",
     // keywords
+    [TokenType.keywordRename]: "rename",
+    [TokenType.keywordTo]: "to",
+    [TokenType.keywordAlter]: "alter",
+    [TokenType.keywordAdd]: "add",
+    [TokenType.keywordDelete]: "delete",
     [TokenType.keywordSelect]: "select",
     [TokenType.keywordInsert]: "insert",
     [TokenType.keywordInto]: "into",
@@ -279,6 +289,11 @@ export var specialCharList: {[keyword: string]:TokenType} = {
 }
 
 export var keywordList: {[keyword: string]:TokenType} = {
+    "rename": TokenType.keywordRename,
+    "to": TokenType.keywordTo,
+    "alter": TokenType.keywordAlter,
+    "add": TokenType.keywordAdd,
+    "delete": TokenType.keywordDelete,
     "select": TokenType.keywordSelect,
     "insert": TokenType.keywordInsert,
     "into": TokenType.keywordInto,
