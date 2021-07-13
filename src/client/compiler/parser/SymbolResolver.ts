@@ -62,7 +62,7 @@ export class SymbolResolver {
                     this.resolveAlterTable(astNode)
                     this.symbolTableStack.pop();
                     break;
-                    
+
                 default:
                     break;
             }
@@ -145,77 +145,119 @@ export class SymbolResolver {
         return resultTable;
     }
 
-    resolveDropTable(node: DropTableNode){
+    resolveDropTable(node: DropTableNode) {
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
-        if(node.tableIdentifier == null) return;
+        if (node.tableIdentifier == null) return;
 
         let table = node.symbolTable.findTable(node.tableIdentifier);
-        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
     }
 
-    resolveDelete(node: DeleteNode){
+    resolveDelete(node: DeleteNode) {
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
-        if(node.tableIdentifier == null) return;
+        if (node.tableIdentifier == null) return;
 
         let table = node.symbolTable.findTable(node.tableIdentifier);
-        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
         // if(node.whereNodeBegin != null){
         //     let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
         //     symbolTable.storeTableSymbols(table);
         // }
 
-        if(node.whereNode != null){
+        if (node.whereNode != null) {
             this.resolveTerm(node.whereNode);
         }
 
     }
 
 
-    resolveAlterTable(node: AlterTableNode){
+    resolveAlterTable(node: AlterTableNode) {
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
-        if(node.tableIdentifier == null) {
+        if (node.tableIdentifier == null) {
             return;
         }
 
         let table = node.symbolTable.findTable(node.tableIdentifier);
-        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        if (table == null) {
+            this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        }
 
-        
+        let oldColumn: Column = null;
+        if (node.oldColumnName != null) {
+            oldColumn = table.columns.find(c => c.identifier.toLocaleLowerCase() == node.oldColumnName.toLocaleLowerCase());
+            if (oldColumn == null) {
+                this.pushError("Die Tabelle " + node.tableIdentifier + " hat keine Spalte mit dem Bezeichner " + node.oldColumnName, "error", node.oldColumnPosition);
+            }
+        }
 
+        switch (node.kind) {
+            case "dropColumn":
+                // nothing to do as node.oldColumnName is checked above
+                break;
+            case "addColumn":
+                let columnNode = node.columnDef;
+                if (columnNode == null) break;
+                if (columnNode.referencesTable != null && columnNode.baseType != null) {
+                    let tables = this.getCurrentSymbolTable().findTables(columnNode.referencesTable);
+                    if (tables.length == 1) {
+                        let table = tables[0].table;
+                        let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
+                        if (column != null && column.type != null) {
+                            if (!column.isPrimaryKey) {
+                                this.pushError("Die referenzierte Spalte " + columnNode.referencesTable + "." + columnNode.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
+                            }
+                            if (!column.type.canCastTo(columnNode.baseType)) {
+                                this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
+                                    " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                                    column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
+                            }
+                        }
+                    }
+                }
+                break;
+            case "renameColumn":
+                // nothing to do as node.oldColumnName is checked above
+                break;
+            case "renameTable":
+                // nothing to do 
+                break;
+            default:
+                break;
+        }
     }
-    
-    resolveUpdate(node: UpdateNode){
+
+    resolveUpdate(node: UpdateNode) {
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
-        
-        if(node.tableIdentifier == null) {
+
+        if (node.tableIdentifier == null) {
             return;
         }
-        
-        let table = node.symbolTable.findTable(node.tableIdentifier);
-        if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
-        for(let i = 0; i < node.columnIdentifiers.length; i++){
+        let table = node.symbolTable.findTable(node.tableIdentifier);
+        if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+
+        for (let i = 0; i < node.columnIdentifiers.length; i++) {
             let ci = node.columnIdentifiers[i];
             let ciPos = node.columnIdentifierPositions[i];
             let value = node.values[i];
 
-            if(ci == null) continue;
+            if (ci == null) continue;
             let column = table.columns.find(c => c.identifier == ci);
 
-            if(column == null){
+            if (column == null) {
                 this.pushError(ci + " ist kein Bezeichner einer Spalte der Tabelle " + node.tableIdentifier + ".", "error", ciPos);
             }
 
-            if(value == null) continue;
+            if (value == null) continue;
             let symbolTable = this.pushNewSymbolTable(node.valuePosBegin[i], node.valuePosEnd[i]);
             symbolTable.storeTableSymbols(table);
             this.resolveTerm(value);
@@ -223,12 +265,12 @@ export class SymbolResolver {
 
         }
 
-        if(node.whereNodeBegin != null){
+        if (node.whereNodeBegin != null) {
             let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
             symbolTable.storeTableSymbols(table);
         }
 
-        if(node.whereNode != null){
+        if (node.whereNode != null) {
             this.resolveTerm(node.whereNode);
         }
         this.symbolTableStack.pop();
@@ -237,7 +279,7 @@ export class SymbolResolver {
 
 
 
-    resolveCreateTable(createTableNode: CreateTableNode){
+    resolveCreateTable(createTableNode: CreateTableNode) {
 
         createTableNode.symbolTable = this.pushNewSymbolTable(createTableNode.position, createTableNode.endPosition);
         createTableNode.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
@@ -263,7 +305,7 @@ export class SymbolResolver {
         createTableNode.symbolTable.storeTableSymbols(thisTable);
 
         for (let columnNode of createTableNode.columnList) {
-            if (createTableNode.columnList.filter(c => c.identifier == columnNode.identifier).length > 1) {
+            if (createTableNode.columnList.filter(c => c.identifier.toLocaleLowerCase() == columnNode.identifier.toLocaleLowerCase()).length > 1) {
                 this.pushError("Der Spaltenbezeichner " + columnNode.identifier + " darf in einer Tabelle nur ein einziges Mal verwendet werden", "error", columnNode.position);
             }
 

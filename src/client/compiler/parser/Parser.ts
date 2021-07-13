@@ -434,34 +434,45 @@ export class Parser {
     parseRenameTableOrColumn(node: AlterTableNode) {
 
         this.nextToken();
+        if(!this.comesToken(TokenType.keywordTo)){
+            this.addCompletionHintHere(node.tableIdentifier, false, ["column", "to"], 3);
+        } 
+        node.endPosition = this.getEndOfCurrentToken();
 
         switch (this.tt) {
             case TokenType.keywordTo:
                 this.nextToken();
+                node.endPosition = this.getEndOfCurrentToken();
                 node.kind = "renameTable";
                 if (this.comesToken(TokenType.identifier)) {
                     node.newTableName = <string>this.cct.value;
                     this.nextToken();
+                    node.endPosition = this.getEndOfCurrentToken();
                 } else {
                     this.pushError("Erwartet wird der neue Tabellenname.");
                 }
                 return;
-            case TokenType.column:
+            case TokenType.keywordColumn:
                 this.nextToken();
+                node.endPosition = this.getEndOfCurrentToken();
+                this.addCompletionHintHere(node.tableIdentifier, false, [], 3);
                 if (!this.comesToken(TokenType.identifier)) {
                     this.pushError("Erwartet wird der Name einer Spalte der Tabelle " + node.tableIdentifier + ".");
                     return;
                 }
-                case TokenType.identifier:
+            case TokenType.identifier:
                 node.kind = "renameColumn";
                 node.oldColumnName = <string>this.cct.value;
                 node.oldColumnPosition = this.getCurrentPosition();
-                this.addCompletionHintHere(node.tableIdentifier, false, []);
+                this.addCompletionHintHere(false, false, ["to"], 3);
                 this.nextToken();
+                node.endPosition = this.getEndOfCurrentToken();
                 if (!this.expect(TokenType.keywordTo, true)) return;
+                node.endPosition = this.getEndOfCurrentToken();
                 if (this.comesToken(TokenType.identifier)) {
                     node.newColumnName = <string>this.cct.value;
                     this.nextToken();
+                    node.endPosition = this.getEndOfCurrentToken();
                 } else {
                     this.pushError("Erwartet wird der neue Spaltenname.");
                 }
@@ -480,9 +491,10 @@ export class Parser {
         this.nextToken(); // skip 'drop'
         this.comesToken(TokenType.keywordColumn, true);
         node.oldColumnPosition = this.getCurrentPosition();
-        this.addCompletionHintHere(node.tableIdentifier, false, []);
+        this.addCompletionHintHere(node.tableIdentifier, false, [], 3);
 
         node.kind = "dropColumn";
+        node.endPosition = this.getEndOfCurrentToken();
 
         if (this.comesToken(TokenType.identifier)) {
             node.oldColumnName = <string>this.cct.value;
