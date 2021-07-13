@@ -131,6 +131,8 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     }
 
     addIdentifierCompletionItems(completionHint: CompletionHint, symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
+        let praefix: string = completionHint.praefix == null ? "" : completionHint.praefix;
+        let suffix: string = completionHint.suffix == null ? "" : completionHint.suffix;
 
         if (!(completionHint.hintTables || completionHint.hintColumns)) {
             return;
@@ -154,13 +156,14 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     }
                 } else if (symbol.table != null && completionHint.hintTables) {
                     if (!tableIdentifiers[symbol.identifier]) {
+                        let insertText = praefix + symbol.identifier + suffix;
                         completionItems.push({
                             label: symbol.identifier,
                             detail: "Tabelle " + symbol.table.identifier,
                             filterText: symbol.identifier,
-                            insertText: symbol.identifier,
-                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                            kind: monaco.languages.CompletionItemKind.Class,
+                            insertText: insertText,
+                            insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
                             range: undefined
                         });
                         tableIdentifiers[symbol.identifier] = true;
@@ -179,14 +182,15 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     if (withTable && cs.identifier == cs.column.identifier.toLowerCase()) {
                         text = (cs.tableAlias == null ? cs.column.table.identifier : cs.tableAlias) + "." + text;
                     }
-                    if(completionHint.hintColumnsOfTable == null || cs.column?.table?.identifier == completionHint.hintColumnsOfTable){
+                    if (completionHint.hintColumnsOfTable == null || cs.column?.table?.identifier == completionHint.hintColumnsOfTable) {
+                        let insertText = praefix + text + suffix;
                         completionItems.push({
                             label: text,
                             detail: "Die Spalte " + cs.column.identifier + " der Tabelle " + cs.column.table.identifier,
                             filterText: text,
-                            insertText: text,
-                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                            kind: monaco.languages.CompletionItemKind.Field,
+                            insertText: insertText,
+                            insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
                             range: undefined
                         })
                     }
@@ -196,14 +200,19 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         }
     }
 
-    keywordToSnippetMap: {[keyword: string]: string} = {
-        "(" : "(\n\t$0\n)",
+    keywordToSnippetMap: { [keyword: string]: string } = {
+        "(": "(\n\t$0\n)",
         "varchar": "varchar($1) $0",
         "decimal": "decimal($1, $2) $0"
     }
 
     addKeywordCompletionItems(completionHint: CompletionHint, completionItems: monaco.languages.CompletionItem[]) {
+        let praefix: string = completionHint.praefix == null ? "" : completionHint.praefix;
+        let suffix: string = completionHint.suffix == null ? "" : completionHint.suffix;
+
+
         for (let text of completionHint.hintKeywords) {
+            let insertText = praefix + text + suffix;
             let snippet = this.keywordToSnippetMap[text];
             if (snippet != null) {
                 let label = snippet.replace("$0", "").replace("$1", "").replace("$2", "").replace(/ /g, "").replace(/\n/g, "").replace(/\t/g, "");
@@ -211,7 +220,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     label: label,
                     detail: "",
                     filterText: text,
-                    insertText: snippet,
+                    insertText: insertText,
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                     kind: monaco.languages.CompletionItemKind.Snippet,
                     range: undefined
@@ -222,8 +231,8 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     detail: "",
                     filterText: text,
                     insertText: text,
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                    kind: monaco.languages.CompletionItemKind.Keyword,
+                    insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
+                    kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
                     range: undefined
                 })
             }

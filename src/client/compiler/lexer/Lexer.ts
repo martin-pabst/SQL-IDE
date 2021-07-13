@@ -549,6 +549,7 @@ export class Lexer {
         let column = this.column - 1;
         let posStart = this.pos;
         let char = this.currentChar;
+        this.next(); // skip@
 
         while (specialCharList[char] == null && !this.isSpace(char) && !(char == endChar)) {
             this.next();

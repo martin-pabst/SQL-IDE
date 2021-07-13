@@ -134,6 +134,8 @@ export class SymbolResolver {
         node.symbolTable = this.pushNewSymbolTable(node.position, node.endPosition);
         node.symbolTable.extractDatabaseStructure(this.databaseTool.databaseStructure);
 
+        if(node.tableIdentifier == null) return;
+
         let table = node.symbolTable.findTable(node.tableIdentifier);
         if(table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
@@ -156,9 +158,12 @@ export class SymbolResolver {
 
         }
 
-        if(node.whereNode != null){
+        if(node.whereNodeBegin != null){
             let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
             symbolTable.storeTableSymbols(table);
+        }
+
+        if(node.whereNode != null){
             this.resolveTerm(node.whereNode);
         }
 

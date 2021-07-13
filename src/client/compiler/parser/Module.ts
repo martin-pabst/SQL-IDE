@@ -19,7 +19,9 @@ export type CompletionHint = {
     hintColumnsOfTable?: string,
     hintTables: boolean,
     hintKeywords: string[],
-    dontHint?: string[]
+    dontHint?: string[],
+    praefix?: string,
+    suffix?: string
 }
 
 export type File = {
@@ -134,7 +136,8 @@ export class Module {
 
     }
 
-    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean|string, hintTables: boolean, hintKeywords: string[], dontHint?: string[]){
+    addCompletionHint(fromPosition: TextPosition, toPosition: TextPosition, hintColumns: boolean|string, hintTables: boolean, 
+        hintKeywords: string[], dontHint?: string[], praefix: string = "", suffix: string = ""){
         let ch: CompletionHint = {
             fromColumn: fromPosition.column,
             fromLine: fromPosition.line,
@@ -144,7 +147,9 @@ export class Module {
             hintColumnsOfTable: (typeof hintColumns == "string")? hintColumns : null,
             hintTables: hintTables,
             hintKeywords: hintKeywords,
-            dontHint: dontHint
+            dontHint: dontHint,
+            praefix: praefix,
+            suffix: suffix
         }
 
         for(let i = ch.fromLine; i <= ch.toLine; i++){

@@ -335,8 +335,11 @@ export class Parser {
 
             // emergency-forward:
             if (this.pos == oldPos) {
-                this.pos++;
-                this.initializeLookahead();
+                let beginStatementTokens: TokenType[] = 
+                [TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordCreate, TokenType.keywordInsert];
+                while(!this.isEnd() && beginStatementTokens.indexOf(this.tt) < 0){
+                    this.nextToken();
+                }
             }
 
         }
@@ -389,9 +392,9 @@ export class Parser {
         let node: UpdateNode = {
             type: TokenType.keywordUpdate,
             position: startPosition,
-            endPosition: null,
+            endPosition: this.getEndOfPosition(this.getCurrentPosition()),
             symbolTable: null,
-            tableIdentifier: "",
+            tableIdentifier: null,
             tableIdentifierPosition: null,
             columnIdentifiers: [],
             columnIdentifierPositions: [],
@@ -403,8 +406,8 @@ export class Parser {
             whereNodeEnd: null
         }
 
-        this.addCompletionHintHere(false, true, [], 1);
-        if(!this.expect(TokenType.identifier, false)) return null;
+        this.addCompletionHintHere(false, true, [], 1, "", " set\n\t");
+        if(!this.expect(TokenType.identifier, false)) return node;
         
         node.tableIdentifier = <string>this.cct.value;
         node.tableIdentifierPosition = this.getCurrentPosition();
@@ -413,8 +416,10 @@ export class Parser {
 
         this.addCompletionHintHere(false, false, ["set\n\t"], 1);
         if(!this.expect(TokenType.keywordSet)) return node;
+        let first: boolean = true;
         do {
-            this.addCompletionHintHere(node.tableIdentifier, false, [], 1);
+            this.addCompletionHintHere(node.tableIdentifier, false, first?[]:['where'], 1, null, " = ");
+            first = false;
             if(this.tt != TokenType.identifier){
                 this.pushError("Hier wird der Bezeichner derjenigen Spalte der Tabelle " + node.tableIdentifier + " erwaretet, deren Wert verändert werden soll.", "error");
                 break;
@@ -433,13 +438,20 @@ export class Parser {
         } while (this.comesToken(TokenType.comma, true));
         
         node.endPosition = this.getCurrentPosition();
-        if(!this.expect(TokenType.keywordWhere, true)) return node;
-        
-        node.whereNodeBegin = this.getCurrentPosition();
-        node.whereNode = this.parseTerm();
-        node.whereNodeEnd = this.getCurrentPosition();
-        
-        node.endPosition = this.getCurrentPosition();
+
+        if(this.lastToken.tt != TokenType.comma || this.comesToken(TokenType.keywordWhere)){
+            if(!this.expect(TokenType.keywordWhere, true)) return node;
+            
+            node.whereNodeBegin = this.getEndOfPosition(this.lastToken.position);
+            node.whereNode = this.parseTerm();
+            node.whereNodeEnd = this.getCurrentPosition();
+            
+            this.module.addCompletionHint(node.whereNodeBegin, node.whereNodeEnd, node.tableIdentifier, false, []);
+
+            node.endPosition = this.getCurrentPosition();
+        } else {
+            this.comesToken(TokenType.keywordWhere, true); // skip where, if present
+        }
         return node;
         
     }    
@@ -608,11 +620,11 @@ export class Parser {
 
     }
 
-    addCompletionHintHere(hintColumns: boolean | string, hintTables: boolean, hints: string[], additionalColumns: number = 0) {
+    addCompletionHintHere(hintColumns: boolean | string, hintTables: boolean, hints: string[], additionalColumns: number = 0, praefix: string = "", suffix: string = "") {
         let pos0 = this.lastToken.position;
         let pos1 = this.getCurrentPosition();
         pos1.column += 1 + additionalColumns
-        this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, hintColumns, hintTables, hints);
+        this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, hintColumns, hintTables, hints, null, praefix, suffix);
     }
 
     parseType(node: CreateTableColumnNode, primaryKeyAlreadyDefined: boolean) {
