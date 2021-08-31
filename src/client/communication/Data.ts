@@ -1,4 +1,3 @@
-
 export type UserSettings = {
     helperHistory: {
         newWorkspaceHelperDone: boolean,
@@ -7,7 +6,8 @@ export type UserSettings = {
         consoleHelperDone: boolean,
         homeButtonHelperDone: boolean,
         stepButtonHelperDone: boolean,
-        repositoryButtonDone: boolean
+        repositoryButtonDone: boolean,
+        folderButtonDone: boolean
     },
     //    theme: string,  // old!
     viewModes: ViewModes,
@@ -28,6 +28,7 @@ export type ViewMode = {
 
 
 export type WorkspaceSettings = {
+    libraries: string[]
 }
 
 export type FileData = {
@@ -48,11 +49,13 @@ export type FileData = {
 
 export type WorkspaceData = {
     name: string,
+    path: string,
+    isFolder: boolean,
     id: number,
     owner_id: number,
     files: FileData[],
     currentFileId: number,
-    settings?: WorkspaceSettings,
+    settings?: string,       // serialized WorkspaceSettings
 
     version: number,
     repository_id: number,    // id of repository-workspace
@@ -81,7 +84,8 @@ export type UserData = {
     rufname: string,
     currentWorkspace_id?: number,
     settings?: UserSettings,
-    password?: string
+    password?: string,
+    is_testuser?: boolean
 }
 
 export type GetUserDataRequest = {
@@ -150,11 +154,17 @@ export type LoginRequest = {
     language: number
 }
 
+export type TicketLoginRequest = {
+    ticket: string,
+    language: number
+}
+
 export type LoginResponse = {
     success: boolean,
     user: UserData,
     classdata: ClassData[], // null if !is_teacher
     workspaces: Workspaces,
+    isTestuser: boolean
 }
 
 export type LogoutRequest = {
@@ -170,12 +180,15 @@ export type SendUpdatesRequest = {
     files: FileData[],
     owner_id: number,
     userId: number,
-    language: number
+    language: number,
+    currentWorkspaceId: number,
+    getModifiedWorkspaces: boolean
 }
 
 export type SendUpdatesResponse = {
-    workspaces: Workspaces;
-    success: boolean;
+    workspaces: Workspaces,
+    filesToForceUpdate: FileData[],
+    success: boolean
 }
 
 export type UpdateUserSettingsRequest = {
@@ -315,7 +328,18 @@ export type StatisticData = {
     userlist?: string[],
     webSocketSessionCount: number,
     webSocketClientCount: number,
-    webSocketRequestPerSecond: number
+    webSocketRequestPerSecond: number,
+    performanceDataList: PerformanceData[]
+}
+
+export type PerformanceData = {
+    url: string;
+    sumTime: number;
+    count: number;
+}
+
+export type CollectPerformanceDataRequest = {
+    data: PerformanceData[]
 }
 
 export type GetStatisticsResponse = {
@@ -565,4 +589,26 @@ export type PairingClient = {
 export type WebSocketResponsePairingFound = {
     command: 6,
     clients: PairingClient[]
+}
+
+export type GetMessagesRequest = {
+    type: string;
+}
+
+export type Message = {
+    text: string, 
+    type: string,
+    done: boolean,
+    time: number,
+    user_id: number
+}
+
+export type GetMessagesResponse = {
+    success: boolean;
+    messages: Message[];
+}
+
+export type ImportSchoolsResponse = {
+    success: boolean, 
+    messageType: string
 }

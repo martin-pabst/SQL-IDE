@@ -99,7 +99,8 @@ export class Login {
                                 speedControlHelperDone: false,
                                 homeButtonHelperDone: false,
                                 stepButtonHelperDone: false,
-                                repositoryButtonDone: false
+                                repositoryButtonDone: false,
+                                folderButtonDone: false
                             },
                             viewModes: null,
                             classDiagram: null
