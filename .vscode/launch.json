@@ -7,8 +7,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome Port 6000",
-            "url": "http://localhost:6000",
+            "name": "Launch Chrome Port 6500",
+            "url": "http://localhost:6500",
             "webRoot": "${workspaceFolder}/htdocs",
             "sourceMaps": true
         },
