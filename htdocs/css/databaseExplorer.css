@@ -64,5 +64,5 @@
 }
 
 .jo_db_tree {
-    overflow-y: scroll;
+    overflow-y: auto;
 }

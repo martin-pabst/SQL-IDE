@@ -41,28 +41,20 @@ export type FileData = {
     version: number,
     workspace_id: number,
     forceUpdate: boolean,
-    is_copy_of_id?: number,
-    repository_file_version?: number,
-    identical_to_repository_version: boolean,
-    file_type: number // 0 == Java, 11 == SQL
+    file_type: number
 }
 
 export type WorkspaceData = {
+    id: number,
     name: string,
     path: string,
     isFolder: boolean,
-    id: number,
     owner_id: number,
     files: FileData[],
-    currentFileId: number,
+    currentFileId?: number,
     settings?: string,       // serialized WorkspaceSettings
 
-    version: number,
-    repository_id: number,    // id of repository-workspace
-    has_write_permission_to_repository: boolean, // true if owner of this working copy has write permission to repository workspace
-
-    language: number,
-    sql_baseDatabase: string,
+    template_database_id?: number,
     sql_manipulateDatabaseStatements: string,
     sql_history: string
 }
@@ -193,6 +185,8 @@ export type SendUpdatesResponse = {
 
 export type UpdateUserSettingsRequest = {
     settings: UserSettings,
+    current_workspace_id: number,
+    current_file_id: number,
     userId: number
 }
 

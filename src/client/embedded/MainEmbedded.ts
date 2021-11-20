@@ -348,8 +348,7 @@ export class MainEmbedded implements MainBase {
             version: 1,
             workspace_id: 0,
             forceUpdate: false,
-            identical_to_repository_version: false,
-            file_type: 11,
+            file_type: 11
         }, this);
 
         this.currentWorkspace.moduleStore.putModule(module);

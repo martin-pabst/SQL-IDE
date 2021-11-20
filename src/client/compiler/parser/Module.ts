@@ -33,10 +33,6 @@ export type File = {
     submitted_date: string,
     student_edited_after_revision: boolean,
 
-    is_copy_of_id?: number,
-    repository_file_version?: number,
-    identical_to_repository_version: boolean,
-
     dirty: boolean,
     saved: boolean,
     version: number,
@@ -113,7 +109,6 @@ export class Module {
             if (versionId != that.lastSavedVersionId) {
                 that.file.dirty = true;
                 that.file.saved = false;
-                that.file.identical_to_repository_version = false;
                 that.lastSavedVersionId = versionId;
             }
 
@@ -206,9 +201,6 @@ export class Module {
             saved: true,
             version: f.version,
             id: f.id,
-            is_copy_of_id: f.is_copy_of_id,
-            repository_file_version: f.repository_file_version,
-            identical_to_repository_version: f.identical_to_repository_version
         }
 
         let m: Module = new Module(f1, main);
@@ -227,9 +219,6 @@ export class Module {
             submitted_date: file.submitted_date,
             student_edited_after_revision: file.student_edited_after_revision,
             version: file.version,
-            is_copy_of_id: file.is_copy_of_id,
-            repository_file_version: file.repository_file_version,
-            identical_to_repository_version: file.identical_to_repository_version,
             workspace_id: workspace.id,
             forceUpdate: false,
             file_type: 11

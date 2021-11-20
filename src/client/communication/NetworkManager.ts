@@ -94,7 +94,9 @@ export class NetworkManager {
             files: fdList, 
             owner_id: this.main.workspacesOwnerId,
             userId: this.main.user.id,
-            language: 1
+            language: 1,
+            currentWorkspaceId: this.main.getCurrentWorkspace()?.id,
+            getModifiedWorkspaces: false
         }
 
         let that = this;
@@ -191,32 +193,6 @@ export class NetworkManager {
     }
 
 
-    sendCreateRepository(ws: Workspace, publish_to: number, repoName: string, repoDescription: string, callback: (error: string, repository_id?: number) => void) {
-
-        this.sendUpdates(() => {
-
-            let request = {
-                workspace_id: ws.id,
-                publish_to: publish_to,
-                name: repoName,
-                description: repoDescription
-            }
-    
-            ajax("createRepository", request, (response: {success: boolean, message?: string, repository_id?: number}) => {
-                ws.moduleStore.getModules(false).forEach(m => {
-                    m.file.is_copy_of_id = m.file.id;
-                    m.file.repository_file_version = 1;
-                })
-                ws.repository_id = response.repository_id;
-                ws.has_write_permission_to_repository = true;
-                callback(response.message, response.repository_id)
-            }, callback);
-    
-        }, true);
-
-
-    }
-
     sendDeleteWorkspaceOrFile(type: "workspace" | "file", id: number, callback: (error: string) => void) {
 
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
@@ -240,7 +216,9 @@ export class NetworkManager {
 
         let request: UpdateUserSettingsRequest = {
             settings: this.main.user.settings,
-            userId: this.main.user.id
+            userId: this.main.user.id,
+            current_workspace_id: this.main.getCurrentWorkspace()?.id,
+            current_file_id: this.main.getCurrentlyEditedModule()?.file?.id
         }
 
         ajax("updateUserSettings", request, (response: UpdateUserSettingsResponse) => {
@@ -329,17 +307,15 @@ export class NetworkManager {
     public createNewWorkspaceFromWorkspaceData(remoteWorkspace: WorkspaceData, withSort: boolean = false) {
         let w = this.main.createNewWorkspace(remoteWorkspace.name, remoteWorkspace.owner_id);
         w.id = remoteWorkspace.id;
-        w.repository_id = remoteWorkspace.repository_id;
-        w.has_write_permission_to_repository = remoteWorkspace.has_write_permission_to_repository;
-        w.sql_baseDatabase = remoteWorkspace.sql_baseDatabase;
-        w.sql_manipulateDatabaseStatements = remoteWorkspace.sql_manipulateDatabaseStatements;
-        w.sql_history = remoteWorkspace.sql_history;
+        w.sql_baseDatabase = "";
+        w.sql_manipulateDatabaseStatements = "";
+        w.sql_history = "";
 
         this.main.workspaceList.push(w);
         this.main.projectExplorer.workspaceListPanel.addElement({
             name: remoteWorkspace.name,
             externalElement: w,
-            iconClass: remoteWorkspace.repository_id == null ? "workspace" : "repository"
+            iconClass: "workspace"
         });
 
         for (let fileData of remoteWorkspace.files) {
@@ -370,8 +346,6 @@ export class NetworkManager {
             saved: true,
             text: remoteFile.text,
             version: remoteFile.version,
-            is_copy_of_id: remoteFile.is_copy_of_id,
-            repository_file_version: remoteFile.repository_file_version,
             identical_to_repository_version: true,
             workspace_id: workspace.id,
             panelElement: ae

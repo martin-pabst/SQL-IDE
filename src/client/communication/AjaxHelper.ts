@@ -1,18 +1,62 @@
-import { LoginRequest } from "./Data.js";
+import { LoginRequest, PerformanceData } from "./Data.js";
 
 // export var credentials: { username: string, password: string } = { username: null, password: null };
 
+export class PerformanceCollector {
+    static performanceData: PerformanceData[] = [];
+    static performanceDataCount: number = 0;
+    static lastTimeSent: number = performance.now();
+
+    static registerPerformanceEntry(url: string, startTime: number) {
+        let pe: PerformanceData = PerformanceCollector.performanceData.find(pe => pe.url == url);
+        if (pe == null) {
+            pe = { count: 0, sumTime: 0, url: url };
+            PerformanceCollector.performanceData.push(pe);
+        }
+        pe.count++;
+        let dt = Math.round(performance.now() - startTime);
+        pe.sumTime += dt;
+        PerformanceCollector.performanceDataCount++;
+        // console.log("Performance entry for path " + pe.url + ": " + dt + " ms, aggregated: " + pe.sumTime + " for " + pe.count + " requests.");
+    }
+
+    static sendDataToServer() {
+        if (performance.now() - PerformanceCollector.lastTimeSent > 3 * 60 * 1000) {
+            let request = {
+                data: PerformanceCollector.performanceData
+            }
+
+            PerformanceCollector.performanceData = [];
+            PerformanceCollector.performanceDataCount = 0;
+            PerformanceCollector.lastTimeSent = performance.now();
+
+            ajax("collectPerformanceData", request, () => { })
+
+        }
+
+    }
+
+}
+
+
 
 export function ajax(url: string, request: any, successCallback: (response: any) => void,
+
     errorCallback?: (message: string) => void) {
+
     showNetworkBusy(true);
+    let time = performance.now();
+
     $.ajax({
         type: 'POST',
         async: true,
         data: JSON.stringify(request),
         contentType: 'application/json',
-        url: url,
+        url: "servlet/" + url,
         success: function (response: any) {
+
+            PerformanceCollector.registerPerformanceEntry(url, time);
+
             showNetworkBusy(false);
             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
                 let error = "Fehler bei der Bearbeitung der Anfrage"
@@ -53,27 +97,3 @@ export function showNetworkBusy(busy: boolean) {
 }
 
 
-
-// export function newLogin(url: string, request: any, successCallback: (response: any) => void,
-//     errorCallback?: (message: string) => void) {
-
-//     if (credentials.username == null) return;
-//     let loginRequest: LoginRequest = {username: credentials.username, password: credentials.password};
-
-//     $.ajax({
-//         type: 'POST',
-//         data: JSON.stringify(loginRequest),
-//         contentType: 'application/json',
-//         url: "login",
-//         success: function (response: any) {
-//             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
-//             } else {
-//                 ajax(url, request, successCallback, errorCallback);
-//             }
-//             return;
-//         },
-//         error: function (jqXHR, message) {
-// //            ajax(url, request, successCallback, errorCallback);
-//         }
-//     });
-// }

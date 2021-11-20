@@ -21,7 +21,6 @@ export class ProjectExplorer {
     workspaceListPanel: AccordionPanel;
 
     $homeAction: JQuery<HTMLElement>;
-    $synchronizeAction: JQuery<HTMLElement>;
 
     constructor(private main: Main, private $projectexplorerDiv: JQuery<HTMLElement>) {
 
@@ -62,8 +61,7 @@ export class ProjectExplorer {
                     submitted_date: null,
                     student_edited_after_revision: false,
                     version: 1,
-                    panelElement: accordionElement,
-                    identical_to_repository_version: false
+                    panelElement: accordionElement
                 };
                 let m = new Module(f, that.main);
                 let modulStore = that.main.currentWorkspace.moduleStore;
@@ -153,17 +151,6 @@ export class ProjectExplorer {
             }
 
 
-        this.$synchronizeAction = jQuery('<div class="img_open-change jo_button jo_active" style="margin-right: 4px"' +
-            ' title="Workspace mit Repository synchronisieren">');
-        this.$synchronizeAction.on('mousedown', (e) => {
-
-            this.main.getCurrentWorkspace().synchronizeWithRepository();
-
-            e.stopPropagation();
-        })
-
-        this.fileListPanel.addAction(this.$synchronizeAction);
-        this.$synchronizeAction.hide();
 
     }
 
@@ -226,7 +213,6 @@ export class ProjectExplorer {
                         that.fileListPanel.enableNewButton(true);
                         successfulNetworkCommunicationCallback(w);
                         that.setWorkspaceActive(w);
-                        w.renderSynchronizeButton(accordionElement);
                     } else {
                         alert('Der Server ist nicht erreichbar!');
 
@@ -295,7 +281,7 @@ export class ProjectExplorer {
                                 newWorkspace.panelElement = {
                                     name: newWorkspace.name,
                                     externalElement: newWorkspace,
-                                    iconClass: newWorkspace.repository_id == null ? 'workspace' : 'repository'
+                                    iconClass: 'workspace' 
                                 };
 
                                 this.workspaceListPanel.addElement(newWorkspace.panelElement);
@@ -405,12 +391,11 @@ export class ProjectExplorer {
             w.panelElement = {
                 name: w.name,
                 externalElement: w,
-                iconClass: w.repository_id == null ? 'workspace' : 'repository'
+                iconClass: 'workspace'
             };
 
             this.workspaceListPanel.addElement(w.panelElement);
 
-            w.renderSynchronizeButton(w.panelElement);
         }
 
         this.workspaceListPanel.sortElements();
@@ -427,23 +412,6 @@ export class ProjectExplorer {
             let errorCountS: string = ((errorCount == null || errorCount == 0) ? "" : "(" + errorCount + ")");
 
             this.fileListPanel.setTextAfterFilename(m.file.panelElement, errorCountS, 'jo_errorcount');
-        }
-    }
-
-    showRepositoryButtonIfNeeded(w: Workspace){
-        if(w.repository_id != null && w.owner_id == this.main.user.id){
-            this.$synchronizeAction.show();
-
-            if (!this.main.user.settings.helperHistory.repositoryButtonDone) {
-
-                Helper.showHelper("repositoryButton", this.main, this.$synchronizeAction);
-
-            }
-
-
-
-        } else {
-            this.$synchronizeAction.hide();
         }
     }
 
@@ -482,8 +450,6 @@ export class ProjectExplorer {
                 Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
 
             }
-
-            this.showRepositoryButtonIfNeeded(w);
 
         } else {
             this.setModuleActive(null);
