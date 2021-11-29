@@ -35,7 +35,7 @@ export class SymbolTable {
     }
 
     extractDatabaseStructure(databaseStructure: DatabaseStructure) {
-        for (let table of Table.fromTableStructureList(databaseStructure.tables)) {
+        for (let table of Table.fromTableStructureList(databaseStructure?.tables)) {
 
             this.storeTableSymbols(table);
 

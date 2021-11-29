@@ -58,6 +58,8 @@ export class Table {
 
     static fromTableStructureList(tsList: TableStructure[]): Table[]{
 
+        if(tsList == null) tsList = [];
+
         let tables: Table[] = tsList.map(ts => Table.fromTableStructure(ts));
 
         let columnStructureToColumnMap: Map<ColumnStructure, Column> = new Map();

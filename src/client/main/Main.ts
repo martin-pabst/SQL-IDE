@@ -187,6 +187,16 @@ export class Main implements MainBase {
 
         this.startTimer();
 
+        $(window).on('unload', function() {
+            
+            if(navigator.sendBeacon && that.user != null){
+                that.networkManager.sendUpdates(null, false);
+                that.networkManager.sendUpdateUserSettings(() => {});
+            }
+            
+        });
+
+
     }
 
     startTimer() {

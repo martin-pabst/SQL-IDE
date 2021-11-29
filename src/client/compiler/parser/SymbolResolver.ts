@@ -19,7 +19,7 @@ export class SymbolResolver {
 
     constructor(databaseTool: DatabaseTool) {
         this.databaseTool = databaseTool;
-        this.tables = Table.fromTableStructureList(databaseTool.databaseStructure.tables);
+        this.tables = Table.fromTableStructureList(databaseTool.databaseStructure?.tables);
     }
 
     start(module: Module) {
