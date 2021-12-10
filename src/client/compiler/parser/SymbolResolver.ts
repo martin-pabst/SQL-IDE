@@ -670,7 +670,13 @@ export class SymbolResolver {
                         let value = valueList[i];
                         let column = columns[i];
                         value.sqlType = SQLBaseType.fromConstantType(value.constantType);
-                        if (!value.sqlType.canCastTo(column.type)) {
+                        // constantType == 40 means: null
+                        // TODO: check if column is nullable!
+                        if(value.constantType == TokenType.keywordNull){
+                            if(!column.isNullable || column.notNull){
+                                this.pushError("Die Spalte " + column.identifier + " ist nicht nullable, daher kann null hier nicht eingefügt werden.", "error", value.position);
+                            }
+                        } else if (!value.sqlType.canCastTo(column.type)) {
                             this.pushError("Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.", "error", value.position);
                         }
                     }

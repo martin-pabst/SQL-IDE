@@ -578,7 +578,7 @@ export class Lexer {
 
         let text = this.input.substring(posStart, posEnd);
 
-        let tt = keywordList[text];
+        let tt = keywordList[text.toLowerCase()];
         if (tt != null && typeof tt == "number") {
 
             switch (tt) {

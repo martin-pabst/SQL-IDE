@@ -3,7 +3,7 @@ import { Module, ModuleStore } from "../compiler/parser/Module.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { Main } from "../main/Main.js";
 import { MainBase } from "../main/MainBase.js";
-
+import { WDatabase } from "./WDatabase.js";
 
 export class Workspace {
     
@@ -20,16 +20,14 @@ export class Workspace {
 
     compilerMessage: string;
 
-    sql_baseDatabase: string;
-    sql_manipulateDatabaseStatements: string;
+    database: WDatabase;
+
     sql_history: string;
 
     constructor(name: string, private main: MainBase, owner_id: number){
         this.name = name;
         this.owner_id = owner_id;
         this.moduleStore = new ModuleStore(main);
-        this.sql_baseDatabase = "";
-        this.sql_manipulateDatabaseStatements = "";
         this.sql_history = "";
     }
     
@@ -40,7 +38,6 @@ export class Workspace {
             owner_id: this.owner_id,
             currentFileId: this.currentlyOpenModule == null ? null : this.currentlyOpenModule.file.id,
             files: [],
-            sql_manipulateDatabaseStatements: this.sql_manipulateDatabaseStatements,
             sql_history: this.sql_history,
             path: "",
             isFolder: false
@@ -63,7 +60,6 @@ export class Workspace {
         let w = new Workspace(ws.name, main, ws.owner_id);
         w.id = ws.id;
         w.owner_id = ws.owner_id;
-        w.sql_manipulateDatabaseStatements = ws.sql_manipulateDatabaseStatements;
         w.sql_history = ws.sql_history;
 
         for(let f of ws.files){

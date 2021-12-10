@@ -1006,7 +1006,7 @@ export class Parser {
     }
 
     parseValueLists(values: ConstantNode[][]) {
-        let insideListTokens = [TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
+        let insideListTokens = [TokenType.keywordNull, TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
 
         let outerFirst: boolean = true;
 

@@ -182,6 +182,7 @@ export class AccordionPanel {
     }
 
     setTextAfterFilename(element: AccordionElement, text: string, cssClass: string) {
+        if(element == null) return;
         let $div = element.$htmlFirstLine.find('.jo_textAfterName');
         $div.addClass(cssClass);
         $div.html(text);

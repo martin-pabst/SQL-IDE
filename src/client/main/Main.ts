@@ -21,6 +21,7 @@ import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { MainBase } from "./MainBase.js";
 import { TextPosition } from "../compiler/lexer/Token.js";
+import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -67,6 +68,10 @@ export class Main implements MainBase {
         return this.databaseTool;
     }
 
+    getDatabaseExplorer():DatabaseExplorer {
+        return this.DatabaseExplorer;
+    }
+
     workspaceList: Workspace[] = [];
     workspacesOwnerId: number;
 
@@ -105,12 +110,15 @@ export class Main implements MainBase {
 
     databaseTool: DatabaseTool;
 
+    DatabaseExplorer: DatabaseExplorer;
+
     initGUI() {
 
         this.login = new Login(this);
         this.login.initGUI();
 
         this.databaseTool = new DatabaseTool();
+        this.DatabaseExplorer = new DatabaseExplorer(this, jQuery(".jo_db_tree"));
 
         this.actionManager = new ActionManager(null, this);
         this.actionManager.init();

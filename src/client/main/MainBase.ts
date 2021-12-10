@@ -8,6 +8,7 @@ import { TextPosition } from "../compiler/lexer/Token.js";
 import { ErrorManager } from "./gui/ErrorManager.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 
 export interface MainBase {
     compileIfDirty();
@@ -26,5 +27,5 @@ export interface MainBase {
     isEmbedded(): boolean;
 
     getDatabaseTool(): DatabaseTool;
-
+    getDatabaseExplorer(): DatabaseExplorer;
 }

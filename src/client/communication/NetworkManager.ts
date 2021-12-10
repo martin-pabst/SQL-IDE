@@ -1,8 +1,9 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
+import { WDatabase } from "../workspace/WDatabase.js";
 
 export class NetworkManager {
     
@@ -231,6 +232,21 @@ export class NetworkManager {
 
     }
 
+    fetchDatabase(workspace: Workspace, callback: (error: string) => void){
+        let request: GetDatabaseRequest = {
+            workspaceId: workspace.id
+        }
+
+        ajax("getDatabase", request, (response: getDatabaseResponse)=> {
+            if(response.success){
+                workspace.database = WDatabase.fromDatabaseData(response.database)
+                callback(null);
+            } else {
+                callback("Netzwerkfehler!");
+            }
+        }, callback )
+
+    }
 
     updateWorkspaces(sendUpdatesRequest: SendUpdatesRequest, sendUpdatesResponse: SendUpdatesResponse){
 
@@ -307,8 +323,6 @@ export class NetworkManager {
     public createNewWorkspaceFromWorkspaceData(remoteWorkspace: WorkspaceData, withSort: boolean = false) {
         let w = this.main.createNewWorkspace(remoteWorkspace.name, remoteWorkspace.owner_id);
         w.id = remoteWorkspace.id;
-        w.sql_baseDatabase = "";
-        w.sql_manipulateDatabaseStatements = "";
         w.sql_history = "";
 
         this.main.workspaceList.push(w);

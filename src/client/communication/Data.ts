@@ -55,7 +55,6 @@ export type WorkspaceData = {
     settings?: string,       // serialized WorkspaceSettings
 
     template_database_id?: number,
-    sql_manipulateDatabaseStatements: string,
     sql_history: string
 }
 
@@ -605,4 +604,44 @@ export type GetMessagesResponse = {
 export type ImportSchoolsResponse = {
     success: boolean, 
     messageType: string
+}
+
+/*
+        id: Int,
+        var name: String,
+        var owner_id: Int?,
+        var schule_id: Int,
+        var template_id: Int?,
+        var template: SqlDatabase?,
+        var statements: String,
+        @Transient var statementList: MutableList<String> = mutableListOf(),
+        var published_to: Int,
+        var version: Int,
+        var description: String,
+        var is_old_version_of_id: Int?
+
+*/
+
+export type DatabaseData = {
+    id: number,
+    name: string,
+    owner_id: number,
+    schule_id: number,
+    template_id: number,
+    template: DatabaseData,
+    statements: string,
+    published_to: number,
+    version: number,
+    description: string,
+    id_old_version_of_id: number
+}
+
+export type GetDatabaseRequest = {
+    workspaceId: number
+}
+
+export type getDatabaseResponse = {
+    success: boolean,
+    database: DatabaseData,
+    error: string
 }

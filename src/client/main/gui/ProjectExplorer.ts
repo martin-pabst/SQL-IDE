@@ -204,7 +204,6 @@ export class ProjectExplorer {
                 }
 
                 let w: Workspace = new Workspace(accordionElement.name, that.main, owner_id);
-                w.sql_baseDatabase = "filename: terra.sql"; // TODO
 
                 that.main.workspaceList.push(w);
 
@@ -419,42 +418,62 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.select(w, false);
 
-        let dbTool = this.main.getDatabaseTool();
-        if(w.sql_baseDatabase.startsWith("filename: ")){
-            let filename = w.sql_baseDatabase.substr("filename: ".length);
-            dbTool.getSQLStatements(filename, (sql: string) => {
-                dbTool.initializeWorker(sql);
+        let callback = (error: string) => {
+            if(error != null){
+                alert(error);
+                return;
+            }
+
+            let dbTool = this.main.getDatabaseTool();
+
+            let sql: string = "";
+            if(w.database.templateStatements != null) sql += w.database.templateStatements;
+            sql += w.database.statements;
+            dbTool.initializeWorker(sql,
+                () => {
+                    this.main.currentWorkspace = w;
+                    this.renderFiles(w);
+            
+                    if (w != null) {
+                        let nonSystemModules = w.moduleStore.getModules(false);
+            
+                        if (w.currentlyOpenModule != null) {
+                            this.setModuleActive(w.currentlyOpenModule);
+                        } else if (nonSystemModules.length > 0) {
+                            this.setModuleActive(nonSystemModules[0]);
+                        } else {
+                            this.setModuleActive(null);
+                        }
+            
+                        for (let m of nonSystemModules) {
+                            m.file.dirty = true;
+                        }
+            
+                        if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
+            
+                            Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
+            
+                        }
+            
+                    } else {
+                        this.setModuleActive(null);
+                    }
+        
+                }, 
+                () => {
+                this.main.DatabaseExplorer.refresh();
             });
+    
+    
+
+
         }
 
-        this.main.currentWorkspace = w;
-        this.renderFiles(w);
-
-        if (w != null) {
-            let nonSystemModules = w.moduleStore.getModules(false);
-
-            if (w.currentlyOpenModule != null) {
-                this.setModuleActive(w.currentlyOpenModule);
-            } else if (nonSystemModules.length > 0) {
-                this.setModuleActive(nonSystemModules[0]);
-            } else {
-                this.setModuleActive(null);
-            }
-
-            for (let m of nonSystemModules) {
-                m.file.dirty = true;
-            }
-
-            if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
-
-                Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
-
-            }
-
+        if(w.database == null){
+            this.main.networkManager.fetchDatabase(w, callback);
         } else {
-            this.setModuleActive(null);
+            callback(null);
         }
-
 
     }
 

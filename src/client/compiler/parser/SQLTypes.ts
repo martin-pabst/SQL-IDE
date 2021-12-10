@@ -50,6 +50,8 @@ export class SQLBaseType extends SQLType {
                 return this.baseTypeMap.get("text");
             case TokenType.booleanConstant:
                 return this.baseTypeMap.get("boolean");
+            case TokenType.keywordNull:
+                return this.baseTypeMap.get("null");
         
             default:
                 break;
@@ -266,13 +268,15 @@ var timestampType = new SQLBaseType("timestamp", [], (ci, pv) => `check(isDateTi
 var booleanType = new SQLBaseType("boolean", [], (ci, pv) => `check(${ci} == 0 or ${ci} == 1)`, (v, pv) => v == 1 ? "true" : "false",
     ["varchar", "text", "decimal", "numeric"]);
 
+var nullType = new SQLBaseType("null", [], (ci, pv) => "", (v, pv) => v,
+    []);
+
 let numericTypes = [decimalType, numericType, doubleType, realType, floatType, intType, integerType, tinyIntType, smallIntType, mediumIntType, bigIntType];
 
 let baseTypes = [varcharType, textType, tinyTextType, mediumTextType, longTextType,
-    dateType, dateTimeType, timestampType, booleanType].concat(numericTypes);
+    dateType, dateTimeType, timestampType, booleanType, nullType].concat(numericTypes);
 
-SQLBaseType.addBaseTypes([varcharType, textType, tinyTextType, mediumTextType, longTextType,
-    dateType, dateTimeType, timestampType, booleanType].concat(numericTypes));
+SQLBaseType.addBaseTypes(baseTypes);
 
 varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, textType, textType);

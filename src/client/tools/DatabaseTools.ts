@@ -53,7 +53,8 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    initializeWorker(sql: string, callback?: () => void){
+    initializeWorker(sql: string, callbackAfterInitializing?: () => void, 
+    callbackAfterRetrievingStructure?: () => void){
         if (this.worker != null) {
             this.worker.terminate();
         }
@@ -87,9 +88,11 @@ export class DatabaseTool {
             };
 
             that.executeQuery(sql, (result) => {
-                if(callback != null) callback();
-                that.retrieveDatabaseStructure(() => {});
-                that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
+                if(callbackAfterInitializing != null) callbackAfterInitializing();
+                that.retrieveDatabaseStructure(() => {
+                    if(callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
+                });
+                // that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
             }, (error) => {});
 
         };
@@ -148,17 +151,19 @@ export class DatabaseTool {
 
         this.executeQuery(sql, (result) => {
             let sql1 = "";
-            result[0].values.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
+            result[0]?.values?.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
 
-            this.executeQuery(sql1, (result1) => {
-                // console.log("DB structure: ");
-                // console.log(result1);
-
-                that.databaseStructure = that.parseDatabaseStructure(result, result1)
-
-                callback(that.databaseStructure);
-
-            }, (error) => {});
+            if(sql1 != ""){
+                this.executeQuery(sql1, (result1) => {
+                    // console.log("DB structure: ");
+                    // console.log(result1);
+    
+                    that.databaseStructure = that.parseDatabaseStructure(result, result1)
+    
+                    callback(that.databaseStructure);
+    
+                }, (error) => {});
+            }
 
         }, (error) => {});
 

@@ -63,6 +63,9 @@ export class MainEmbedded implements MainBase {
         return this.databaseTool;
     }
 
+    getDatabaseExplorer(): DatabaseExplorer {
+        return this.databaseExplorer;
+    }
 
     config: JavaOnlineConfig;
 
