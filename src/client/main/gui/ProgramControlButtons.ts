@@ -15,54 +15,74 @@
 // <div id="buttonRestart" title="Restart" class="img_restart-dark button"></div>
 // </div>
 
+import { Main } from "../Main.js";
+
 
 export class ProgramControlButtons {
 
     $buttonStart: JQuery<HTMLElement>;
-    $buttonPause: JQuery<HTMLElement>;
-    $buttonStop: JQuery<HTMLElement>;
-    $buttonStepOver: JQuery<HTMLElement>;
-    $buttonStepInto: JQuery<HTMLElement>;
-    $buttonStepOut: JQuery<HTMLElement>;
-    $buttonRestart: JQuery<HTMLElement>;
+    // $buttonPause: JQuery<HTMLElement>;
+    // $buttonStop: JQuery<HTMLElement>;
+    // $buttonStepOver: JQuery<HTMLElement>;
+    // $buttonStepInto: JQuery<HTMLElement>;
+    // $buttonStepOut: JQuery<HTMLElement>;
+    // $buttonRestart: JQuery<HTMLElement>;
 
     // $buttonEdit: JQuery<HTMLElement>;
 
-    buttonActiveMatrix: { [buttonName: string]: boolean[] } = {
-        "start": [false, false, true, true, true, false],
-        "pause": [false, true, false, false, false, false],
-        "stop": [false, true, true, false, false, true],
-        "stepOver": [false, false, true, true, true, false],
-        "stepInto": [false, false, true, true, true, false],
-        "stepOut": [false, false, true, false, false, false],
-        "restart": [false, true, true, true, true, true]
-    }
 
-
-    constructor(private $buttonsContainer: JQuery<HTMLElement>, private $editorContainer: JQuery<HTMLElement>){
+    constructor(private main: Main, private $buttonsContainer: JQuery<HTMLElement>) {
 
         this.$buttonStart = jQuery('<div title="Start" class="img_start-dark jo_button"></div>');
-        this.$buttonPause = jQuery('<div title="Pause" class="img_pause-dark jo_button"></div>');
-        this.$buttonStop = jQuery('<div title="Stop" class="img_stop-dark jo_button"></div>');
-        this.$buttonStepOver = jQuery('<div title="Step over" class="img_step-over-dark jo_button"></div>');
-        this.$buttonStepInto = jQuery('<div title="Step into" class="img_step-into-dark jo_button"></div>');
-        this.$buttonStepOut = jQuery('<div title="Step out" class="img_step-out-dark jo_button"></div>');
-        this.$buttonRestart = jQuery('<div title="Restart" class="img_restart-dark jo_button"></div>');
+        let am = this.main.actionManager;
+
+        am.registerAction("execute", ['Ctrl + Enter'],
+            () => {
+                if (am.isActive("execute")) {
+
+                    let module = this.main.getCurrentlyEditedModule();
+                    if (module == null) return;
+
+                    let monacoEditor = this.main.getMonacoEditor();
+                    let sqlStatement = module.getSQLStatementAtPosition(monacoEditor.getPosition());
+                    if (sqlStatement == null) return;
+
+                    let sql: string = monacoEditor.getModel().getValueInRange({
+                        startColumn: sqlStatement.from.column,
+                        startLineNumber: sqlStatement.from.line, endColumn: sqlStatement.to.column, endLineNumber: sqlStatement.to.line
+                    });
+
+                    console.log("Executing " + sql);
+                }
+
+            }, "SQL-Statement ausführen", this.$buttonStart
+        );
+
+        am.setActive('execute',false);
+
+        // this.$buttonPause = jQuery('<div title="Pause" class="img_pause-dark jo_button"></div>');
+        // this.$buttonStop = jQuery('<div title="Stop" class="img_stop-dark jo_button"></div>');
+        // this.$buttonStepOver = jQuery('<div title="Step over" class="img_step-over-dark jo_button"></div>');
+        // this.$buttonStepInto = jQuery('<div title="Step into" class="img_step-into-dark jo_button"></div>');
+        // this.$buttonStepOut = jQuery('<div title="Step out" class="img_step-out-dark jo_button"></div>');
+        // this.$buttonRestart = jQuery('<div title="Restart" class="img_restart-dark jo_button"></div>');
 
         // this.$buttonEdit = jQuery('<div class="jo_editButton" title="Programm anhalten damit der Programmtext bearbeitbar wird"></div>')
         // $editorContainer.append(this.$buttonEdit);
 
-        $buttonsContainer.append(this.$buttonStart, this.$buttonPause, this.$buttonStop,
-            this.$buttonStepOver, this.$buttonStepInto, this.$buttonStepOut, this.$buttonRestart);
+        $buttonsContainer.append(this.$buttonStart
+            // , this.$buttonPause, this.$buttonStop,
+            // this.$buttonStepOver, this.$buttonStepInto, this.$buttonStepOut, this.$buttonRestart
+        );
 
-// <!-- <img id="buttonStart" title="Start" src="assets/projectexplorer/start-dark.svg"> -->
-// <div id="buttonStart" title="Start" class="img_start-dark button"></div>
-// <div id="buttonPause" title="Pause" class="img_pause-dark button"></div>
-// <div id="buttonStop" title="Stop" class="img_stop-dark button"></div>
-// <div id="buttonStepOver" title="Step over" class="img_step-over-dark button"></div>
-// <div id="buttonStepInto" title="Step into" class="img_step-into-dark button"></div>
-// <div id="buttonStepOut" title="Step out" class="img_step-out-dark button"></div>
-// <div id="buttonRestart" title="Restart" class="img_restart-dark button"></div>
+        // <!-- <img id="buttonStart" title="Start" src="assets/projectexplorer/start-dark.svg"> -->
+        // <div id="buttonStart" title="Start" class="img_start-dark button"></div>
+        // <div id="buttonPause" title="Pause" class="img_pause-dark button"></div>
+        // <div id="buttonStop" title="Stop" class="img_stop-dark button"></div>
+        // <div id="buttonStepOver" title="Step over" class="img_step-over-dark button"></div>
+        // <div id="buttonStepInto" title="Step into" class="img_step-into-dark button"></div>
+        // <div id="buttonStepOut" title="Step out" class="img_step-out-dark button"></div>
+        // <div id="buttonRestart" title="Restart" class="img_restart-dark button"></div>
 
 
 

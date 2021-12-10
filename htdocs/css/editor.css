@@ -866,6 +866,18 @@ body .monaco-editor-hover .monaco-tokenized-source {
     background-color: var(--reveal-method);
 }
 
+.jo_highlightStatementGreen {
+    background-color: #003000;
+}
+
+.jo_highlightStatementRed {
+    background-color: #300000;
+}
+
+.jo_highlightStatementYellow {
+    background-color: #303000;
+}
+
  .jo_decorate_breakpoint {
     background-color: #580000;
 }

@@ -13,6 +13,14 @@ type TokenTreeNode = {
     children: (TokenTreeNode | TokenType)[]
 } | TokenType;
 
+export type SQLStatement = {
+    ast: ASTNode,
+    from: TextPosition,
+    to: TextPosition,
+    hasErrors: boolean,
+    acceptedBySQLite: boolean
+}
+
 
 export class Parser {
 
@@ -72,8 +80,7 @@ export class Parser {
         let lastToken = this.tokenList[this.tokenList.length - 1];
         this.endToken.position = { line: lastToken.position.line, column: lastToken.position.column + lastToken.position.length, length: 1 };
 
-        let astNodes = this.parseMain();
-        this.module.sqlStatements = astNodes.mainProgramAST;
+        this.module.sqlStatements = this.parseMain();
 
         this.module.errors[1] = this.errorList;
 
@@ -294,9 +301,9 @@ export class Parser {
         return position;
     }
 
-    parseMain(): { mainProgramAST: ASTNodes, mainProgramEnd: TextPosition } {
+    parseMain(): SQLStatement[] {
 
-        let mainProgram: ASTNodes = [];
+        let mainProgram: SQLStatement[] = [];
 
         let mainProgramEnd: TextPosition = {
             column: 0,
@@ -316,6 +323,14 @@ export class Parser {
 
             this.module.addCompletionHint(afterLastStatement, this.getCurrentPosition(), false, false, ["select", "update", "create table", "insert into"]);
 
+            let errorsBeforeStatement: number = this.errorList.length;
+
+            while ([TokenType.space, TokenType.newline].indexOf(this.cct.tt) >= 0) {
+                this.nextToken();
+            }
+
+            let startPosition = this.getCurrentPosition();
+
             let st = this.parseStatement();
 
             afterLastStatement = {
@@ -328,9 +343,15 @@ export class Parser {
                 this.nextToken();
             }
 
-            if (st != null) {
-                mainProgram = mainProgram.concat(st);
-            }
+            mainProgram.push({
+                ast: st,
+                from: startPosition,
+                to: this.getEndOfPosition(this.lastToken.position),
+                hasErrors: this.errorList.length > errorsBeforeStatement,
+                acceptedBySQLite: false
+            });
+            // console.log(mainProgram[mainProgram.length - 1]);
+
             mainProgramEnd = this.getCurrentPosition();
 
             // emergency-forward:
@@ -338,7 +359,15 @@ export class Parser {
                 let beginStatementTokens: TokenType[] =
                     [TokenType.keywordSelect, TokenType.keywordUpdate, TokenType.keywordCreate, TokenType.keywordInsert,
                     TokenType.keywordDelete, TokenType.keywordDrop, TokenType.keywordAlter];
+                
+                    let firstBadToken: boolean = true;
+
                 while (!this.isEnd() && beginStatementTokens.indexOf(this.tt) < 0) {
+                    if([TokenType.space,TokenType.newline].indexOf(this.tt) < 0 && firstBadToken){
+                        this.pushError("Erwartet wird eines dieser Schlüsselwörter: " + beginStatementTokens.map(t => TokenTypeReadable[t]).join(", ")
+                         + "; Gefunden wurde: " + this.cct.value);
+                         firstBadToken = true;
+                    }
                     this.nextToken();
                 }
             }
@@ -347,10 +376,7 @@ export class Parser {
 
         this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false, ["select", "update", "create table", "insert into"]);
 
-        return {
-            mainProgramAST: mainProgram,
-            mainProgramEnd: mainProgramEnd
-        }
+        return mainProgram;
 
     }
 
@@ -434,9 +460,9 @@ export class Parser {
     parseRenameTableOrColumn(node: AlterTableNode) {
 
         this.nextToken();
-        if(!this.comesToken(TokenType.keywordTo)){
+        if (!this.comesToken(TokenType.keywordTo)) {
             this.addCompletionHintHere(node.tableIdentifier, false, ["column", "to"], 3);
-        } 
+        }
         node.endPosition = this.getEndOfCurrentToken();
 
         switch (this.tt) {

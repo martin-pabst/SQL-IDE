@@ -8,6 +8,7 @@ import { Main } from "../../main/Main.js";
 import { ASTNode } from "./AST.js";
 import { MainBase } from "../../main/MainBase.js";
 import { stringToDate } from "../../tools/StringTools.js";
+import { SQLStatement } from "./Parser.js";
 
 
 export type CompletionHint = {
@@ -67,7 +68,7 @@ export class Module {
     tokenList: Token[];
 
     // 2nd pass: ASTParser
-    sqlStatements: ASTNode[];
+    sqlStatements: SQLStatement[];
     mainSymbolTable: SymbolTable;
 
 
@@ -156,6 +157,19 @@ export class Module {
             chList.push(ch);
         }
     }
+
+    getSQLStatementAtPosition(p: { lineNumber: number, column: number }): SQLStatement {
+
+        return this.sqlStatements.find(statement => {
+            if(statement.from.line > p.lineNumber ) return false;
+            if(statement.from.line == p.lineNumber && statement.from.column > p.column) return false;
+            if(statement.to.line < p.lineNumber) return false;
+            if(statement.to.line == p.lineNumber && statement.to.column < p.column) return false;
+            return true;
+        });        
+
+    }
+
 
     getCompletionHint(line: number, column: number){
         let chList = this.completionHints.get(line);
@@ -496,6 +510,7 @@ export class ModuleStore {
     getModule(moduleName: string): Module {
         return this.moduleMap[moduleName];
     }
+
 
 }
 

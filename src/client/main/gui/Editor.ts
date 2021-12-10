@@ -45,7 +45,9 @@ export class Editor {
             ],
             colors: {
                 "editor.background": "#1e1e1e",
-                "jo_highlightMethod": "#2b2b7d"
+                "jo_highlightStatementGreen": "#004000",
+                "jo_highlightStatementYellow": "#404000",
+                "jo_highlightStatementRed": "#400000"
             }
         });
 
@@ -79,7 +81,9 @@ export class Editor {
                 "settings.numberInputBorder": "#CECECE",
                 "statusBarItem.remoteForeground": "#FFF",
                 "statusBarItem.remoteBackground": "#16825D",
-                "jo_highlightMethod": "#babaec"
+                "jo_highlightStatementGreen": "#004000",
+                "jo_highlightStatementYellow": "#404000",
+                "jo_highlightStatementRed": "#400000"
             }
         });
 
@@ -250,7 +254,7 @@ export class Editor {
             const prevLine = model.getLineContent(position.lineNumber - 1);
             if (prevLine.trim().indexOf("/*") === 0 && !prevLine.trimRight().endsWith("*/")) {
                 const nextLine = position.lineNumber < model.getLineCount() ? model.getLineContent(position.lineNumber + 1) : "";
-                if(!nextLine.trim().startsWith("*")){
+                if (!nextLine.trim().startsWith("*")) {
                     let spacesAtBeginningOfLine: string = prevLine.substr(0, prevLine.length - prevLine.trimLeft().length);
                     if (prevLine.trim().indexOf("/**") === 0) {
                         insertEndOfComment(position, "\n" + spacesAtBeginningOfLine + " */", position.lineNumber, position.column + 3 + spacesAtBeginningOfLine.length);
@@ -399,24 +403,41 @@ export class Editor {
 
         if (this.highlightCurrentMethod) {
 
-            // let method = module.getMethodDeclarationAtPosition(position);
-            // if (method != null) {
-            //     decorations.push({
-            //         range: { startColumn: 0, startLineNumber: method.position.line, endColumn: 100, endLineNumber: method.scopeTo.line },
-            //         options: {
-            //             className: 'jo_highlightMethod', isWholeLine: true, overviewRuler: {
-            //                 color: { id: "jo_highlightMethod" },
-            //                 darkColor: { id: "jo_highlightMethod" },
-            //                 position: monaco.editor.OverviewRulerLane.Left
-            //             },
-            //             minimap: {
-            //                 color: { id: 'jo_highlightMethod' },
-            //                 position: monaco.editor.MinimapPosition.Inline
-            //             },
-            //             zIndex: -100
-            //         }
-            //     })
-            // }
+            let executeActionActive = false;
+
+            let classname = "jo_highlightStatementGreen";
+            let sqlStatement = module.getSQLStatementAtPosition(position);
+            if (sqlStatement != null) {
+                if (sqlStatement.hasErrors) {
+                    classname = "jo_highlightStatementRed";
+                    if (sqlStatement.acceptedBySQLite) {
+                        classname = "jo_highlightStatementYellow";
+                        executeActionActive = true;
+                    }
+                } else {
+                    executeActionActive = true;
+                }
+
+                decorations.push({
+                    range: { startColumn: sqlStatement.from.column, startLineNumber: sqlStatement.from.line, 
+                        endColumn: sqlStatement.to.column, endLineNumber: sqlStatement.to.line },
+                    options: {
+                        className: classname, isWholeLine: false, overviewRuler: {
+                            color: { id: classname },
+                            darkColor: { id: classname },
+                            position: monaco.editor.OverviewRulerLane.Left
+                        },
+                        minimap: {
+                            color: { id: classname },
+                            position: monaco.editor.MinimapPosition.Inline
+                        },
+                        zIndex: -100
+                    }
+                })
+
+            } 
+
+            this.main.getActionManager().setActive('execute', executeActionActive);
 
         }
 

@@ -22,6 +22,7 @@ import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { MainBase } from "./MainBase.js";
 import { TextPosition } from "../compiler/lexer/Token.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
+import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -143,6 +144,8 @@ export class Main implements MainBase {
         this.viewModeController = new ViewModeController(jQuery("#view-mode"), this);
 
         this.semicolonAngel = new SemicolonAngel(this);
+
+        new ProgramControlButtons(this, jQuery('#controls'));
 
     }
 

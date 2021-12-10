@@ -31,7 +31,12 @@ export class SymbolResolver {
 
         this.symbolTableStack.push(module.mainSymbolTable);
 
-        for (let astNode of this.module.sqlStatements) {
+        for (let statement of this.module.sqlStatements) {
+
+            let errorsBeforeStatement = this.errorList.length;
+
+            let astNode = statement.ast;
+            if(astNode == null) continue;
 
             switch (astNode.type) {
                 case TokenType.keywordSelect:
@@ -66,6 +71,8 @@ export class SymbolResolver {
                 default:
                     break;
             }
+
+            statement.hasErrors = statement.hasErrors || this.errorList.length > errorsBeforeStatement;
 
         }
 
