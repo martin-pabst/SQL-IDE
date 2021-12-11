@@ -1,3 +1,4 @@
+import { jo_mouseDetected } from "../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
 
 export class Sliders {
@@ -11,98 +12,172 @@ export class Sliders {
     initSliders() {
         let that = this;
 
-        jQuery('#slider1').on("mousedown", (md: JQuery.MouseDownEvent) => {
+        let mousePointer = window.PointerEvent ? "pointer" : "mouse";
 
-            let pe = jQuery('#leftpanel');
-            let me = jQuery('#editor>.monaco-editor');
+        jQuery('#slider1').on(mousePointer + "down", (md: JQuery.MouseDownEvent) => {
+
             let x = md.clientX;
 
-            jQuery(document).on("mousemove.slider1", (mm: JQuery.MouseMoveEvent) => {
+            jQuery(document).on(mousePointer + "move.slider1", (mm: JQuery.MouseMoveEvent) => {
                 let dx = mm.clientX - x;
-                let width = Number.parseInt(pe.css('width').replace('px', ''));
-                pe.css('width', (width + dx) + "px");
+                
+                that.moveLeftPanel(dx);
 
-                let mewidth = Number.parseInt(me.css('width').replace('px', ''));
-                me.css('width', (mewidth - dx) + "px");
-                that.main.getMonacoEditor().layout();
-                if(that.main.bottomDiv.homeworkManager.diffEditor != null){
-                    that.main.bottomDiv.homeworkManager.diffEditor.layout();
-                }
                 x = mm.clientX;
             });
 
-            jQuery(document).on("mouseup.slider1", () => {
-                jQuery(document).off("mousemove.slider1");
-                jQuery(document).off("mouseup.slider1");
+            jQuery(document).on(mousePointer + "up.slider1", () => {
+                jQuery(document).off(mousePointer + "move.slider1");
+                jQuery(document).off(mousePointer + "up.slider1");
             });
 
 
         });
 
-        jQuery('#slider2').on("mousedown", (md: JQuery.MouseDownEvent) => {
+        jQuery('#slider2').on(mousePointer + "down", (md: JQuery.MouseDownEvent) => {
 
-            let ee = jQuery('#bottomdiv-outer');
-            let me = jQuery('#editor>.monaco-editor');
             let y = md.clientY;
 
-            jQuery(document).on("mousemove.slider2", (mm: JQuery.MouseMoveEvent) => {
+            jQuery(document).on(mousePointer + "move.slider2", (mm: JQuery.MouseMoveEvent) => {
                 let dy = mm.clientY - y;
 
-                let height = Number.parseInt(ee.css('height').replace('px', ''));
-                ee.css('height', (height - dy) + "px");
-
-                let meheight = Number.parseInt(me.css('height').replace('px', ''));
-                me.css('height', (meheight + dy) + "px");
-
-                that.main.getMonacoEditor().layout();
-                if(that.main.bottomDiv.homeworkManager.diffEditor != null){
-                    that.main.bottomDiv.homeworkManager.diffEditor.layout();
-                }
+                that.moveBottomDiv(dy);
 
                 y = mm.clientY;
             });
 
-            jQuery(document).on("mouseup.slider2", () => {
-                jQuery(document).off("mousemove.slider2");
-                jQuery(document).off("mouseup.slider2");
+            jQuery(document).on(mousePointer + "up.slider2", () => {
+                jQuery(document).off(mousePointer + "move.slider2");
+                jQuery(document).off(mousePointer + "up.slider2");
             });
 
 
         });
 
-        jQuery('#slider3').on("mousedown", (md: JQuery.MouseDownEvent) => {
+        jQuery('#slider3').on(mousePointer + "down", (md: JQuery.MouseDownEvent) => {
 
-            let pe = jQuery('#rightdiv');
-            let me = jQuery('#editor>.monaco-editor');
             let x = md.clientX;
 
-            jQuery(document).on("mousemove.slider3", (mm: JQuery.MouseMoveEvent) => {
+            jQuery(document).on(mousePointer + "move.slider3", (mm: JQuery.MouseMoveEvent) => {
                 let dx = mm.clientX - x;
 
-                let width = Number.parseInt(pe.css('width').replace('px', ''));
-                pe.css('width', (width - dx) + "px");
+                that.moveRightDiv(dx);
 
-                let mewidth = Number.parseInt(me.css('width').replace('px', ''));
-                me.css('width', (mewidth + dx) + "px");
-                
-                that.main.getMonacoEditor().layout();
-                if(that.main.bottomDiv.homeworkManager.diffEditor != null){
-                    that.main.bottomDiv.homeworkManager.diffEditor.layout();
-                }
-
-                jQuery('.jo_graphics').trigger('sizeChanged');
-                width += dx;
                 x = mm.clientX;
                 mm.stopPropagation();
             });
 
-            jQuery(document).on("mouseup.slider3", () => {
-                jQuery(document).off("mousemove.slider3");
-                jQuery(document).off("mouseup.slider3");
+            jQuery(document).on(mousePointer + "up.slider3", () => {
+                jQuery(document).off(mousePointer + "move.slider3");
+                jQuery(document).off(mousePointer + "up.slider3");
             });
 
 
         });
+
+        let sliderknobLeft = jQuery('<div class="jo_sliderknob img_knob jo_button jo_active" style="left: -8px" draggable="false"></div>');
+        jQuery('#slider2').append(sliderknobLeft);
+        sliderknobLeft.on(mousePointer + 'down', (md: JQuery.MouseDownEvent) => {
+            let y = md.clientY;
+            let x = md.clientX;
+
+            md.stopImmediatePropagation();
+
+            jQuery(document).on(mousePointer + "move.knobleft", (mm: JQuery.MouseMoveEvent) => {
+                let dy = mm.clientY - y;
+                let dx = mm.clientX - x;
+                mm.stopImmediatePropagation();
+
+                that.moveLeftPanel(dx);
+                that.moveBottomDiv(dy);
+
+                x += dx;
+                y += dy;
+            });
+
+            jQuery(document).on(mousePointer + "up.knobleft", () => {
+                jQuery(document).off(mousePointer + "move.knobleft");
+                jQuery(document).off(mousePointer + "up.knobleft");
+            });
+
+        });
+
+        let sliderknobRight = jQuery('<div class="jo_sliderknob img_knob jo_button jo_active" style="right: -8px" draggable="false"></div>');
+        jQuery('#slider2').append(sliderknobRight);
+        sliderknobRight.on(mousePointer + 'down', (md: JQuery.MouseDownEvent) => {
+            let y = md.clientY;
+            let x = md.clientX;
+
+            md.stopImmediatePropagation();
+
+            jQuery(document).on(mousePointer + "move.knobright", (mm: JQuery.MouseMoveEvent) => {
+                let dy = mm.clientY - y;
+                let dx = mm.clientX - x;
+                mm.stopImmediatePropagation();
+
+                that.moveRightDiv(dx);
+                that.moveBottomDiv(dy);
+
+                x += dx;
+                y += dy;
+            });
+
+            jQuery(document).on(mousePointer + "up.knobright", () => {
+                jQuery(document).off(mousePointer + "move.knobright");
+                jQuery(document).off(mousePointer + "up.knobright");
+            });
+
+        });
+
+    }
+    
+    moveRightDiv(dx: number) {
+        let $editor = jQuery('#editor>.monaco-editor');
+        let $rightDiv = jQuery('#rightdiv');
+
+        let width = Number.parseInt($rightDiv.css('width').replace('px', ''));
+        $rightDiv.css('width', (width - dx) + "px");
+
+        let mewidth = Number.parseInt($editor.css('width').replace('px', ''));
+        $editor.css('width', (mewidth + dx) + "px");
+        
+        this.main.getMonacoEditor().layout();
+        if(this.main.bottomDiv.homeworkManager.diffEditor != null){
+            this.main.bottomDiv.homeworkManager.diffEditor.layout();
+        }
+
+        jQuery('.jo_graphics').trigger('sizeChanged');
+        width += dx;
+}
+    moveBottomDiv(dy: number) {
+        let $editor = jQuery('#editor>.monaco-editor');
+        let $bottomDiv = jQuery('#bottomdiv-outer');
+
+        let height = Number.parseInt($bottomDiv.css('height').replace('px', ''));
+        $bottomDiv.css('height', (height - dy) + "px");
+
+        let meheight = Number.parseInt($editor.css('height').replace('px', ''));
+        $editor.css('height', (meheight + dy) + "px");
+
+        this.main.getMonacoEditor().layout();
+        if(this.main.bottomDiv.homeworkManager.diffEditor != null){
+            this.main.bottomDiv.homeworkManager.diffEditor.layout();
+        }
+}
+
+    moveLeftPanel(dx: number) {
+        let $leftPanel = jQuery('#leftpanel');
+        let $editor = jQuery('#editor>.monaco-editor');
+
+        let width = Number.parseInt($leftPanel.css('width').replace('px', ''));
+        $leftPanel.css('width', (width + dx) + "px");
+
+        let mewidth = Number.parseInt($editor.css('width').replace('px', ''));
+        $editor.css('width', (mewidth - dx) + "px");
+        this.main.getMonacoEditor().layout();
+        if(this.main.bottomDiv.homeworkManager.diffEditor != null){
+            this.main.bottomDiv.homeworkManager.diffEditor.layout();
+        }
 
     }
 
