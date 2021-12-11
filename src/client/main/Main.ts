@@ -23,6 +23,7 @@ import { MainBase } from "./MainBase.js";
 import { TextPosition } from "../compiler/lexer/Token.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
+import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -73,6 +74,10 @@ export class Main implements MainBase {
         return this.DatabaseExplorer;
     }
 
+    getResultsetPresenter(): ResultsetPresenter {
+        return this.resultsetPresenter;
+    }
+
     workspaceList: Workspace[] = [];
     workspacesOwnerId: number;
 
@@ -113,6 +118,8 @@ export class Main implements MainBase {
 
     DatabaseExplorer: DatabaseExplorer;
 
+    resultsetPresenter: ResultsetPresenter;
+
     initGUI() {
 
         this.login = new Login(this);
@@ -146,6 +153,8 @@ export class Main implements MainBase {
         this.semicolonAngel = new SemicolonAngel(this);
 
         new ProgramControlButtons(this, jQuery('#controls'));
+
+        this.resultsetPresenter = new ResultsetPresenter(this);
 
     }
 

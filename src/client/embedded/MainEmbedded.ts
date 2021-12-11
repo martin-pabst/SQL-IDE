@@ -16,6 +16,7 @@ import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
+import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -65,6 +66,10 @@ export class MainEmbedded implements MainBase {
 
     getDatabaseExplorer(): DatabaseExplorer {
         return this.databaseExplorer;
+    }
+
+    getResultsetPresenter(): ResultsetPresenter {
+        return null;
     }
 
     config: JavaOnlineConfig;

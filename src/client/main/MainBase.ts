@@ -9,6 +9,7 @@ import { ErrorManager } from "./gui/ErrorManager.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
+import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 
 export interface MainBase {
     compileIfDirty();
@@ -28,4 +29,5 @@ export interface MainBase {
 
     getDatabaseTool(): DatabaseTool;
     getDatabaseExplorer(): DatabaseExplorer;
+    getResultsetPresenter():ResultsetPresenter;
 }

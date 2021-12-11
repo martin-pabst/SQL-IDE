@@ -90,9 +90,9 @@ export function ajax(url: string, request: any, successCallback: (response: any)
 
 export function showNetworkBusy(busy: boolean) {
     if (busy) {
-        jQuery('.jo_network-busy').show();
+        jQuery('.jo_network-busy').css('visibility','visible');
     } else {
-        jQuery('.jo_network-busy').hide();
+        jQuery('.jo_network-busy').css('visibility','hidden');
     }
 }
 

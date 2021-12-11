@@ -16,6 +16,7 @@
 // </div>
 
 import { Main } from "../Main.js";
+import { ResultsetPresenter } from "./ResultsetPresenter.js";
 
 
 export class ProgramControlButtons {
@@ -36,23 +37,12 @@ export class ProgramControlButtons {
         this.$buttonStart = jQuery('<div title="Start" class="img_start-dark jo_button"></div>');
         let am = this.main.actionManager;
 
-        am.registerAction("execute", ['Ctrl + Enter'],
+        am.registerAction("execute", ['Strg + Enter'],
             () => {
                 if (am.isActive("execute")) {
 
-                    let module = this.main.getCurrentlyEditedModule();
-                    if (module == null) return;
+                    this.main.resultsetPresenter.presentResultset();
 
-                    let monacoEditor = this.main.getMonacoEditor();
-                    let sqlStatement = module.getSQLStatementAtPosition(monacoEditor.getPosition());
-                    if (sqlStatement == null) return;
-
-                    let sql: string = monacoEditor.getModel().getValueInRange({
-                        startColumn: sqlStatement.from.column,
-                        startLineNumber: sqlStatement.from.line, endColumn: sqlStatement.to.column, endLineNumber: sqlStatement.to.line
-                    });
-
-                    console.log("Executing " + sql);
                 }
 
             }, "SQL-Statement ausführen", this.$buttonStart

@@ -242,14 +242,6 @@ body .monaco-editor-hover .monaco-tokenized-source {
     background-color: var(--loginButtonActive);
 }
 
-.jo_gif_animation {
-    z-index: 0;
-    position: absolute;
-    filter: brightness(0.3);
-    border-radius: 20px;
-    box-shadow: 0 0 20px 20px var(--backgroundDark);
-}
-
 /* Main */
 
 #main {

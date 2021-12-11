@@ -329,6 +329,8 @@ export class Editor {
 
 
     addActions() {
+        let that = this;
+
         this.editor.addAction({
             // An unique identifier of the contributed action.
             id: 'Find bracket',
@@ -354,6 +356,35 @@ export class Editor {
             // @param editor The editor instance is passed in as a convinience
             run: function (ed) {
                 ed.getAction('editor.action.jumpToBracket').run();
+                return null;
+            }
+        });
+
+        this.editor.addAction({
+            // An unique identifier of the contributed action.
+            id: 'Execute statement',
+
+            // A label of the action that will be presented to the user.
+            label: 'SQL-Anweisung ausführen',
+
+            // An optional array of keybindings for the action.
+            keybindings: [
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+
+            // A precondition for this action.
+            precondition: null,
+
+            // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+            keybindingContext: null,
+
+            contextMenuGroupId: 'navigation',
+
+            contextMenuOrder: 1.0,
+
+            // Method that will be executed when the action is triggered.
+            // @param editor The editor instance is passed in as a convinience
+            run: function (ed) {
+                that.main.getActionManager().trigger('execute');
                 return null;
             }
         });

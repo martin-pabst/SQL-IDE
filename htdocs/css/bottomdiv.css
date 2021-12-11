@@ -115,6 +115,8 @@
     flex-direction: column;
     overflow: visible;
     height: 100%;
+    padding-left: 5px;
+    box-sizing: border-box;
 }
 
 .jo_result-body{
@@ -124,11 +126,11 @@
 }
 
 .jo_result-header{
-    height: 25px;
+    height: 20px;
     position: relative;
     flex-shrink: 0;
-    border-bottom: 1px solid var(--console-top-borderbottom);
     box-sizing: border-box;
+    text-overflow: ellipsis;
 }
 
 .jo_decorationsOverviewRuler {
@@ -149,7 +151,7 @@
 }
 
 .jo_network-busy {
-    display: none;
+    visibility: hidden;
     margin-right: 8px;
 }
 
@@ -236,3 +238,52 @@
     color: var(--homework-file);
 }
 
+.jo_result-body table {
+  text-align: left;
+  position: relative;
+  border-collapse: collapse;
+}
+
+.jo_result-body th {
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
+    padding: 0;
+    background-color: #202060;
+    user-select: none;
+}
+
+.jo_result-body th>div {
+    padding: 0.25rem;
+    border-bottom: 2px solid #444;    
+    border-top: 2px solid #444;    
+}
+
+.jo_result-body td {
+    padding: 0.25rem;
+    border: 1px solid #444;
+    user-select: none;
+  }
+
+.jo_result-body th {
+    position: sticky;
+    top: 0; /* Don't forget this, required for the stickiness */
+  }
+
+.jo_result-body tr:nth-child(even) {background: #222}
+
+.jo_pagination {
+    display: flex;
+    flex-direction: row;
+}
+
+.jo_pagination_info {
+    padding: 0 4px;
+    color: var(----fontColorNormal);
+    font-family: Consolas, "Roboto Mono";
+    user-select: none;
+}
+
+.jo_pagination_info>span{
+    color: white;
+    font-weight: bold;
+}
