@@ -158,6 +158,31 @@ export class Module {
         }
     }
 
+    getSQLSTatementsAtSelection(sel: monaco.Selection): SQLStatement[] {
+        let selStart = {line: sel.startLineNumber, column: sel.startColumn};
+        let selEnd = {line: sel.endLineNumber, column: sel.endColumn};
+
+        return this.sqlStatements.filter(stmt => {
+            return !(this.compare(stmt.to, selStart) < 0 || this.compare(stmt.from, selEnd) > 0);
+        })
+
+    }
+
+    /**
+     * returns 1 if a > b, 0 if a == b and -1 if a < b
+     * @param a 
+     * @param b 
+     */
+    compare(a: {line: number, column: number}, b: {line: number, column: number}): number{
+        if(a.line > b.line) return 1;
+        if(a.line < b.line) return -1;
+        if(a.column > b.column) return 1;
+        if(a.column < b.column) return -1;
+        return 0;
+    }
+
+
+
     getSQLStatementAtPosition(p: { lineNumber: number, column: number }): SQLStatement {
 
         return this.sqlStatements.find(statement => {

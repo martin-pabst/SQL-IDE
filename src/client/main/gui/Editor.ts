@@ -14,8 +14,6 @@ export class Editor {
 
     editor: monaco.editor.IStandaloneCodeEditor;
 
-    highlightCurrentMethod: boolean = true;
-
     cw: monaco.editor.IContentWidget = null;
 
     dontPushNextCursorMove: number = 0;
@@ -47,7 +45,7 @@ export class Editor {
                 "editor.background": "#1e1e1e",
                 "jo_highlightStatementGreen": "#004000",
                 "jo_highlightStatementYellow": "#404000",
-                "jo_highlightStatementRed": "#400000"
+                "jo_highlightStatementRed": "#402020"
             }
         });
 
@@ -432,12 +430,12 @@ export class Editor {
         }
 
 
-        if (this.highlightCurrentMethod) {
 
-            let executeActionActive = false;
+        let executeActionActive = false;
+
+        for(let sqlStatement of module.getSQLSTatementsAtSelection(this.editor.getSelection())){
 
             let classname = "jo_highlightStatementGreen";
-            let sqlStatement = module.getSQLStatementAtPosition(position);
             if (sqlStatement != null) {
                 if (sqlStatement.hasErrors) {
                     classname = "jo_highlightStatementRed";
@@ -448,10 +446,12 @@ export class Editor {
                 } else {
                     executeActionActive = true;
                 }
-
+    
                 decorations.push({
-                    range: { startColumn: sqlStatement.from.column, startLineNumber: sqlStatement.from.line, 
-                        endColumn: sqlStatement.to.column, endLineNumber: sqlStatement.to.line },
+                    range: {
+                        startColumn: sqlStatement.from.column, startLineNumber: sqlStatement.from.line,
+                        endColumn: sqlStatement.to.column, endLineNumber: sqlStatement.to.line
+                    },
                     options: {
                         className: classname, isWholeLine: false, overviewRuler: {
                             color: { id: classname },
@@ -465,12 +465,13 @@ export class Editor {
                         zIndex: -100
                     }
                 })
-
-            } 
-
-            this.main.getActionManager().setActive('execute', executeActionActive);
-
+    
+            }
         }
+
+
+        this.main.getActionManager().setActive('execute', executeActionActive);
+
 
         this.elementDecoration = this.editor.deltaDecorations(this.elementDecoration, decorations);
 

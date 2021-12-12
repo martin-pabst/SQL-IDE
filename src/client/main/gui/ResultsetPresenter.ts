@@ -115,6 +115,11 @@ export class ResultsetPresenter {
         if (module == null) return null;
 
         let monacoEditor = this.main.getMonacoEditor();
+        console.log(monacoEditor.getSelection());
+        console.log(monacoEditor.getPosition());
+
+        module.getSQLSTatementsAtSelection(monacoEditor.getSelection());
+
         let sqlStatement = module.getSQLStatementAtPosition(monacoEditor.getPosition());
         if (sqlStatement == null) return null;
 
