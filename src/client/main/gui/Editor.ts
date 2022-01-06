@@ -33,11 +33,12 @@ export class Editor {
             rules: [
                 { token: 'functions', foreground: 'dcdcaa', fontStyle: 'italic' },
                 { token: 'string.sql', foreground: '3DC9B0' },
-                { token: 'number', foreground: 'b5cea8' },
+                { token: 'number', foreground: '7bef3f' },
                 { token: 'type', foreground: '499cd6' },
-                { token: 'identifier', foreground: 'c2cccc' },
+                { token: 'identifier', foreground: 'effefe' },
                 { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
-                { token: 'keyword', foreground: '68bed4', fontStyle: 'bold' },
+                { token: 'keyword', foreground: '619ceb', fontStyle: 'bold' },
+                { token: 'table', foreground: 'ff0000', fontStyle: 'bold' },
                 { token: 'delimiter', foreground: 'e8eb38' }
                 // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },
             ],

@@ -1053,6 +1053,9 @@ export class Parser {
                     this.nextToken(); // consume comma
                 }
                 first = false;
+                if(this.tt == TokenType.identifier && this.cct.isDoubleQuotedIdentifier){
+                    this.tt = TokenType.stringConstant 
+                }
                 //@ts-ignore
                 if (insideListTokens.indexOf(this.tt) < 0) {
                     this.pushError("Erwartet wird eine Konstante oder null. Gefunden wurde: " + this.cct.value, "error");

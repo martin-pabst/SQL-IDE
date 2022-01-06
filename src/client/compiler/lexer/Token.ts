@@ -369,7 +369,8 @@ export type Token = {
     tt: TokenType,
     value: string|number|boolean,
     position: TextPosition,
-    commentBefore?: Token
+    commentBefore?: Token,
+    isDoubleQuotedIdentifier?: boolean
 }
 
 export type TokenList = Token[];

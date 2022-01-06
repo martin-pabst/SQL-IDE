@@ -384,7 +384,13 @@ export class Lexer {
             this.next();
         }
 
-        this.pushToken(TokenType.stringConstant, text, line, column, text.length + 2);
+        if(beginChar == "'"){
+            this.pushToken(TokenType.stringConstant, text, line, column, text.length + 2);
+        } else {
+            this.pushToken(TokenType.identifier, text, line, column, text.length + 2);
+            this.tokenList[this.tokenList.length - 1].isDoubleQuotedIdentifier = true;
+        }
+
 
     }
 

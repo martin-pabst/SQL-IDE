@@ -10,7 +10,7 @@ export class DatabaseExplorer {
 
     }
 
-    refresh(){
+    refresh(callback: () => void){
 
         let dbTool = this.main.getDatabaseTool();
 
@@ -24,7 +24,6 @@ export class DatabaseExplorer {
                 this.$mainDiv.append($table);
             }
         });
-
 
     }
 

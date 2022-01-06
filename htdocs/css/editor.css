@@ -340,7 +340,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 }
 
 .jo_button:not(.jo_active) {
-    filter: grayscale();
+    filter: grayscale() brightness(50%);
 }
 
 

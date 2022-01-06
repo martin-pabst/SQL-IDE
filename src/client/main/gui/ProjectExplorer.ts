@@ -461,7 +461,11 @@ export class ProjectExplorer {
         
                 }, 
                 () => {
-                this.main.DatabaseExplorer.refresh();
+                this.main.DatabaseExplorer.refresh(() => {
+                    if(w != null){
+                        w.moduleStore.getModules(false).forEach(m => m.file.dirty = true)
+                    }
+                });
             });
     
     

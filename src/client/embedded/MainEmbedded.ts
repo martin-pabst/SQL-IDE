@@ -129,7 +129,7 @@ export class MainEmbedded implements MainBase {
             this.databaseTool.getSQLStatements(this.config.databaseFilename, (sql) => {
                 this.databaseTool.initializeWorker(sql, () => {
                     
-                    this.databaseExplorer.refresh();
+                    this.databaseExplorer.refresh(() => {this.currentWorkspace.moduleStore.getModules(false).forEach((m) => m.file.dirty = true)});
 
                 })
             })
