@@ -31,7 +31,7 @@
     --contextmenu-hover-background: #094771;
     --contextmenu-hover-color: #ffffff;
     --error-filename: #2a709e;
-    --error-line-ative: #094771;
+    --error-line-active: #094771;
     --error-line-hover: rgba(136, 136, 136, 0.39);
     --error-position: #c0802d;
     --linecolumn: #14c714;
@@ -720,12 +720,12 @@ body .monaco-editor-hover .monaco-tokenized-source {
     cursor: pointer;
 }
 
-.jo_error-line.jo_active {
-    background-color: var(--error-line-ative);
-}
-
 .jo_error-line:hover {
     background-color: var(--error-line-hover);
+}
+
+.jo_error-line.jo_active, jo_error-line:active  {
+    background-color: var(--error-line-active);
 }
 
 .jo_error-position {

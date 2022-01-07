@@ -123,6 +123,7 @@
     flex-grow: 1;
     overflow: auto;
     background-color: var(--console-top-background);
+    padding-right: 5px;
 }
 
 .jo_result-header{
@@ -278,7 +279,7 @@
 
 .jo_pagination_info {
     padding: 0 4px;
-    color: var(----fontColorNormal);
+    color: var(--fontColorNormal);
     font-family: Consolas, "Roboto Mono";
     user-select: none;
 }
@@ -286,4 +287,13 @@
 .jo_pagination_info>span{
     color: white;
     font-weight: bold;
+}
+
+.jo_sqlErrorStatement, .jo_sqlErrorMessage {
+    user-select: none;
+}
+
+.jo_runtimeerrorsTab {
+    overflow: auto;
+    height: calc(100% - 25px);
 }

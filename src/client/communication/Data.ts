@@ -645,3 +645,27 @@ export type getDatabaseResponse = {
     database: DatabaseData,
     error: string
 }
+
+export type GetNewStatementsRequest = {
+    workspaceId: number,
+    version_before: number
+}
+
+export type GetNewStatementsResponse = {
+    success: Boolean,
+    newStatements: string[],
+    new_version: number
+}
+
+export type AddDatabaseStatementsRequest = {
+    workspaceId: number,
+    version_before: number,
+    statements: string[]
+}
+
+export type AddDatabaseStatementsResponse = {
+        success: Boolean,
+        statements_before: string[],
+        new_version: number
+}
+    

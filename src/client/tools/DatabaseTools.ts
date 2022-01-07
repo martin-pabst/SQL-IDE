@@ -77,7 +77,6 @@ export class DatabaseTool {
                 } else {
                     let queryErrorCallback = that.queryErrorCallbackMap.get(id);
                     if (queryErrorCallback != null) {
-                        console.log(event.data);
                         queryErrorCallback(event.data.error);
                     }
                 }
@@ -93,7 +92,10 @@ export class DatabaseTool {
                     if(callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
                 });
                 // that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
-            }, (error) => {});
+            }, 
+            (error) => {
+                console.log("Error while setting up database: " + error);
+            });
 
         };
 

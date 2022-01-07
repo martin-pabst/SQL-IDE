@@ -10,11 +10,19 @@ export class DatabaseExplorer {
 
     }
 
-    refresh(callback: () => void){
+    refresh(){
 
         let dbTool = this.main.getDatabaseTool();
 
         dbTool.retrieveDatabaseStructure((dbstructure: DatabaseStructure) => {
+    
+            let workspace = this.main.getCurrentWorkspace();
+            if(workspace != null){
+                for(let m of workspace.moduleStore.getModules(false)){
+                    m.file.dirty = true;
+                }
+            }
+
             let tables = Table.fromTableStructureList(dbTool.databaseStructure.tables);
     
             this.$mainDiv.empty();

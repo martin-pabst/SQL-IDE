@@ -18,7 +18,8 @@ export type SQLStatement = {
     from: TextPosition,
     to: TextPosition,
     hasErrors: boolean,
-    acceptedBySQLite: boolean
+    acceptedBySQLite: boolean,
+    sql?: string
 }
 
 
@@ -1162,13 +1163,14 @@ export class Parser {
 
     parseLimit(): LimitNode {
         let position = this.getCurrentPosition();
+        this.nextToken();
         let numberOfRows: TermNode = this.parseTerm();
         let ln: LimitNode = {
             type: TokenType.keywordLimit,
             position: position,
             numberOfRows: numberOfRows
         }
-        if (this.tt = TokenType.keywordOffset) {
+        if (this.tt == TokenType.keywordOffset) {
             this.nextToken();
             ln.offset = this.parseTerm();
         }

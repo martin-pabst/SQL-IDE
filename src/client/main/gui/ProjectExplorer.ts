@@ -428,6 +428,7 @@ export class ProjectExplorer {
 
             let sql: string = "";
             if(w.database.templateStatements != null) sql += w.database.templateStatements;
+            if(!sql.endsWith(";")) sql += ";";
             sql += w.database.statements;
             dbTool.initializeWorker(sql,
                 () => {
@@ -461,11 +462,7 @@ export class ProjectExplorer {
         
                 }, 
                 () => {
-                this.main.DatabaseExplorer.refresh(() => {
-                    if(w != null){
-                        w.moduleStore.getModules(false).forEach(m => m.file.dirty = true)
-                    }
-                });
+                this.main.DatabaseExplorer.refresh();
             });
     
     

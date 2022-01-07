@@ -41,8 +41,7 @@ export class ProgramControlButtons {
             () => {
                 if (am.isActive("execute")) {
 
-                    this.main.resultsetPresenter.presentResultset();
-
+                    this.main.resultsetPresenter.executeSelectedStatements();
                 }
 
             }, "SQL-Statement ausführen", this.$buttonStart

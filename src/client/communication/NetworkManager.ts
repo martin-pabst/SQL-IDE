@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -230,6 +230,34 @@ export class NetworkManager {
             }
         }, callback);
 
+    }
+
+
+    getNewStatements(workspace: Workspace, callback: (statements: string[], new_version: number) => void){
+        let request: GetNewStatementsRequest = {
+            workspaceId: workspace.id,
+            version_before: workspace.database.version
+        }
+
+        ajax("getNewStatements", request, (response: GetNewStatementsResponse) => {
+            if(response.success){
+                callback(response.newStatements, response.new_version);
+            }
+        });
+    }
+
+    AddDatabaseStatements(workspace: Workspace, statements: string[], callback: (statements_before: string[], new_version: number) => void){
+        let request: AddDatabaseStatementsRequest = {
+            workspaceId: workspace.id,
+            version_before: workspace.database.version,
+            statements: statements
+        }
+
+        ajax("addDatabaseStatements", request, (response: AddDatabaseStatementsResponse) => {
+            if(response.success){
+                callback(response.statements_before, response.new_version);
+            }
+        });
     }
 
     fetchDatabase(workspace: Workspace, callback: (error: string) => void){
