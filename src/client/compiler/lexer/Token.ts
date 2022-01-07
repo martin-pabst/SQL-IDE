@@ -59,6 +59,7 @@ export enum TokenType {
     keywordOffset,
     keywordIn,
     keywordNotIn,
+    keywordLike,
 
     // brackets
     leftBracket, // ()
@@ -193,6 +194,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordOffset]: "offset",
     [TokenType.keywordIn]: "in",
     [TokenType.keywordNotIn]: "not in",
+    [TokenType.keywordLike]: "like",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -340,7 +342,8 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "limit": TokenType.keywordLimit,
     "offset": TokenType.keywordOffset,
     "in": TokenType.keywordIn,
-    "not in": TokenType.keywordNotIn
+    "not in": TokenType.keywordNotIn,
+    "like": TokenType.keywordLike
 
 
 };

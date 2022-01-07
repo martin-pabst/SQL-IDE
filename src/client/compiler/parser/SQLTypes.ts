@@ -281,6 +281,9 @@ SQLBaseType.addBaseTypes(baseTypes);
 varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, textType, textType);
 textType.addBinaryOperation(TokenType.concatenation, textType, textType);
+varcharType.addBinaryOperation(TokenType.keywordLike, varcharType, booleanType);
+varcharType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
+textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 
 let numericBinaryOperators: TokenType[] = [TokenType.plus, TokenType.minus, TokenType.multiplication, TokenType.division, TokenType.modulo];
 let comparisonOperators: TokenType[] = [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual];

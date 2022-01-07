@@ -27,7 +27,7 @@ export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
         [TokenType.keywordOr], [TokenType.keywordAnd],
-        [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual],
+        [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual, TokenType.keywordLike],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo],
         [TokenType.keywordIn, TokenType.keywordNotIn]
     ];
