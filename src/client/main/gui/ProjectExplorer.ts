@@ -455,6 +455,8 @@ export class ProjectExplorer {
                             Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
             
                         }
+
+                        this.main.notifier.connect(w);
             
                     } else {
                         this.setModuleActive(null);

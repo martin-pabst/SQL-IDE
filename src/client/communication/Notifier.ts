@@ -1,0 +1,195 @@
+import { Module } from "../compiler/parser/Module.js";
+import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
+import { Main } from "../main/Main.js";
+import { WDatabase } from "../workspace/WDatabase.js";
+import { Workspace } from "../workspace/Workspace.js";
+import { ajax } from "./AjaxHelper.js";
+import { GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
+
+export class Notifier {
+
+    connection: WebSocket;
+    isOpen: boolean = false;
+    workspace: Workspace;
+    database: WDatabase;
+
+    constructor(public main: Main) {
+
+    }
+
+    connect(workspace: Workspace) {
+
+        let that = this;
+        this.workspace = workspace;
+        this.database = workspace.database;
+
+        if(this.isOpen){
+            this.connection.close();
+        }
+
+        ajax('getWebSocketToken', {}, (response: GetWebSocketTokenResponse) => {
+
+            let url: string = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/servlet/websocket";
+            this.connection = new WebSocket(url);
+
+            this.connection.onerror = (error: Event) => { this.onError(error); }
+            this.connection.onclose = (event: CloseEvent) => { this.onClose(event); }
+            this.connection.onmessage = (event: MessageEvent) => { this.onMessage(event); }
+
+            this.connection.onopen = (event: Event) => {
+                let request: WebSocketRequestConnect = {
+                    command: 1,
+                    token: response.token,
+                    workspaceId: workspace.id,
+                    databaseId: workspace.database.id,
+                    databaseVersion: workspace.database.version
+                }
+
+                this.isOpen = true;
+                this.sendIntern(JSON.stringify(request));
+                this.onOpen();
+
+            }
+
+            // Now let's hope that websocket connection can be established.
+            // We setup http-polling as fallback solution
+
+            this.startPolling();
+
+        });
+
+    }
+
+    unsentMessages: string[] = [];
+    sendIntern(message: string) {
+
+        if (!this.isOpen) {
+            this.unsentMessages.push(message);
+        } else {
+            try {
+                this.connection.send(message);
+            } catch (exception) {
+                console.log(exception);
+            }
+        }
+    }
+
+    onClose(event: CloseEvent) {
+        this.isOpen = false;
+    }
+
+
+    disconnect() {
+        let message: WebSocketRequestDisconnect = {
+            command: 4
+        };
+        this.sendIntern(JSON.stringify(message));
+        this.connection.close();
+    }
+
+    onMessage(event: MessageEvent) {
+
+        let that = this;
+        let response: WebSocketResponse = JSON.parse(event.data);
+        if (response.command == undefined) return;
+
+        switch (response.command) {
+            case 2: // SendStatements
+                that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
+                    let request: WebSocketRequestGetNewStatements = { command: 2, databaseVersion: that.database.version };
+                    that.sendIntern(JSON.stringify(request));
+                })
+                break;
+            case 3: // server initiated disconnect
+                this.isOpen = false;
+                this.database = null;
+                this.workspace = null;
+                break;
+            case 4: // keep alive
+                break;
+        }
+    }
+
+    executeNewStatements(newStatements: string[], firstNewStatementIndex: number, callbackIfTooFewStatements: () => void, callbackIfDone: () => void = () => {}, doRefreshDatabaseExplorer: boolean = true) {
+        if(this.database == null) return;
+        let that = this;
+        let delta = firstNewStatementIndex - (this.database.version + 1);
+        if (delta > 0) {
+            callbackIfTooFewStatements();
+            callbackIfDone();
+            return;
+        } else {
+            if (delta < 0) {
+                newStatements.splice(0, -delta);
+                firstNewStatementIndex -= delta;
+            }
+            let statements = newStatements;
+            if(statements.length > 0){
+                this.main.resultsetPresenter.executeStatementsString(statements, 0, () => {
+                    that.database.statements += ResultsetPresenter.StatementDelimiter + statements.join(ResultsetPresenter.StatementDelimiter);
+                    that.database.version = firstNewStatementIndex + newStatements.length - 1;
+                    if(doRefreshDatabaseExplorer){
+                        that.main.DatabaseExplorer.refresh();
+                    }
+                    callbackIfDone();
+                })
+            } else {
+                callbackIfDone();
+            }
+        }
+
+    }
+
+
+    onError(error: Event) {
+    }
+
+    onOpen() {
+        this.isOpen = true;
+        if (this.unsentMessages.length > 0) {
+            this.unsentMessages.forEach(m => this.sendIntern(m));
+            this.unsentMessages = [];
+        }
+    }
+
+    isPolling: boolean = false;
+    startPolling() {
+        if (this.isPolling) return;
+        this.isPolling = true;
+
+        this.poll();
+
+    }
+
+    poll() {
+        let that = this;
+        setTimeout(() => {
+            that.poll();
+        }, 5000);
+
+        if (!that.isOpen) {
+            this.getNewStatementsHttp();
+        }
+
+    }
+
+    getNewStatementsHttp() {
+        let that = this;
+        if (this.workspace == null || this.database == null) return;
+
+        let request: GetNewStatementsRequest = {
+            workspaceId: this.workspace.id,
+            version_before: this.workspace.database.version
+        }
+
+        ajax('getNewStatements', request, (response: GetNewStatementsResponse) => {
+
+            that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
+                that.getNewStatementsHttp();
+            })
+
+        });
+
+    }
+
+}

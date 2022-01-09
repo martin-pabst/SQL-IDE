@@ -508,21 +508,14 @@ export type GetWebSocketTokenResponse = { success: boolean, token?: string }
 export type WebSocketRequestConnect = {
     command: 1,
     token: string,
-    nickname: string,
-    sessionCode: string
+    databaseId: number,
+    workspaceId: number, 
+    databaseVersion: number
 }
 
-export type WebSocketRequestSendToAll = {
-    command: 2,
-    data: string,
-    dataType: string
-}
-
-export type WebSocketRequestSendToClient = {
-    command: 3,
-    recipient_id: number,
-    data: string,
-    dataType: string
+export type WebSocketRequestGetNewStatements = {
+    command: 2
+    databaseVersion: number
 }
 
 export type WebSocketRequestDisconnect = {
@@ -533,94 +526,22 @@ export type WebSocketRequestKeepAlive = {
     command: 5
 }
 
-export type WebSocketRequestFindPairing = {
-    command: 6,
-    count: number,
-    nicknames: string[]
-}
+export type WebSocketResponse = WebSocketResponseSendingStatements | WebSocketResponseDisconnect | WebSocketResponseKeepAlive;
 
-export type WebSocketResponse = WebSocketResponseMessage | WebSocketResponseNewClient |
-    WebSocketResponseOtherClientDisconnected | WebSocketResponseSynchro | WebSocketResponseKeepAlive |
-    WebSocketResponsePairingFound;
-
-export type WebSocketResponseNewClient = {
-    command: 1,
-    user_id: number,
-    rufname: string,
-    familienname: string,
-    username: string,
-    nickname: string
-}
-
-export type WebSocketResponseMessage = {
+export type WebSocketResponseSendingStatements = {
     command: 2,
-    from_client_id: number,
-    data: string,
-    dataType: string
+    firstNewStatementIndex: number,  // -1 => Database doesn't exist
+    newStatements: string[]
 }
 
-export type WebSocketResponseOtherClientDisconnected = {
-    command: 3,
-    disconnecting_client_id: number
-}
-
-export type WebSocketResponseSynchro = {
-    command: 4,
-    currentTimeMills: number,
-    client_id: number
+export type WebSocketResponseDisconnect = {
+    command: 3
 }
 
 export type WebSocketResponseKeepAlive = {
-    command: 5
+    command: 4
 }
 
-export type PairingClient = {
-    id: number,
-    index: number
-}
-
-export type WebSocketResponsePairingFound = {
-    command: 6,
-    clients: PairingClient[]
-}
-
-export type GetMessagesRequest = {
-    type: string;
-}
-
-export type Message = {
-    text: string, 
-    type: string,
-    done: boolean,
-    time: number,
-    user_id: number
-}
-
-export type GetMessagesResponse = {
-    success: boolean;
-    messages: Message[];
-}
-
-export type ImportSchoolsResponse = {
-    success: boolean, 
-    messageType: string
-}
-
-/*
-        id: Int,
-        var name: String,
-        var owner_id: Int?,
-        var schule_id: Int,
-        var template_id: Int?,
-        var template: SqlDatabase?,
-        var statements: String,
-        @Transient var statementList: MutableList<String> = mutableListOf(),
-        var published_to: Int,
-        var version: Int,
-        var description: String,
-        var is_old_version_of_id: Int?
-
-*/
 
 export type DatabaseData = {
     id: number,
@@ -654,7 +575,7 @@ export type GetNewStatementsRequest = {
 export type GetNewStatementsResponse = {
     success: Boolean,
     newStatements: string[],
-    new_version: number
+    firstNewStatementIndex: number
 }
 
 export type AddDatabaseStatementsRequest = {

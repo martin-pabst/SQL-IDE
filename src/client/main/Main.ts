@@ -24,6 +24,7 @@ import { TextPosition } from "../compiler/lexer/Token.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
+import { Notifier } from "../communication/Notifier.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -120,6 +121,8 @@ export class Main implements MainBase {
 
     resultsetPresenter: ResultsetPresenter;
 
+    notifier: Notifier;
+
     initGUI() {
 
         this.login = new Login(this);
@@ -155,6 +158,8 @@ export class Main implements MainBase {
         new ProgramControlButtons(this, jQuery('#controls'));
 
         this.resultsetPresenter = new ResultsetPresenter(this);
+
+        this.notifier = new Notifier(this);
 
     }
 

@@ -76,10 +76,10 @@ export class ResultsetPresenter {
 
         if (hasDDLStatements) {
             // Step 1: Update Database to newest version to avoid potential database reset
-            this.main.networkManager.getNewStatements(workspace, (new_statements, new_version) => {
-                this.executeStatementsString(new_statements, 0, () => {
-                    database.version = new_version;
+            this.main.networkManager.getNewStatements(workspace, (new_statements, firstStatementIndex) => {
 
+                this.main.notifier.executeNewStatements(new_statements, firstStatementIndex, () => {}, 
+                () => {
                     // Step 2: Execute new statements to see which are successful
                     let sucessfullyExecutedDDLStatements: SQLStatement[] = [];
                     this.executeStatements(statements, 0, sucessfullyExecutedDDLStatements, () => {
@@ -109,7 +109,7 @@ export class ResultsetPresenter {
 
                         })
                     });
-                })
+                }, false)
             })
 
         } else {

@@ -233,7 +233,7 @@ export class NetworkManager {
     }
 
 
-    getNewStatements(workspace: Workspace, callback: (statements: string[], new_version: number) => void){
+    getNewStatements(workspace: Workspace, callback: (statements: string[], firstNewStatementIndex: number) => void){
         let request: GetNewStatementsRequest = {
             workspaceId: workspace.id,
             version_before: workspace.database.version
@@ -241,7 +241,7 @@ export class NetworkManager {
 
         ajax("getNewStatements", request, (response: GetNewStatementsResponse) => {
             if(response.success){
-                callback(response.newStatements, response.new_version);
+                callback(response.newStatements, response.firstNewStatementIndex);
             }
         });
     }
