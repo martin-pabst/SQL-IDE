@@ -15,23 +15,29 @@ export class DatabaseExplorer {
         let dbTool = this.main.getDatabaseTool();
 
         dbTool.retrieveDatabaseStructure((dbstructure: DatabaseStructure) => {
-    
-            let workspace = this.main.getCurrentWorkspace();
-            if(workspace != null){
-                for(let m of workspace.moduleStore.getModules(false)){
-                    m.file.dirty = true;
-                }
-            }
 
-            let tables = Table.fromTableStructureList(dbTool.databaseStructure.tables);
-    
-            this.$mainDiv.empty();
-    
-            for(let table of tables){
-                let $table = this.renderTable(table);
-                this.$mainDiv.append($table);
-            }
+            this.refreshAfterRetrievingDBStructure();
         });
+
+    }
+
+    refreshAfterRetrievingDBStructure(){
+        let dbTool = this.main.getDatabaseTool();
+        let workspace = this.main.getCurrentWorkspace();
+        if(workspace != null){
+            for(let m of workspace.moduleStore.getModules(false)){
+                m.file.dirty = true;
+            }
+        }
+
+        let tables = Table.fromTableStructureList(dbTool.databaseStructure.tables);
+
+        this.$mainDiv.empty();
+
+        for(let table of tables){
+            let $table = this.renderTable(table);
+            this.$mainDiv.append($table);
+        }
 
     }
 

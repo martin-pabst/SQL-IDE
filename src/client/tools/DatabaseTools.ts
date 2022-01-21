@@ -165,6 +165,9 @@ export class DatabaseTool {
                     callback(that.databaseStructure);
     
                 }, (error) => {});
+            } else {
+                that.databaseStructure = {tables: []};
+                callback(that.databaseStructure);
             }
 
         }, (error) => {});

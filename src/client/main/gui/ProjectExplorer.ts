@@ -192,7 +192,7 @@ export class ProjectExplorer {
         let that = this;
 
         this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "2",
-            "img_add-workspace-dark", "Neue Datenbank...", "workspace", true);
+            "img_add-database-dark", "Neue Datenbank...", "workspace", true);
 
         this.workspaceListPanel.newElementCallback =
 
@@ -464,7 +464,7 @@ export class ProjectExplorer {
         
                 }, 
                 () => {
-                this.main.DatabaseExplorer.refresh();
+                this.main.DatabaseExplorer.refreshAfterRetrievingDBStructure();
             });
     
     
