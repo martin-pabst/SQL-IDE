@@ -1,6 +1,7 @@
 import { Main } from "../Main.js";
 import { UserData } from "../../communication/Data.js";
 import { PasswordChanger } from "./UserMenu.js";
+import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 
 export type Action = (identifier: string) => void;
 
@@ -124,6 +125,14 @@ export class MainMenu {
                             { identifier: "Zoom normal", action: () => { this.main.editor.setFontSize(14); }},
                             { identifier: "Zoom in (Strg + Mausrad)", action: () => { this.main.editor.changeEditorFontSize(4); } },
 
+                        ]
+                    }
+                },
+                {
+                    identifier: "Datenbank", subMenu:
+                    {
+                        items: [
+                            { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, null) } },
                         ]
                     }
                 },

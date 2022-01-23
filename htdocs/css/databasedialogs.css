@@ -1,0 +1,56 @@
+#jo_ds_create_database_button {
+    background-color: green;
+}
+
+.jo_createDatabaseDescription {
+    margin-left: 5px;
+}
+
+.jo_cdtabheading {
+    border-top: 2px solid gray;
+    border-bottom: 2px solid gray;
+    margin-top: 20px;
+}
+
+.jo_templateListEntry {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.jo_templateListEntry:hover {
+    background-color: var(--file-hover);
+    color: var(--fontColorLight);
+}
+
+.jo_templateListEntry.jo_active {
+    background-color: var(--file-active);
+    color: var(--fontColorLight);
+}
+
+.jo_templateListEntry.jo_active:hover {
+    background-color: var(--file-active-hover);
+}
+
+.jo_tle_secondline {
+    font-size: 60%;
+}
+
+#dialog .ds_databasedialog {
+    align-items: left;
+}
+
+.jo_ds_secret_table button {
+    margin-left: 10px;
+    background-color: rgb(85, 85, 236);
+}
+
+.jo_ds_secret {
+    font-family: 'Roboto Mono', sans-serif;
+    color: rgb(196, 170, 25);
+    margin-left: 10px;
+}
+
+#jo_ds_save_button{
+    background-color: green;
+}

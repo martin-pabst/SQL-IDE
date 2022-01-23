@@ -39,6 +39,11 @@
     font-size: 150%;
 }
 
+#dialog button.jo_small_button {
+    font-size: 100%;
+    padding: 2px;
+}
+
 #dialog button:hover {
     cursor: pointer;
     filter: brightness(120%);

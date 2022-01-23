@@ -172,8 +172,8 @@ export class Main implements MainBase {
 
         let that = this;
         jQuery(window).on('resize', (event) => {
-            jQuery('#bottomdiv-outer').css('height', '150px');
-            jQuery('#editor').css('height', (window.innerHeight - 150 - 30 - 2) + "px");
+            jQuery('#bottomdiv-outer').css('height', '450px');
+            jQuery('#editor').css('height', (window.innerHeight - 450 - 30 - 2) + "px");
             that.editor.editor.layout();
             jQuery('#editor').css('height', "");
 

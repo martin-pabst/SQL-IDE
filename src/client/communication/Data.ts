@@ -53,10 +53,21 @@ export type WorkspaceData = {
     files: FileData[],
     currentFileId?: number,
     settings?: string,       // serialized WorkspaceSettings
+    sql_history: string,
+}
+
+export type CreateWorkspaceData = {
+    id: number,
+    name: string,
+    path: string,
+    isFolder: boolean,
 
     template_database_id?: number,
-    sql_history: string
+    secret?: string,
+    otherDatabaseId?: number
 }
+
+
 
 export type Workspaces = {
     workspaces: WorkspaceData[]
@@ -198,7 +209,7 @@ export type UpdateUserSettingsResponse = {
 export type CreateOrDeleteFileOrWorkspaceRequest = {
     entity: "workspace" | "file",
     type: "create" | "delete",
-    data?: WorkspaceData | FileData, // in case of create
+    data?: CreateWorkspaceData | FileData, // in case of create
     id?: number, // in case of delete
     owner_id?: number, // in case of create
     userId: number
@@ -590,3 +601,20 @@ export type AddDatabaseStatementsResponse = {
         new_version: number
 }
     
+export type TemplateListEntry = {
+    id: number,
+    name: string,
+    published_to: number,
+    description: string
+}
+
+export type GetTemplateListRequest = {
+    user_id: number
+}
+
+export type GetTemplateListResponse = {
+    success: boolean,
+    error: string,
+    templateList: TemplateListEntry[]
+}
+

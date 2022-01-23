@@ -29,7 +29,7 @@ export class ResultsetPresenter {
     constructor(private main: Main) {
         this.$paginationDiv = jQuery('.jo_pagination');
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
-        this.$infoDiv = jQuery('<div class="jo_pagination_info">Datensätze <span class="jo_pagination_fromto">0001 - 1000</span> von <span class="jo_pagination_all">5000</span></div>');
+        this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto">0001 - 1000</span> von <span class="jo_pagination_all">5000</span></div>');
         this.$arrowRight = jQuery('<div class="jo_button img_arrow-right-dark jo_active"></div>');
 
         this.$paginationDiv.append(this.$arrowLeft, this.$infoDiv, this.$arrowRight);

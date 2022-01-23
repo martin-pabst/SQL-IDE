@@ -8,6 +8,7 @@ import { Helper } from "./Helper.js";
 import { WorkspaceData, Workspaces, ClassData } from "../../communication/Data.js";
 import { dateToString } from "../../tools/StringTools.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
+import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 
 
 export class ProjectExplorer {
@@ -40,7 +41,7 @@ export class ProjectExplorer {
 
         let that = this;
 
-        this.fileListPanel = new AccordionPanel(this.accordion, "Kein Workspace gewählt", "3",
+        this.fileListPanel = new AccordionPanel(this.accordion, "Kein Workspace gewählt", "1",
             "img_add-file-dark", "Neue Datei...", "java", true);
 
         this.fileListPanel.newElementCallback =
@@ -103,45 +104,45 @@ export class ProjectExplorer {
                 });
             }
 
-            this.fileListPanel.contextMenuProvider = (accordionElement: AccordionElement) => {
+        this.fileListPanel.contextMenuProvider = (accordionElement: AccordionElement) => {
 
-                let cmiList: AccordionContextMenuItem[] = [];
+            let cmiList: AccordionContextMenuItem[] = [];
 
-                if(!(that.main.user.is_teacher || that.main.user.is_admin || that.main.user.is_schooladmin)){
-                    let module: Module = <Module>accordionElement.externalElement;
-                    let file = module.file;
+            if (!(that.main.user.is_teacher || that.main.user.is_admin || that.main.user.is_schooladmin)) {
+                let module: Module = <Module>accordionElement.externalElement;
+                let file = module.file;
 
-                    if(file.submitted_date == null){
-                        cmiList.push({
-                            caption: "Als Hausaufgabe markieren",
-                            callback: (element: AccordionElement) => {
+                if (file.submitted_date == null) {
+                    cmiList.push({
+                        caption: "Als Hausaufgabe markieren",
+                        callback: (element: AccordionElement) => {
 
-                                let file = (<Module>element.externalElement).file;
-                                file.submitted_date = dateToString(new Date());
-                                file.saved = false;
-                                that.main.networkManager.sendUpdates(null, true);
-                                that.renderHomeworkButton(file);
-                            }
-                        });
-                    } else {
-                        cmiList.push({
-                            caption: "Hausaufgabenmarkierung entfernen",
-                            callback: (element: AccordionElement) => {
-                                
-                                let file = (<Module>element.externalElement).file;
-                                file.submitted_date = null;
-                                file.saved = false;
-                                that.main.networkManager.sendUpdates(null, true);
-                                that.renderHomeworkButton(file);
-                                
-                            }
-                        });
-                    }
+                            let file = (<Module>element.externalElement).file;
+                            file.submitted_date = dateToString(new Date());
+                            file.saved = false;
+                            that.main.networkManager.sendUpdates(null, true);
+                            that.renderHomeworkButton(file);
+                        }
+                    });
+                } else {
+                    cmiList.push({
+                        caption: "Hausaufgabenmarkierung entfernen",
+                        callback: (element: AccordionElement) => {
 
+                            let file = (<Module>element.externalElement).file;
+                            file.submitted_date = null;
+                            file.saved = false;
+                            that.main.networkManager.sendUpdates(null, true);
+                            that.renderHomeworkButton(file);
+
+                        }
+                    });
                 }
 
-                return cmiList;
-            }    
+            }
+
+            return cmiList;
+        }
 
 
 
@@ -162,19 +163,19 @@ export class ProjectExplorer {
 
         let klass: string = null;
         let title: string = "";
-        if(file.submitted_date != null){
+        if (file.submitted_date != null) {
             klass = "img_homework";
             title = "Wurde als Hausaufgabe abgegeben: " + file.submitted_date
-            if(file.text_before_revision){
+            if (file.text_before_revision) {
                 klass = "img_homework-corrected";
                 title = "Korrektur liegt vor."
             }
-        } 
+        }
 
         if (klass != null) {
             let $homeworkButtonDiv = jQuery(`<div class="jo_homeworkButton ${klass}" title="${title}"></div>`);
             $buttonDiv.prepend($homeworkButtonDiv);
-            if(klass.indexOf("jo_active") >= 0){
+            if (klass.indexOf("jo_active") >= 0) {
                 $homeworkButtonDiv.on('mousedown', (e) => e.stopPropagation());
                 $homeworkButtonDiv.on('click', (e) => {
                     e.stopPropagation();
@@ -191,33 +192,26 @@ export class ProjectExplorer {
 
         let that = this;
 
-        this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "2",
+        this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "3",
             "img_add-database-dark", "Neue Datenbank...", "workspace", true);
 
-        this.workspaceListPanel.newElementCallback =
+        let $newWorkspaceAction = jQuery('<div class="img_add-database-dark jo_button jo_active" style="margin-right: 4px"' +
+            ' title="Neue Datenbank anlegen">');
+        $newWorkspaceAction.on('mousedown', (e) => {
+            e.stopPropagation();
 
-            (accordionElement, successfulNetworkCommunicationCallback) => {
+            let owner_id: number = that.main.user.id;
+            if (that.main.workspacesOwnerId != null) {
+                owner_id = that.main.workspacesOwnerId;
+            }
 
-                let owner_id: number = that.main.user.id;
-                if(that.main.workspacesOwnerId != null){
-                    owner_id = that.main.workspacesOwnerId;
-                }
+            new NewDatabaseDialog(that.main, owner_id);
 
-                let w: Workspace = new Workspace(accordionElement.name, that.main, owner_id);
+        })
 
-                that.main.workspaceList.push(w);
+        this.workspaceListPanel.addAction($newWorkspaceAction);
+        this.workspaceListPanel.$buttonNew.hide();
 
-                that.main.networkManager.sendCreateWorkspace(w, that.main.workspacesOwnerId, (error: string) => {
-                    if (error == null) {
-                        that.fileListPanel.enableNewButton(true);
-                        successfulNetworkCommunicationCallback(w);
-                        that.setWorkspaceActive(w);
-                    } else {
-                        alert('Der Server ist nicht erreichbar!');
-
-                    }
-                });
-            };
 
         this.workspaceListPanel.renameCallback =
             (workspace: Workspace, newName: string) => {
@@ -280,7 +274,7 @@ export class ProjectExplorer {
                                 newWorkspace.panelElement = {
                                     name: newWorkspace.name,
                                     externalElement: newWorkspace,
-                                    iconClass: 'workspace' 
+                                    iconClass: 'workspace'
                                 };
 
                                 this.workspaceListPanel.addElement(newWorkspace.panelElement);
@@ -293,7 +287,7 @@ export class ProjectExplorer {
                 }
             });
 
-            if(this.main.user.is_teacher && this.main.teacherExplorer.classPanel.elements.length > 0){
+            if (this.main.user.is_teacher && this.main.teacherExplorer.classPanel.elements.length > 0) {
                 cmiList.push({
                     caption: "An Klasse austeilen...",
                     callback: (element: AccordionElement) => { },
@@ -309,8 +303,8 @@ export class ProjectExplorer {
                                     if (error == null) {
                                         let networkManager = this.main.networkManager;
                                         let dt = networkManager.updateFrequencyInSeconds * networkManager.forcedUpdateEvery;
-                                        alert("Der Workspace " + workspace.name + " wurde an die Klasse " + klasse.name + " ausgeteilt. Er wird in maximal " + 
-                                                      dt + " s bei jedem Schüler ankommen.");
+                                        alert("Der Workspace " + workspace.name + " wurde an die Klasse " + klasse.name + " ausgeteilt. Er wird in maximal " +
+                                            dt + " s bei jedem Schüler ankommen.");
                                     } else {
                                         alert(error);
                                     }
@@ -320,14 +314,14 @@ export class ProjectExplorer {
                         }
                     })
                 },
-                {
-                    caption: "An einzelne Schüler/innen austeilen...",
-                    callback: (element: AccordionElement) => { 
-                        let classes: ClassData[] = this.main.teacherExplorer.classPanel.elements.map(ae => ae.externalElement);
-                        let workspace: Workspace = element.externalElement;
-                        new DistributeToStudentsDialog(classes, workspace, this.main);
+                    {
+                        caption: "An einzelne Schüler/innen austeilen...",
+                        callback: (element: AccordionElement) => {
+                            let classes: ClassData[] = this.main.teacherExplorer.classPanel.elements.map(ae => ae.externalElement);
+                            let workspace: Workspace = element.externalElement;
+                            new DistributeToStudentsDialog(classes, workspace, this.main);
+                        }
                     }
-                }
                 );
             }
 
@@ -419,7 +413,7 @@ export class ProjectExplorer {
         this.workspaceListPanel.select(w, false);
 
         let callback = (error: string) => {
-            if(error != null){
+            if (error != null) {
                 alert(error);
                 return;
             }
@@ -427,17 +421,17 @@ export class ProjectExplorer {
             let dbTool = this.main.getDatabaseTool();
 
             let sql: string = "";
-            if(w.database.templateStatements != null) sql += w.database.templateStatements;
-            if(!sql.endsWith(";")) sql += ";";
+            if (w.database.templateStatements != null) sql += w.database.templateStatements;
+            if (!sql.endsWith(";")) sql += ";";
             sql += w.database.statements;
             dbTool.initializeWorker(sql,
                 () => {
                     this.main.currentWorkspace = w;
                     this.renderFiles(w);
-            
+
                     if (w != null) {
                         let nonSystemModules = w.moduleStore.getModules(false);
-            
+
                         if (w.currentlyOpenModule != null) {
                             this.setModuleActive(w.currentlyOpenModule);
                         } else if (nonSystemModules.length > 0) {
@@ -445,34 +439,31 @@ export class ProjectExplorer {
                         } else {
                             this.setModuleActive(null);
                         }
-            
+
                         for (let m of nonSystemModules) {
                             m.file.dirty = true;
                         }
-            
+
                         if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
-            
+
                             Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
-            
+
                         }
 
                         this.main.notifier.connect(w);
-            
+
                     } else {
                         this.setModuleActive(null);
                     }
-        
-                }, 
-                () => {
-                this.main.DatabaseExplorer.refreshAfterRetrievingDBStructure();
-            });
-    
-    
 
+                },
+                () => {
+                    this.main.DatabaseExplorer.refreshAfterRetrievingDBStructure();
+                });
 
         }
 
-        if(w.database == null){
+        if (w.database == null) {
             this.main.networkManager.fetchDatabase(w, callback);
         } else {
             callback(null);
@@ -503,9 +494,9 @@ export class ProjectExplorer {
         } else {
             this.main.getMonacoEditor().updateOptions({ readOnly: false });
             this.main.getMonacoEditor().setModel(m.model);
-            if(this.main.getBottomDiv() != null) this.main.getBottomDiv().errorManager.showParenthesisWarning(m.bracketError);
+            if (this.main.getBottomDiv() != null) this.main.getBottomDiv().errorManager.showParenthesisWarning(m.bracketError);
 
-            if(m.file.text_before_revision != null){
+            if (m.file.text_before_revision != null) {
                 this.main.bottomDiv.homeworkManager.showHomeWorkRevisionButton();
             } else {
                 this.main.bottomDiv.homeworkManager.hideHomeworkRevisionButton();

@@ -14,6 +14,7 @@ const ideConfig = {
             './css/databaseExplorer.css',
             './css/run.css',
             './css/dialog.css',
+            './css/databasedialog.css',
             './assets/fonts/fonts.css',
         ],
         // style: [

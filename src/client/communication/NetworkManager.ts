@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -125,9 +125,8 @@ export class NetworkManager {
         
     }
     
-    sendCreateWorkspace(w: Workspace, owner_id: number, callback: (error: string) => void) {
+    sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number, callback: (error: string, id?: number) => void) {
 
-        let wd: WorkspaceData = w.getWorkspaceData(false);
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "create",
             entity: "workspace",
@@ -137,8 +136,7 @@ export class NetworkManager {
         }
 
         ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            w.id = response.id;
-            callback(null);
+            callback(null, response.id);
         }, callback);
 
     }
@@ -273,6 +271,22 @@ export class NetworkManager {
                 callback("Netzwerkfehler!");
             }
         }, callback )
+
+    }
+
+    fetchTemplateList(callback: (templateList: TemplateListEntry[]) => void){
+        let request: GetTemplateListRequest = {user_id: this.main.user.id}
+
+        ajax("getTemplateList", request, (response: GetTemplateListResponse)=> {
+            if(response.success){
+                callback(response.templateList);
+            } else {
+                callback([]);
+            }
+        }, (message) => {
+            alert(message);
+            callback([]);
+        } )
 
     }
 

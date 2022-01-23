@@ -515,6 +515,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
     color: var(--fontColorNormal);
     font-family: 'Roboto', sans-serif;
     font-size: 10pt;
+    z-index: 10;
 }
 
 .jo_submenu>div, .jo_submenu>a {
