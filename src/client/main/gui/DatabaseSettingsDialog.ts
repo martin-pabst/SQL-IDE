@@ -43,8 +43,8 @@ export class DatabaseSettingsDialog {
                 Datenbank freigeben als Vorlage für andere Benutzer:
                 </div>
 
-                <fieldset>
-                    <input type="radio" id="d0" name="publishedFilter" value="0" checked=""><label for="b0">Keine Freigabe</label>
+                <fieldset id="jo_ds_publishedTo">
+                    <input type="radio" id="b0" name="publishedFilter" value="0" checked="checked"><label for="b0">Keine Freigabe</label>
                     <input type="radio" id="b1" name="publishedFilter" value="1"><label for="b1">Freigabe für meine Klasse(n)</label>
                     <input type="radio" id="b2" name="publishedFilter" value="2"><label for="b2">Freigabe für meine Schule</label>
                 </fieldset>

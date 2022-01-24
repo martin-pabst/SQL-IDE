@@ -54,3 +54,8 @@
 #jo_ds_save_button{
     background-color: green;
 }
+
+#jo_ds_publishedTo input, #jo_ds_publishedTo label {
+    cursor: pointer;
+    user-select: none;
+}
