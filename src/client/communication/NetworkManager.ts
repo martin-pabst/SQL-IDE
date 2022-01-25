@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -140,6 +140,39 @@ export class NetworkManager {
         }, callback);
 
     }
+
+    getDatabaseSettings(workspace_id: number, callback: (response: GetDatabaseSettingsResponse)=> void){
+        let request: GetDatabaseSettingsRequest = {
+            workspaceId: workspace_id
+        };
+        ajax("getDatabaseSettings", request, (response: GetDatabaseSettingsResponse) => {
+            callback(response);
+        }, (message) => {alert(message)})
+    }
+
+    setNewSecret(workspace_id: number, kind: string, callback: (secret: string)=> void){
+        let request: SetDatabaseSecretRequest = {
+            workspaceId: workspace_id,
+            secretKind: kind
+        };
+        ajax("setDatabaseSecret", request, (response: SetDatabaseSecretResponse) => {
+            callback(response.secret);
+        }, (message) => {alert(message)})
+    }
+
+    setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, callback: ()=> void){
+        let request: SetPublishedToRequest = {
+            workspaceId: workspace_id,
+            databaseName: name,
+            publishedTo: published_to
+        };
+
+        ajax("setPublishedTo", request, (response: SetPublishedToResponse) => {
+            callback();
+        }, (message) => {alert(message)})
+    }
+
+
 
     sendCreateFile(m: Module, ws: Workspace, owner_id: number, callback: (error: string) => void) {
 
