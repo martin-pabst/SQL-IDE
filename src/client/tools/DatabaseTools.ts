@@ -59,7 +59,8 @@ export class DatabaseTool {
             this.worker.terminate();
         }
 
-        this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
+        this.worker = new Worker('js/sqljs-worker/sqljsWorker.js');
+        // this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
         let that = this;
 
         this.worker.onmessage = () => {
@@ -81,6 +82,11 @@ export class DatabaseTool {
                     }
                 }
 
+                // if(event.data.buffer){
+                //     console.log(event.data.buffer);
+                // }
+
+
                 this.queryErrorCallbackMap.delete(id);
                 this.querySuccessCallbacksMap.delete(id);
 
@@ -97,9 +103,13 @@ export class DatabaseTool {
                 console.log("Error while setting up database: " + error);
             });
 
+            // that.worker.postMessage({
+            //     action: "export"
+            // })
+
         };
 
-        this.worker.onerror = e => {
+        this.worker.onerror = (e) => {
             console.log("Worker error: " + e);
         }
 
