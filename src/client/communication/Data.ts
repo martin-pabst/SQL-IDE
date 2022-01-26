@@ -618,3 +618,42 @@ export type GetTemplateListResponse = {
     templateList: TemplateListEntry[]
 }
 
+export type GetDatabaseSettingsRequest = {
+    workspaceId: number
+}
+
+export type Secrets = {
+    read: string,
+    write: string,
+    ddl: string
+}
+
+export type GetDatabaseSettingsResponse = {
+    success: boolean,
+    workspaceId: number,
+    secrets: Secrets,
+    publishedTo: number,
+    error: string
+}
+
+export type setDatabaseSecretRequest = {
+    workspaceId: number,
+    secretKind: string
+}
+
+export type SetDatabaseSecretResponse = {
+    success: boolean,
+    secret: string,
+    error: string
+}
+
+export type SetPublishedToRequest = {
+    workspaceId: number,
+    publishedTo: number,
+    databaseName: string
+}
+
+export type SetPublishedToResponse = {
+    success: boolean,
+    error: string
+}

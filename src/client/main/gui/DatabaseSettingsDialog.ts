@@ -29,12 +29,12 @@ export class DatabaseSettingsDialog {
                 <div>
                     <table class="jo_ds_secret_table">
                     <tr>
-                        <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read">123#sdkfierj</td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
+                        <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read"></td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
                     <tr>
-                        <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write">123/sdkfierj</td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
+                        <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write"></td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
                     </tr>
                     <tr>
-                        <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_read">123/sdkfierj</td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
+                        <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
                     </tr>
                     </table>
                 </div>
@@ -46,7 +46,8 @@ export class DatabaseSettingsDialog {
                 <fieldset id="jo_ds_publishedTo">
                     <input type="radio" id="b0" name="publishedFilter" value="0" checked="checked"><label for="b0">Keine Freigabe</label>
                     <input type="radio" id="b1" name="publishedFilter" value="1"><label for="b1">Freigabe für meine Klasse(n)</label>
-                    <input type="radio" id="b2" name="publishedFilter" value="2"><label for="b2">Freigabe für meine Schule</label>
+                    <input type="radio" id="b2" name="publishedFilter" value="2" style="visibility: none"><label id="lb2" for="b2" style="visibility: none">Freigabe für meine Schule</label>
+                    <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für meine Schule</label>
                 </fieldset>
             </div>
 
@@ -59,14 +60,50 @@ export class DatabaseSettingsDialog {
         ));
 
 
+        let that = this;
         this.$dialog.css('visibility', 'visible');
 
         jQuery('#jo_ds_cancel_button').on('click', () => { this.showMainWindow(); });
-        jQuery('#jo_ds_save_button').on('click', () => { alert("Hier!") })
+        jQuery('#jo_ds_save_button').on('click', () => { 
+            this.saveNameAndPublishedTo();
+         })
 
+        this.setValues();
 
+        ["read", "write", "ddl"].forEach(kind => {
+            jQuery('.jo_button_code_' + kind).on('pointerdown', () => {
+                that.main.networkManager.setNewSecret(that.workspace.id, kind, (secret) => {
+                    jQuery('.jo_ds_secret_'+kind).text(secret);
+                })
+            })
+        })
 
+    }
 
+    saveNameAndPublishedTo(){
+        let published_to = Number.parseInt(<string>jQuery('#jo_ds_publishedTo').val());
+
+        this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
+            <string>jQuery('.jo_databasename').val(), published_to, () => { this.showMainWindow(); })
+    }
+
+    setValues(){
+        jQuery('.jo_databasename').val(this.workspace.name);
+        this.main.networkManager.getDatabaseSettings(this.workspace.id, (response) => {
+            ["read", "write", "ddl"].forEach(kind => {
+                jQuery('.jo_ds_secret_' + kind).text(response.secrets[kind]);
+            });
+            if(this.main.user.is_admin){
+                jQuery('#b3').css('visibility', 'visible');
+                jQuery('#lb3').css('visibility', 'visible');
+            }
+            if(this.main.user.is_schooladmin){
+                jQuery('#b2').css('visibility', 'visible');
+                jQuery('#lb2').css('visibility', 'visible');
+            }
+            jQuery('#jo_ds_publishedTo input').attr('checked', '');
+            jQuery('#b'+response.publishedTo).attr('checked', 'checked');
+        })
     }
 
     showMainWindow() {
