@@ -47,7 +47,7 @@ export class DatabaseSettingsDialog {
                     <input type="radio" id="b0" name="publishedFilter" value="0" checked="checked"><label for="b0">Keine Freigabe</label>
                     <input type="radio" id="b1" name="publishedFilter" value="1"><label for="b1">Freigabe für meine Klasse(n)</label>
                     <input type="radio" id="b2" name="publishedFilter" value="2" style="visibility: none"><label id="lb2" for="b2" style="visibility: none">Freigabe für meine Schule</label>
-                    <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für meine Schule</label>
+                    <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für alle Schulen</label>
                 </fieldset>
             </div>
 
@@ -81,7 +81,14 @@ export class DatabaseSettingsDialog {
     }
 
     saveNameAndPublishedTo(){
-        let published_to = Number.parseInt(<string>jQuery('#jo_ds_publishedTo').val());
+        let published_to = 0;
+        jQuery('#jo_ds_publishedTo').find('input').each( (n, element) => {
+            let $element = jQuery(element);
+            //@ts-ignore
+            if(<HTMLInputElement>element.checked){
+                published_to = Number.parseInt(<string>$element.attr('value'));
+            }
+        })
 
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
             <string>jQuery('.jo_databasename').val(), published_to, () => { this.showMainWindow(); })
@@ -101,8 +108,8 @@ export class DatabaseSettingsDialog {
                 jQuery('#b2').css('visibility', 'visible');
                 jQuery('#lb2').css('visibility', 'visible');
             }
-            jQuery('#jo_ds_publishedTo input').attr('checked', '');
-            jQuery('#b'+response.publishedTo).attr('checked', 'checked');
+            // jQuery('#jo_ds_publishedTo input').attr('checked', '');
+            jQuery('#b'+response.publishedTo).prop('checked', true);
         })
     }
 

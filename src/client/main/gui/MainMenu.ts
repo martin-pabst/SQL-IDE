@@ -132,7 +132,7 @@ export class MainMenu {
                     identifier: "Datenbank", subMenu:
                     {
                         items: [
-                            { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, null) } },
+                            { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },
                         ]
                     }
                 },

@@ -155,7 +155,7 @@ export class NetworkManager {
             workspaceId: workspace_id,
             secretKind: kind
         };
-        ajax("setDatabaseSecret", request, (response: SetDatabaseSecretResponse) => {
+        ajax("setNewSecret", request, (response: SetDatabaseSecretResponse) => {
             callback(response.secret);
         }, (message) => {alert(message)})
     }
