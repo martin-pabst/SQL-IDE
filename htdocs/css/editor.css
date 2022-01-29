@@ -128,8 +128,11 @@ body .monaco-editor-hover .monaco-tokenized-source {
 
 #bitteWarten>div>div {
     font-size: 32px;
-    color: var(--fontColorLight);
-}
+    color: white;
+    text-shadow:  1px  1px 1px gray,
+    1px -1px 1px gray,
+   -1px  1px 1px gray,
+   -1px -1px 1px gray;}
 
 /* Login */
 #login, #bitteWarten {

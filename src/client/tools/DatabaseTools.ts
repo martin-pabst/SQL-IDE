@@ -58,13 +58,19 @@ export class DatabaseTool {
         if (this.worker != null) {
             this.worker.terminate();
         }
+        
+        let t = performance.now();
+        jQuery('#bitteWartenText').html('Bitte warten, die Datenbank wird initialisiert ...');
+        jQuery('#bitteWarten').css('display', 'flex');
+
+        // console.log("Starting worker...");
 
         this.worker = new Worker('js/sqljs-worker/sqljsWorker.js');
         // this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
         let that = this;
 
         this.worker.onmessage = () => {
-            console.log("Database opened");
+            // console.log("Database opened (" + (performance.now() - t)/1000 + " s)");
             that.worker.onmessage = event => {
 
                 // console.log(event.data);
@@ -93,9 +99,14 @@ export class DatabaseTool {
             };
 
             that.executeQuery(sql, (result) => {
+                // console.log("Template written (" + (performance.now() - t)/1000 + " s)");
+
                 if(callbackAfterInitializing != null) callbackAfterInitializing();
                 that.retrieveDatabaseStructure(() => {
+                    // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
                     if(callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
+                    jQuery('#bitteWarten').css('display', 'none');
+
                 });
                 // that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
             }, 

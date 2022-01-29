@@ -254,6 +254,12 @@ export class ResultsetPresenter {
 
     }
 
+    showTable(identifier: string){
+        let statement = "select * from " + identifier + ";";
+        this.main.databaseTool.executeQuery(statement,
+            (results) => { this.presentResultsIntern(statement, results);  },
+            (error) => {  });
+    }
 
 
 
