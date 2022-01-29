@@ -236,9 +236,9 @@ export class Parser {
                 this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
             }
 
-            if (tt != TokenType.identifier) {
-                this.module.addCompletionHint(this.getEndOfPosition(this.lastToken.position), this.getCurrentPositionPlus(1), false, false, expectedValuesArray);
-            }
+            // if (!Array.isArray(tt) && tt != TokenType.identifier) {
+            //     this.module.addCompletionHint(this.getEndOfPosition(this.lastToken.position), this.getCurrentPositionPlus(1), false, false, expectedValuesArray);
+            // }
 
             return false;
         }
@@ -322,7 +322,7 @@ export class Parser {
 
             let oldPos = this.pos;
 
-            this.module.addCompletionHint(afterLastStatement, this.getCurrentPosition(), false, false, ["select", "update", "create table", "insert into"]);
+            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false, ["select", "update", "create table", "insert into"]);
 
             let errorsBeforeStatement: number = this.errorList.length;
 
@@ -1085,7 +1085,11 @@ export class Parser {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
 
-        let columnListStart = this.getCurrentPosition();
+        let columnListStart: TextPosition = {
+            line: startPosition.line,
+            column: startPosition.column + 6,
+            length: 1
+        };
 
         let node: SelectNode = {
             type: TokenType.keywordSelect,

@@ -19,7 +19,41 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     }
 
     first: boolean = true;
-    provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, token: monaco.CancellationToken): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
+    provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, 
+        token: monaco.CancellationToken): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
+
+
+        let module: Module =
+            this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
+
+        if (module == null || module.mainSymbolTable == null) {
+            return null;
+        }
+
+        return new Promise((resolve, reject) => {
+            let that = this;
+
+            let wfc = function waitForCompiler(){
+                if(module.file.dirty){
+                    setTimeout(() => {
+                        wfc();
+                    }, 100);
+                } else {
+                    resolve(that.provideCompletionItemsIntern(model, position, context, token));
+                }
+            }
+        
+            wfc();
+
+        })
+
+        // Promise.resolve({
+        //     suggestions: completionItems
+        // });
+    }
+
+    provideCompletionItemsIntern(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, 
+        token: monaco.CancellationToken): monaco.languages.CompletionList {
 
         setTimeout(() => {
             //@ts-ignore
@@ -28,7 +62,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                 sw.toggleDetails();
                 this.first = false;
             }
-        }, 300);
+        }, 500);
 
         let module: Module =
             this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
@@ -91,10 +125,11 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             completionItems = completionItems.filter(item => completionHint.dontHint.indexOf(item.insertText) < 0);
         }
 
-        return Promise.resolve({
+        return {
             suggestions: completionItems
-        });
+        };
     }
+
 
     addDotCompletionItems(position: monaco.Position, dotMatch: RegExpMatchArray, identifierAndBracketAfterCursor: string,
         symbolTable: SymbolTable, completionItems: monaco.languages.CompletionItem[]) {
@@ -163,7 +198,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                             filterText: symbol.identifier,
                             insertText: insertText,
                             insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
+                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Class,
                             range: undefined
                         });
                         tableIdentifiers[symbol.identifier] = true;
@@ -190,7 +225,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                             filterText: text,
                             insertText: insertText,
                             insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
-                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
+                            kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Field,
                             range: undefined
                         })
                     }
