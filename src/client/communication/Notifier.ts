@@ -129,7 +129,7 @@ export class Notifier {
                     that.database.statements += ResultsetPresenter.StatementDelimiter + statements.join(ResultsetPresenter.StatementDelimiter);
                     that.database.version = firstNewStatementIndex + newStatements.length - 1;
                     if(doRefreshDatabaseExplorer){
-                        that.main.DatabaseExplorer.refresh();
+                        that.main.databaseExplorer.refresh();
                     }
                     callbackIfDone();
                 })

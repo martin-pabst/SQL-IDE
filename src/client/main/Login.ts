@@ -167,6 +167,7 @@ export class Login {
 
                 ajax('logout', logoutRequest, () => {
                     // window.location.href = 'index.html';
+                    this.main.networkManager.sendUpdateUserSettings(() => {});
 
                     jQuery('#login').show();
                     jQuery('#bitteWarten').css('display', 'none');
@@ -175,10 +176,14 @@ export class Login {
                     this.main.projectExplorer.fileListPanel.clear();
                     this.main.projectExplorer.workspaceListPanel.clear();
 
+                    this.main.databaseExplorer.clear();
+                    this.main.resultsetPresenter.clear();
+
                     if (this.main.user.is_teacher) {
                         this.main.teacherExplorer.removePanels();
                         this.main.teacherExplorer = null;
                     }
+
 
                     this.main.currentWorkspace = null;
                     this.main.user = null;

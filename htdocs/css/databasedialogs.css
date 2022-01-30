@@ -16,11 +16,15 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    padding: 2px 0;
+    border-bottom: 1px solid gray;
+    user-select: none;
 }
 
 .jo_templateListEntry:hover {
     background-color: var(--file-hover);
     color: var(--fontColorLight);
+    cursor: pointer;
 }
 
 .jo_templateListEntry.jo_active {
@@ -58,4 +62,14 @@
 #jo_ds_publishedTo input, #jo_ds_publishedTo label {
     cursor: pointer;
     user-select: none;
+}
+
+.jo_tle_ownername {
+    color:brown
+}
+
+.jo_tle_secondline {
+    font-size: 80%;
+    font-style: italic;
+    color:burlywood
 }

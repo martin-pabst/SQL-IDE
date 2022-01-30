@@ -228,6 +228,9 @@ export class ProjectExplorer {
                     if (error == null) {
                         that.main.removeWorkspace(workspace);
                         that.fileListPanel.enableNewButton(that.main.workspaceList.length > 0);
+                        that.fileListPanel.clear();
+                        that.main.databaseExplorer.clear();
+                        that.main.getResultsetPresenter().clear();
                         successfulNetworkCommunicationCallback();
                     } else {
                         alert('Der Server ist nicht erreichbar!');
@@ -410,6 +413,10 @@ export class ProjectExplorer {
 
     setWorkspaceActive(w: Workspace) {
 
+        if(w != null){
+            this.fileListPanel.$buttonNew.show();
+        }
+
         this.workspaceListPanel.select(w, false);
 
         let callback = (error: string) => {
@@ -427,6 +434,11 @@ export class ProjectExplorer {
             dbTool.initializeWorker(sql,
                 () => {
                     this.main.currentWorkspace = w;
+                    
+                    if(this.main.user.id == w.owner_id){
+                        this.main.user.currentWorkspace_id = w.id;
+                    }
+
                     this.renderFiles(w);
 
                     if (w != null) {
@@ -458,7 +470,7 @@ export class ProjectExplorer {
 
                 },
                 () => {
-                    this.main.DatabaseExplorer.refreshAfterRetrievingDBStructure();
+                    this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
                 });
 
         }

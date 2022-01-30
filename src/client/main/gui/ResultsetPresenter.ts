@@ -71,28 +71,39 @@ export class ResultsetPresenter {
         if (statements.length == 0) return;
 
         let hasDDLStatements: boolean = statements.some(st => this.isDDLStatement(st));
+        let hasWriteStatements: boolean = statements.some(st => this.isWriteStatement(st));
         let workspace = this.main.currentWorkspace;
         let database = workspace.database;
 
-        if (hasDDLStatements) {
+        if(hasDDLStatements && workspace.permissions <= 2){
+            alert("Der Benutzer hat keine Berechtigung zum Ändern der Tabellenstruktur.");
+            return;
+        }
+
+        if(hasWriteStatements && workspace.permissions <= 1){
+            alert("Der Benutzer hat keine Berechtigung zum Einfügen/Löschen/Ändern von Datensätzen.");
+            return;
+        }
+
+        if (hasDDLStatements || hasWriteStatements) {
             // Step 1: Update Database to newest version to avoid potential database reset
             this.main.networkManager.getNewStatements(workspace, (new_statements, firstStatementIndex) => {
 
                 this.main.notifier.executeNewStatements(new_statements, firstStatementIndex, () => {}, 
                 () => {
                     // Step 2: Execute new statements to see which are successful
-                    let sucessfullyExecutedDDLStatements: SQLStatement[] = [];
-                    this.executeStatements(statements, 0, sucessfullyExecutedDDLStatements, () => {
+                    let sucessfullyExecutedModifyingStatements: SQLStatement[] = [];
+                    this.executeStatements(statements, 0, sucessfullyExecutedModifyingStatements, () => {
 
-                        if (sucessfullyExecutedDDLStatements.length == 0) return;
+                        if (sucessfullyExecutedModifyingStatements.length == 0) return;
 
                         // Step 3: Send successful statements to server in order to retrieve new db-version-number
-                        this.main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedDDLStatements.map(st => st.sql), (statements_before, new_version) => {
+                        this.main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sql), (statements_before, new_version) => {
 
                             // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
                             // Add all new statements to local statement list
                             statements_before.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st);
-                            sucessfullyExecutedDDLStatements.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st.sql);
+                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st.sql);
                             database.version = new_version;
 
                             // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2
@@ -142,7 +153,7 @@ export class ResultsetPresenter {
     }
 
 
-    executeStatements(statements: SQLStatement[], index: number, successfullyExecutedDDLStatements: SQLStatement[], callback: () => void, errors: RuntimeError[] = []) {
+    executeStatements(statements: SQLStatement[], index: number, successfullyExecutedModifyingStatements: SQLStatement[], callback: () => void, errors: RuntimeError[] = []) {
 
         if (index >= statements.length) {
             this.showErrors(errors);
@@ -154,7 +165,7 @@ export class ResultsetPresenter {
 
 
         let callback1 = () => {
-            this.executeStatements(statements, index + 1, successfullyExecutedDDLStatements, callback, errors);
+            this.executeStatements(statements, index + 1, successfullyExecutedModifyingStatements, callback, errors);
         }
 
         if (statement.ast == null) {
@@ -181,7 +192,7 @@ export class ResultsetPresenter {
                     (error) => { errors.push({ statement: statement, message: error }); callback1(); });
             }
         } else {
-            this.main.databaseTool.executeQuery(statement.sql, (results) => { successfullyExecutedDDLStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
+            this.main.databaseTool.executeQuery(statement.sql, (results) => { successfullyExecutedModifyingStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
         }
 
     }
@@ -315,7 +326,11 @@ export class ResultsetPresenter {
     }
 
     isDDLStatement(statement: SQLStatement): boolean {
-        return statement.ast != null && statement.ast.type != TokenType.keywordSelect;
+        return statement.ast != null && [TokenType.keywordCreate, TokenType.keywordDrop, TokenType.keywordAlter].indexOf(statement.ast.type) >= 0;
+    }
+
+    isWriteStatement(statement: SQLStatement): boolean {
+        return statement.ast != null && [TokenType.keywordInsert, TokenType.keywordDelete, TokenType.keywordUpdate].indexOf(statement.ast.type) >= 0;
     }
 
     private presentResultsIntern(query: string, results: QueryResult[]) {
@@ -341,6 +356,12 @@ export class ResultsetPresenter {
 
         this.showResults();
 
+    }
+
+    public clear(){
+        let $bodyDiv = jQuery('.jo_result-body');
+        $bodyDiv.empty();
+        this.$paginationDiv.hide();
     }
 
     private showResultsBusy: boolean = false;

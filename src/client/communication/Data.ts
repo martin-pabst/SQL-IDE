@@ -54,6 +54,7 @@ export type WorkspaceData = {
     currentFileId?: number,
     settings?: string,       // serialized WorkspaceSettings
     sql_history: string,
+    permissions: number
 }
 
 export type CreateWorkspaceData = {
@@ -195,8 +196,7 @@ export type SendUpdatesResponse = {
 
 export type UpdateUserSettingsRequest = {
     settings: UserSettings,
-    current_workspace_id: number,
-    current_file_id: number,
+    current_workspace_id: number
     userId: number
 }
 
@@ -605,7 +605,9 @@ export type TemplateListEntry = {
     id: number,
     name: string,
     published_to: number,
-    description: string
+    description: string,
+    ownerName: string,
+    $tle: JQuery<HTMLDivElement>
 }
 
 export type GetTemplateListRequest = {

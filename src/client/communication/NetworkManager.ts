@@ -249,8 +249,7 @@ export class NetworkManager {
         let request: UpdateUserSettingsRequest = {
             settings: this.main.user.settings,
             userId: this.main.user.id,
-            current_workspace_id: this.main.getCurrentWorkspace()?.id,
-            current_file_id: this.main.getCurrentlyEditedModule()?.file?.id
+            current_workspace_id: this.main.getCurrentWorkspace()?.id
         }
 
         ajax("updateUserSettings", request, (response: UpdateUserSettingsResponse) => {

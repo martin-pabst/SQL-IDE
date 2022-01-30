@@ -24,6 +24,8 @@ export class Workspace {
 
     sql_history: string;
 
+    permissions: number;
+
     constructor(name: string, private main: MainBase, owner_id: number){
         this.name = name;
         this.owner_id = owner_id;
@@ -40,7 +42,8 @@ export class Workspace {
             files: [],
             sql_history: this.sql_history,
             path: "",
-            isFolder: false
+            isFolder: false, 
+            permissions: this.permissions
         }
 
         if(withFiles){
@@ -61,6 +64,7 @@ export class Workspace {
         w.id = ws.id;
         w.owner_id = ws.owner_id;
         w.sql_history = ws.sql_history;
+        w.permissions = ws.permissions;
 
         for(let f of ws.files){
 

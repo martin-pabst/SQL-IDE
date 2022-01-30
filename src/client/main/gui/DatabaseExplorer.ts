@@ -21,6 +21,10 @@ export class DatabaseExplorer {
 
     }
 
+    clear(){
+        this.$mainDiv.empty();
+    }
+
     refreshAfterRetrievingDBStructure() {
         let dbTool = this.main.getDatabaseTool();
         let workspace = this.main.getCurrentWorkspace();
@@ -35,8 +39,10 @@ export class DatabaseExplorer {
         this.$mainDiv.empty();
 
         for (let table of tables) {
-            let $table = this.renderTable(table);
-            this.$mainDiv.append($table);
+            if(table.identifier != "sqlite_sequence"){
+                let $table = this.renderTable(table);
+                this.$mainDiv.append($table);
+            }
         }
 
     }

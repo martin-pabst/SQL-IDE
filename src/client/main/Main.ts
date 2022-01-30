@@ -72,7 +72,7 @@ export class Main implements MainBase {
     }
 
     getDatabaseExplorer():DatabaseExplorer {
-        return this.DatabaseExplorer;
+        return this.databaseExplorer;
     }
 
     getResultsetPresenter(): ResultsetPresenter {
@@ -117,7 +117,7 @@ export class Main implements MainBase {
 
     databaseTool: DatabaseTool;
 
-    DatabaseExplorer: DatabaseExplorer;
+    databaseExplorer: DatabaseExplorer;
 
     resultsetPresenter: ResultsetPresenter;
 
@@ -129,7 +129,7 @@ export class Main implements MainBase {
         this.login.initGUI();
 
         this.databaseTool = new DatabaseTool();
-        this.DatabaseExplorer = new DatabaseExplorer(this, jQuery(".jo_db_tree"));
+        this.databaseExplorer = new DatabaseExplorer(this, jQuery(".jo_db_tree"));
 
         this.actionManager = new ActionManager(null, this);
         this.actionManager.init();

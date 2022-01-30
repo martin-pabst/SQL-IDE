@@ -59,16 +59,17 @@ export class NewDatabaseDialog {
 
         makeTabs(this.$dialog);
 
+        let $templatelist = jQuery('.jo_templatelist');
         this.main.networkManager.fetchTemplateList((templatelist) => {
-            let $templatelist = jQuery('.jo_templatelist');
             templatelist.forEach(tle => {
 
                 let $tle = jQuery('<div class="jo_templateListEntry"></div>')
-                $tle.append(jQuery(`<div class="jo_tle_firstline">${tle.name}</div>`))
+                $tle.append(jQuery(`<div class="jo_tle_firstline">${tle.name} <span class="jo_tle_ownername"> (von ${tle.ownerName})</span></div>`))
                 $tle.append(jQuery(`<div class="jo_tle_secondline">${tle.description}</div>`))
                 $tle.data('templateId', tle.id);
 
                 $templatelist.append($tle);
+                tle.$tle = <JQuery<HTMLDivElement>>$tle;
 
                 $tle.on('pointerdown', () => {
                     $templatelist.find('.jo_templateListEntry').removeClass('jo_active');
@@ -76,7 +77,17 @@ export class NewDatabaseDialog {
                 })
 
             })
+            let $templateName = <JQuery<HTMLInputElement>>jQuery('.jo_templatename');
+            $templateName.on('input', () => {
+                let s = <string>$templateName.val();
+                $templatelist.find('.jo_templateListEntry').hide();
+                templatelist.forEach(tle => {
+                    let tleString = tle.name + tle.ownerName + (tle.description ? tle.description : "");
+                    if(tleString.indexOf(s) >= 0) tle.$tle.show();
+                })
+            })
         })
+
 
         this.$dialog.css('visibility', 'visible');
 
@@ -89,7 +100,7 @@ export class NewDatabaseDialog {
             let workspaceData: CreateWorkspaceData = {
                 id: null,
                 isFolder: false,
-                name: <string>jQuery('.dialog-input jo_databasename').val(),
+                name: <string>jQuery('.dialog-input.jo_databasename').val(),
                 path: "",
             }
 
@@ -107,13 +118,13 @@ export class NewDatabaseDialog {
                     break;
                 case "useExistingDatabase":
                     let code = <string>jQuery('.jo_databasecodeinput').val();
-                    let slashIndex = code.indexOf("/");
-                    if (slashIndex == -1) {
-                        alert("Der Zugriffscode muss das Zeichen / enthalten.");
+                    let tIndex = code.indexOf("T");
+                    if (tIndex == -1) {
+                        alert("Der Zugriffscode muss das Zeichen T enthalten.");
                         return;
                     }
-                    workspaceData.otherDatabaseId = Number.parseInt(code.substring(0, slashIndex));
-                    workspaceData.secret = code.substring(slashIndex + 1);
+                    workspaceData.otherDatabaseId = Number.parseInt(code.substring(0, tIndex));
+                    workspaceData.secret = code.substring(tIndex + 1);
                     break;
             }
 
@@ -137,6 +148,8 @@ export class NewDatabaseDialog {
                 projectExplorer.fileListPanel.sortElements();
 
                 projectExplorer.setWorkspaceActive(w);
+
+                this.showMainWindow();
 
             })
 
