@@ -239,7 +239,7 @@ export class Module {
             dirty: true,
             saved: true,
             version: f.version,
-            id: f.id,
+            id: f.id
         }
 
         let m: Module = new Module(f1, main);

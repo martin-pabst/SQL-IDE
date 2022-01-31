@@ -8,6 +8,8 @@ import { WDatabase } from "./WDatabase.js";
 export class Workspace {
     
     name: string;
+    path: string;
+    isFolder: boolean;
     id: number;
     owner_id: number;
 
@@ -42,8 +44,8 @@ export class Workspace {
             files: [],
             sql_history: this.sql_history,
             path: "",
-            isFolder: false, 
-            permissions: this.permissions
+            isFolder: false,  
+            permissions: this.permissions 
         }
 
         if(withFiles){
@@ -62,6 +64,8 @@ export class Workspace {
 
         let w = new Workspace(ws.name, main, ws.owner_id);
         w.id = ws.id;
+        w.path = ws.path;
+        w.isFolder = ws.isFolder;
         w.owner_id = ws.owner_id;
         w.sql_history = ws.sql_history;
         w.permissions = ws.permissions;

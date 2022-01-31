@@ -128,6 +128,7 @@ export class NewDatabaseDialog {
                     break;
             }
 
+
             this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string, id?: number) => {
                 if (error != null) { alert(error); return; }
 
@@ -141,8 +142,10 @@ export class NewDatabaseDialog {
                 projectExplorer.workspaceListPanel.addElement({
                     name: workspaceData.name,
                     externalElement: w,
-                    iconClass: "workspace"
-                });
+                    iconClass: "workspace",
+                    isFolder: false,
+                    path: []
+                }, true);
 
                 projectExplorer.workspaceListPanel.sortElements();
                 projectExplorer.fileListPanel.sortElements();

@@ -25,6 +25,7 @@ import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { Notifier } from "../communication/Notifier.js";
+import { checkIfMousePresent } from "../tools/HtmlTools.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -124,6 +125,8 @@ export class Main implements MainBase {
     notifier: Notifier;
 
     initGUI() {
+
+        checkIfMousePresent();
 
         this.login = new Login(this);
         this.login.initGUI();

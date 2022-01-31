@@ -4,6 +4,7 @@ import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, Creat
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
+import { AccordionElement } from "../main/gui/Accordion.js";
 
 export class NetworkManager {
     
@@ -125,21 +126,29 @@ export class NetworkManager {
         
     }
     
-    sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number, callback: (error: string, id?: number) => void) {
+    sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number, callback: (error: string) => void) {
+
+        if (this.main.user.is_testuser) {
+            wd.id = Math.round(Math.random() * 10000000);
+            callback(null);
+            return;
+        }
 
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "create",
             entity: "workspace",
             data: wd,
-            owner_id: owner_id,            
+            owner_id: owner_id,
             userId: this.main.user.id
         }
 
         ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            callback(null, response.id);
+            wd.id = response.id;
+            callback(null);
         }, callback);
 
     }
+
 
     getDatabaseSettings(workspace_id: number, callback: (response: GetDatabaseSettingsResponse)=> void){
         let request: GetDatabaseSettingsRequest = {
@@ -398,13 +407,23 @@ export class NetworkManager {
         let w = this.main.createNewWorkspace(remoteWorkspace.name, remoteWorkspace.owner_id);
         w.id = remoteWorkspace.id;
         w.sql_history = "";
+        w.path = remoteWorkspace.path;
+        w.isFolder = remoteWorkspace.isFolder;
 
         this.main.workspaceList.push(w);
-        this.main.projectExplorer.workspaceListPanel.addElement({
+        let path = remoteWorkspace.path.split("/");
+        if (path.length == 1 && path[0] == "") path = [];
+
+        let panelElement: AccordionElement = {
             name: remoteWorkspace.name,
             externalElement: w,
-            iconClass: "workspace"
-        });
+            iconClass: "workspace",
+            isFolder: remoteWorkspace.isFolder,
+            path: path
+        };
+
+        this.main.projectExplorer.workspaceListPanel.addElement(panelElement, true);
+        w.panelElement = panelElement;
 
         for (let fileData of remoteWorkspace.files) {
             this.createFile(w, fileData);
@@ -424,7 +443,7 @@ export class NetworkManager {
                 externalElement: null
             }
 
-            this.main.projectExplorer.fileListPanel.addElement(ae);
+            this.main.projectExplorer.fileListPanel.addElement(ae, true);
         }
 
         let f: any = { // File
