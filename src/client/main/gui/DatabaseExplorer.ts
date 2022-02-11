@@ -78,6 +78,7 @@ export class DatabaseExplorer {
 
             let type = column.type == null ? "" : column.type.toString();
             let notNull: string = column.notNull ? '<div class="jo_dbnotnull">not null</div>' : "";
+            let defaultValue: string = column.defaultValue ? `<div class="jo_dbdefault">default ${column.defaultValue}</div>` : "";
 
             let $column = jQuery(`
             <div class="jo_column">
@@ -86,6 +87,7 @@ export class DatabaseExplorer {
                 <div class="jo_dbtype">${type}</div>
                 ${referencesHtml}
                 ${notNull}
+                ${defaultValue}
             </div>
             `);
             $columns.append($column);

@@ -85,9 +85,10 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
             $item.css('color', mi.color);
         }
         if (mi.link == null) {
-            $item.on(mousePointer + 'down.contextmenu', () => {
+            $item.on(mousePointer + 'up.contextmenu', (e) => {
+                e.stopPropagation();
                 jQuery('.jo_contextmenu').remove();
-                jQuery(document).off(mousePointer + "down.contextmenu");
+                jQuery(document).off(mousePointer + "up.contextmenu");
                 jQuery(document).off("keydown.contextmenu");
                 mi.callback();
             });
@@ -116,8 +117,8 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
         $contextMenu.append($item);
     }
 
-    jQuery(document).on(mousePointer + "down.contextmenu", () => {
-        jQuery(document).off(mousePointer + "down.contextmenu");
+    jQuery(document).on(mousePointer + "up.contextmenu", () => {
+        jQuery(document).off(mousePointer + "up.contextmenu");
         jQuery(document).off("keydown.contextmenu");
         jQuery('.jo_contextmenu').remove();
     })

@@ -78,9 +78,13 @@ export type CreateTableColumnNode = {
     identifier: string,
     isPrimary: boolean,
     baseType: SQLBaseType,
+    parameters?: number[],
     referencesTable?: string,
     referencesColumn?: string,
-    referencesPosition?: TextPosition
+    defaultValue?: string,
+    notNull: boolean,
+    collate?: string,
+    referencesPosition?: TextPosition,
 }
 
 export type GroupByNode = {

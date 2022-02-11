@@ -60,6 +60,10 @@ export enum TokenType {
     keywordIn,
     keywordNotIn,
     keywordLike,
+    keywordCollate,
+    keywordDefault,
+    keywordEngine,
+    keywordCharset,
 
     // brackets
     leftBracket, // ()
@@ -75,6 +79,7 @@ export enum TokenType {
     modulo,
     minus, plus, multiplication, division,
     singleQuote, doubleQuote, // ', "
+    identifierQuote,
     lower, greater, lowerOrEqual, greaterOrEqual, 
     concatenation,    
     equal,
@@ -195,6 +200,10 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordIn]: "in",
     [TokenType.keywordNotIn]: "not in",
     [TokenType.keywordLike]: "like",
+    [TokenType.keywordCollate]: "collate",
+    [TokenType.keywordDefault]: "default",
+    [TokenType.keywordEngine]: "engine",
+    [TokenType.keywordCharset]: "charset",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -214,6 +223,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.division]: "/",
     [TokenType.singleQuote]: "'", 
     [TokenType.doubleQuote]: "\"", // ']: "", "
+    [TokenType.identifierQuote]: "`",
     [TokenType.lower]: "<", 
     [TokenType.greater]: ">",
     [TokenType.equal]: "=", 
@@ -274,6 +284,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     '|': TokenType.pipe,
     '\'': TokenType.singleQuote, 
     '"': TokenType.doubleQuote, // ', "
+    '`': TokenType.identifierQuote, // ', "
     "<": TokenType.lower,
     ">": TokenType.greater,
     "=": TokenType.equal,
@@ -343,7 +354,11 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "offset": TokenType.keywordOffset,
     "in": TokenType.keywordIn,
     "not in": TokenType.keywordNotIn,
-    "like": TokenType.keywordLike
+    "like": TokenType.keywordLike,
+    "collate": TokenType.keywordCollate,
+    "default": TokenType.keywordDefault,
+    "engine": TokenType.keywordEngine,
+    "charset": TokenType.keywordCharset
 
 
 };

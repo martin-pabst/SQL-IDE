@@ -44,12 +44,17 @@
 
 .jo_dbtype {
     margin-left: 5px;
-    color: var(--scrollbar-thumb-active);
+    color: var(--linecolumn);
 }
 
 .jo_dbnotnull {
     margin-left: 5px;
     color: var(--error-position);
+}
+
+.jo_dbdefault {
+    margin-left: 5px;
+    color: var(--scrollbar-thumb-active);
 }
 
 .jo_columnlist {

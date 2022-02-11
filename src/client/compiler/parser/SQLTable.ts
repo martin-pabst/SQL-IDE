@@ -8,7 +8,7 @@ export class Column {
     fromColumnStructure?: ColumnStructure;
     notNull: boolean;
 
-    constructor(public identifier: string, public type: SQLType, public table: Table, public isPrimaryKey: boolean, public isNullable: boolean){
+    constructor(public identifier: string, public type: SQLType, public table: Table, public isPrimaryKey: boolean, public isNullable: boolean, public defaultValue: string){
 
     }
 
@@ -30,8 +30,9 @@ export class Column {
             type = new SQLDerivedType(<SQLBaseType>type, parameterValues);
         }
 
-        let column = new Column(cs.name, type, table, cs.isPrimaryKey, !cs.isPrimaryKey);
+        let column = new Column(cs.name, type, table, cs.isPrimaryKey, !cs.isPrimaryKey, cs.defaultValue);
         column.notNull = cs.notNull;
+        
         column.fromColumnStructure = cs;
 
         return column;

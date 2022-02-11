@@ -67,6 +67,7 @@ export class SQLBaseType extends SQLType {
     }
 
     static getBaseType(name: string) {
+        if(name == 'char') name = 'varchar';
         return this.baseTypeMap.get(name.toLocaleLowerCase());
     }
 

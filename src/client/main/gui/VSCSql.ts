@@ -71,6 +71,7 @@ export function defineVscSQL() {
             { open: '[', close: ']', token: 'delimiter.square' },
             { open: '(', close: ')', token: 'delimiter.parenthesis' }
         ],
+        escapes: /\\(?:[abfnrtv\\"'])/,
         keywords: [
             "ABORT", "ACTION", "ADD", "AFTER", "ALL", "ALTER", "ANALYZE", "AND", "AS", "ASC", "ATTACH", "AUTOINCREMENT", "BEFORE",
             "BEGIN", "BETWEEN", "BY", "CASCADE", "CASE", "CAST", "CHECK", "COLLATE", "COLUMN", "COMMIT", "CONFLICT", "CONSTRAINT",
@@ -81,7 +82,7 @@ export function defineVscSQL() {
             "NATURAL", "NO", "NOT", "NOTNULL", "NULL", "OF", "OFFSET", "ON", "OR", "ORDER", "OUTER", "PLAN", "PRAGMA", "PRIMARY", "QUERY",
             "RAISE", "RECURSIVE", "REFERENCES", "REGEXP", "REINDEX", "RELEASE", "RENAME", "REPLACE", "RESTRICT", "RIGHT", "ROLLBACK", "ROW",
             "SAVEPOINT", "SELECT", "SET", "TABLE", "TEMP", "TEMPORARY", "THEN", "TO", "TRANSACTION", "TRIGGER", "UNION", "UNIQUE", "UPDATE",
-            "USING", "VACUUM", "VALUES", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WITH", "WITHOUT"
+            "USING", "VACUUM", "VALUES", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WITH", "WITHOUT", "ENGINE", "CHARSET"
         ],
         operators: [
             "AND", "BETWEEN", "IN", "LIKE", "NOT", "OR", "IS", "NULL", "INTERSECT", "UNION", "INNER", "JOIN", "LEFT", "OUTER", "RIGHT"
@@ -160,7 +161,8 @@ export function defineVscSQL() {
                 [/'/, { token: 'string', next: '@string' }],
             ],
             string: [
-                [/[^']+/, 'string'],
+                [/[^\\']+/, 'string'],
+                [/\\./, 'string.escape.invalid'],
                 [/''/, 'string'],
                 [/'/, { token: 'string', next: '@pop' }]
             ],

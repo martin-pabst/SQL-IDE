@@ -119,13 +119,13 @@ export class SymbolResolver {
             if (columnNode.type == TokenType.allColumns) {
                 for (let table of joinedTables) {
                     for (let column of table.columns) {
-                        let c: Column = new Column(column.identifier, column.type, resultTable, false, true);
+                        let c: Column = new Column(column.identifier, column.type, resultTable, false, true, column.defaultValue);
                         resultTable.columns.push(c);
                     }
                 }
             } else {
                 this.resolveTerm(columnNode.term);
-                let c1: Column = new Column(columnNode.alias, columnNode.term.sqlType, resultTable, false, true);
+                let c1: Column = new Column(columnNode.alias, columnNode.term.sqlType, resultTable, false, true, null);
                 resultTable.columns.push(c1);
                 if (c1.identifier != null) {
                     selectNode.symbolTable.storeSymbol({
@@ -305,7 +305,8 @@ export class SymbolResolver {
                 notNull: false,
                 references: null,
                 table: thisTable,
-                type: c.baseType
+                type: c.baseType,
+                defaultValue: c.defaultValue
             }
         });
 

@@ -44,11 +44,11 @@ export class Lexer {
     bracketError: string;
     correspondingBracket: { [key: number]: TokenType } = {};
 
-    tokenTypesToMerge: {first: TokenType, second: TokenType, merged: TokenType}[] = [
-        {first: TokenType.keywordNotIn, second: TokenType.keywordIn, merged: TokenType.keywordNotIn},
-        {first: TokenType.keywordIs, second: TokenType.keywordNot, merged: TokenType.isNot},
-        {first: TokenType.isNot, second: TokenType.keywordNull, merged: TokenType.isNotNull},
-        {first: TokenType.keywordIs, second: TokenType.keywordNull, merged: TokenType.isNull},
+    tokenTypesToMerge: { first: TokenType, second: TokenType, merged: TokenType }[] = [
+        { first: TokenType.keywordNotIn, second: TokenType.keywordIn, merged: TokenType.keywordNotIn },
+        { first: TokenType.keywordIs, second: TokenType.keywordNot, merged: TokenType.isNot },
+        { first: TokenType.isNot, second: TokenType.keywordNull, merged: TokenType.isNotNull },
+        { first: TokenType.keywordIs, second: TokenType.keywordNull, merged: TokenType.isNull },
     ]
 
     constructor() {
@@ -233,6 +233,9 @@ export class Lexer {
                 case TokenType.at:
                     this.lexAnnotation();
                     return;
+                case TokenType.identifierQuote:
+                    this.lexQuotedIdentifier();
+                    return;
             }
 
             this.pushToken(specialCharToken, char);
@@ -252,6 +255,25 @@ export class Lexer {
 
     }
 
+
+    lexQuotedIdentifier() {
+        let line = this.line;
+        let column = this.column;
+
+        let s: string = "";
+        this.next();
+        while(this.currentChar != '`' && this.currentChar != endChar){
+            s += this.currentChar;
+            this.next();
+        }
+        if(this.currentChar == endChar){
+            this.pushError("Innerhalb eines in `` eingeschlossenen Bezeichners wurde das Ende der Datei erreicht.", s.length + 1, "error", line, column);
+        } else {
+            this.next(); // skip `
+            this.pushToken(TokenType.identifier, s, line, column);
+        }
+    }
+
     pushToken(tt: TokenType, text: string | number | boolean, line: number = this.line, column: number = this.column, length: number = ("" + text).length) {
         let t: Token = {
             tt: tt,
@@ -263,13 +285,13 @@ export class Lexer {
             }
         }
 
-        for(let tripel of this.tokenTypesToMerge){
-            if(tt == tripel.second && this.nonSpaceLastTokenType == tripel.first){
+        for (let tripel of this.tokenTypesToMerge) {
+            if (tt == tripel.second && this.nonSpaceLastTokenType == tripel.first) {
                 let newLength = column - this.nonSpaceLastToken.position.column + length;
                 this.nonSpaceLastToken.tt = tripel.merged;
-                this.nonSpaceLastToken.position = {column: this.nonSpaceLastToken.position.column, line: line, length: newLength};
+                this.nonSpaceLastToken.position = { column: this.nonSpaceLastToken.position.column, line: line, length: newLength };
                 this.nonSpaceLastToken.value = this.nonSpaceLastToken.value + " " + text;
-    
+
                 this.nonSpaceLastTokenType = tripel.merged;
                 return;
             }
@@ -361,17 +383,12 @@ export class Lexer {
         while (true) {
             let char = this.currentChar;
             if (char == "\\") {
-                if (this.nextChar == "u") {
-                    this.next();
-
+                let escapeChar = EscapeSequenceList[this.nextChar];
+                if (escapeChar == null) {
+                    this.pushError('Die Escape-Sequenz \\' + this.nextChar + ' gibt es nicht.', 2);
                 } else {
-                    let escapeChar = EscapeSequenceList[this.nextChar];
-                    if (escapeChar == null) {
-                        this.pushError('Die Escape-Sequenz \\' + this.nextChar + ' gibt es nicht.', 2);
-                    } else {
-                        char = escapeChar;
-                        this.next();
-                    }
+                    char = escapeChar;
+                    this.next();
                 }
             } else if (char == beginChar) {
                 this.next();
@@ -384,7 +401,7 @@ export class Lexer {
             this.next();
         }
 
-        if(beginChar == "'"){
+        if (beginChar == "'") {
             this.pushToken(TokenType.stringConstant, text, line, column, text.length + 2);
         } else {
             this.pushToken(TokenType.identifier, text, line, column, text.length + 2);

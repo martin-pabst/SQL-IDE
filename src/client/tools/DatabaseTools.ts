@@ -53,12 +53,12 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    initializeWorker(sql: string, callbackAfterInitializing?: () => void, 
-    callbackAfterRetrievingStructure?: () => void){
+    initializeWorker(sql: string, callbackAfterInitializing?: () => void,
+        callbackAfterRetrievingStructure?: () => void) {
         if (this.worker != null) {
             this.worker.terminate();
         }
-        
+
         let t = performance.now();
         jQuery('#bitteWartenText').html('Bitte warten, die Datenbank wird initialisiert ...');
         jQuery('#bitteWarten').css('display', 'flex');
@@ -98,21 +98,45 @@ export class DatabaseTool {
 
             };
 
-            that.executeQuery(sql, (result) => {
-                // console.log("Template written (" + (performance.now() - t)/1000 + " s)");
+            let queries: string[] = sql.split(";\n\n");
 
-                if(callbackAfterInitializing != null) callbackAfterInitializing();
-                that.retrieveDatabaseStructure(() => {
-                    // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
-                    if(callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
-                    jQuery('#bitteWarten').css('display', 'none');
+            let execQuery = () => {
+                if (queries.length > 0) {
+                    let query = queries.shift();
+                    that.executeQuery(query, (result) => {
+                        execQuery();
+                    }, (error) => {
+                        console.log("Error while setting up database: " + error);
+                        execQuery();
+                    })
+                } else {
+                    if (callbackAfterInitializing != null) callbackAfterInitializing();
+                    that.retrieveDatabaseStructure(() => {
+                        // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
+                        if (callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
+                        jQuery('#bitteWarten').css('display', 'none');
 
-                });
-                // that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
-            }, 
-            (error) => {
-                console.log("Error while setting up database: " + error);
-            });
+                    });
+                }
+            }
+
+            execQuery();
+
+            // that.executeQuery(sql, (result) => {
+            //     // console.log("Template written (" + (performance.now() - t)/1000 + " s)");
+
+            //     if (callbackAfterInitializing != null) callbackAfterInitializing();
+            //     that.retrieveDatabaseStructure(() => {
+            //         // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
+            //         if (callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
+            //         jQuery('#bitteWarten').css('display', 'none');
+
+            //     });
+            //     // that.executeQuery("select * from test", (results: QueryResult[]) => {console.log(results)}, (error) => {console.log("Error:" + error)});
+            // },
+            //     (error) => {
+            //         console.log("Error while setting up database: " + error);
+            //     });
 
             // that.worker.postMessage({
             //     action: "export"
@@ -165,7 +189,7 @@ export class DatabaseTool {
     }
 
     retrieveDatabaseStructure(callback: (dbStructure: DatabaseStructure) => void) {
-        
+
         /*
             @see https://stackoverflow.com/questions/6460671/sqlite-schema-information-metadata
         */
@@ -174,24 +198,24 @@ export class DatabaseTool {
 
         this.executeQuery(sql, (result) => {
             let sql1 = "";
-            result[0]?.values?.forEach( value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
+            result[0]?.values?.forEach(value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
 
-            if(sql1 != ""){
+            if (sql1 != "") {
                 this.executeQuery(sql1, (result1) => {
                     // console.log("DB structure: ");
-                    // console.log(result1);
-    
+                    console.log(result1);
+
                     that.databaseStructure = that.parseDatabaseStructure(result, result1)
-    
+
                     callback(that.databaseStructure);
-    
-                }, (error) => {});
+
+                }, (error) => { });
             } else {
-                that.databaseStructure = {tables: []};
+                that.databaseStructure = { tables: [] };
                 callback(that.databaseStructure);
             }
 
-        }, (error) => {});
+        }, (error) => { });
 
 
     }
@@ -204,7 +228,7 @@ export class DatabaseTool {
         let tableNameToStructureMap: Map<string, TableStructure> = new Map();
 
         let index = 0;
-        for(let i = 0; i < tables[0].values.length; i++){
+        for (let i = 0; i < tables[0].values.length; i++) {
             let tableName = tables[0].values[i][0];
             let tableSQL = tables[0].values[i][1];
 
@@ -221,7 +245,7 @@ export class DatabaseTool {
 
             let columnArray = columns[index].values;
             let foreignKeyList: any[][] = null;
-            if(columns.length > index + 1 && columns[index + 1].columns[0] == "id"){
+            if (columns.length > index + 1 && columns[index + 1].columns[0] == "id") {
                 foreignKeyList = columns[index + 1].values;
                 index++;
             }
@@ -240,7 +264,7 @@ export class DatabaseTool {
                 let isPrimaryKey: boolean = columnArray1[5] != 0;
 
                 let columnStructure: ColumnStructure = {
-                    name: name, 
+                    name: name,
                     isPrimaryKey: isPrimaryKey,
                     completeTypeSQL: type,
                     table: tableStructure,
@@ -255,9 +279,9 @@ export class DatabaseTool {
                     0: (8) [0, 0, "land", "LNR", "lnr", "NO ACTION", "NO ACTION", "NONE"]
                 */
 
-                if(foreignKeyList != null){
-                    let fkInfo: any[] = foreignKeyList.find( foreignKeyInfo => foreignKeyInfo[4].toLocaleLowerCase() == name.toLocaleLowerCase());
-                    if(fkInfo != null){
+                if (foreignKeyList != null) {
+                    let fkInfo: any[] = foreignKeyList.find(foreignKeyInfo => foreignKeyInfo[4].toLocaleLowerCase() == name.toLocaleLowerCase());
+                    if (fkInfo != null) {
                         columnStructure.referencesRawData = fkInfo;
                     }
                 }
@@ -268,9 +292,9 @@ export class DatabaseTool {
 
         }
 
-        for(let ts of this.databaseStructure.tables){
-            for(let cs of ts.columns){
-                if(cs.referencesRawData != null){
+        for (let ts of this.databaseStructure.tables) {
+            for (let cs of ts.columns) {
+                if (cs.referencesRawData != null) {
                     let table = tableNameToStructureMap.get(cs.referencesRawData[2]);
                     let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[3].toLocaleLowerCase());
                     cs.references = column;

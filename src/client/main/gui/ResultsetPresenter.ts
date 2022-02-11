@@ -1,6 +1,7 @@
 import { NetworkManager } from "../../communication/NetworkManager.js";
 import { TokenType } from "../../compiler/lexer/Token.js";
 import { SQLStatement } from "../../compiler/parser/Parser.js";
+import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
 import { QueryResult } from "../../tools/DatabaseTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
 import { Main } from "../Main.js";
@@ -98,12 +99,12 @@ export class ResultsetPresenter {
                         if (sucessfullyExecutedModifyingStatements.length == 0) return;
 
                         // Step 3: Send successful statements to server in order to retrieve new db-version-number
-                        this.main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sql), (statements_before, new_version) => {
+                        this.main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned), (statements_before, new_version) => {
 
                             // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
                             // Add all new statements to local statement list
                             statements_before.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st);
-                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st.sql);
+                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st.sqlCleaned == null ? st.sql : st.sqlCleaned);
                             database.version = new_version;
 
                             // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2
@@ -192,7 +193,9 @@ export class ResultsetPresenter {
                     (error) => { errors.push({ statement: statement, message: error }); callback1(); });
             }
         } else {
-            this.main.databaseTool.executeQuery(statement.sql, (results) => { successfullyExecutedModifyingStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
+            let sql = new StatementCleaner().clean(statement);
+            console.log(sql);
+            this.main.databaseTool.executeQuery(sql, (results) => { successfullyExecutedModifyingStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
         }
 
     }
