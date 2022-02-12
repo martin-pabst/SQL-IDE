@@ -5,6 +5,7 @@ import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
+import { CacheManager } from "./CacheManager.js";
 
 export class NetworkManager {
     
@@ -300,18 +301,32 @@ export class NetworkManager {
     }
 
     fetchDatabase(workspace: Workspace, callback: (error: string) => void){
-        let request: GetDatabaseRequest = {
-            workspaceId: workspace.id
-        }
 
-        ajax("getDatabase", request, (response: getDatabaseResponse)=> {
-            if(response.success){
-                workspace.database = WDatabase.fromDatabaseData(response.database)
-                callback(null);
-            } else {
-                callback("Netzwerkfehler!");
+        let cacheManager: CacheManager = new CacheManager();
+
+        cacheManager.fetchTemplateFromCache(workspace.databaseId, (templateStatements: string) => {
+            let request: GetDatabaseRequest = {
+                workspaceId: workspace.id,
+                templateNeeded: templateStatements == null
             }
-        }, callback )
+    
+            ajax("getDatabase", request, (response: getDatabaseResponse)=> {
+                if(response.success){
+                    workspace.database = WDatabase.fromDatabaseData(response.database)
+                    if(templateStatements != null){
+                        workspace.database.templateStatements = templateStatements
+                    } else {
+                        if(workspace.database.templateStatements != null){
+                            cacheManager.saveTemplateToCache(workspace.databaseId, workspace.database.templateStatements);
+                        }
+                    }
+                    callback(null);
+                } else {
+                    callback("Netzwerkfehler!");
+                }
+            }, callback )
+        });
+
 
     }
 

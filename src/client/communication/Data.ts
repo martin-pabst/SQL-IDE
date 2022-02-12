@@ -54,7 +54,8 @@ export type WorkspaceData = {
     currentFileId?: number,
     settings?: string,       // serialized WorkspaceSettings
     sql_history: string,
-    permissions: number
+    permissions: number,
+    database_id: number
 }
 
 export type CreateWorkspaceData = {
@@ -569,7 +570,8 @@ export type DatabaseData = {
 }
 
 export type GetDatabaseRequest = {
-    workspaceId: number
+    workspaceId: number,
+    templateNeeded: boolean
 }
 
 export type getDatabaseResponse = {
