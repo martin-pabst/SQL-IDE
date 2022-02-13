@@ -16,8 +16,7 @@ export type ColumnStructure = {
     name: string;
     table: TableStructure;
 
-    typeLength1?: number; // for varchar(5), ...
-    typeLength2?: number; // for varchar(5), ...
+    typeLengths?: number[]; // for varchar(5), ...
     completeTypeSQL: string;
 
     references?: ColumnStructure;
@@ -268,8 +267,7 @@ export class DatabaseTool {
                     isPrimaryKey: isPrimaryKey,
                     completeTypeSQL: type,
                     table: tableStructure,
-                    typeLength1: 0,
-                    typeLength2: 0,
+                    typeLengths: [],
                     defaultValue: dflt_value,
                     notNull: notNull
                 }
