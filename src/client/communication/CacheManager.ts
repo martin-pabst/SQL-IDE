@@ -29,7 +29,7 @@ export class CacheManager {
     }
 
     databaseIdToCacheIdentifier(databaseId: number): string {
-        return "/onlineIdeCache" + databaseId;
+        return "/onlineIdeTemplateDb" + databaseId;
     }
 
 }

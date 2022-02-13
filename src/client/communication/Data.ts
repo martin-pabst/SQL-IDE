@@ -55,7 +55,8 @@ export type WorkspaceData = {
     settings?: string,       // serialized WorkspaceSettings
     sql_history: string,
     permissions: number,
-    database_id: number
+    database_id: number, 
+    template_id: number
 }
 
 export type CreateWorkspaceData = {

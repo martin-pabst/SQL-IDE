@@ -304,7 +304,7 @@ export class NetworkManager {
 
         let cacheManager: CacheManager = new CacheManager();
 
-        cacheManager.fetchTemplateFromCache(workspace.databaseId, (templateStatements: string) => {
+        cacheManager.fetchTemplateFromCache(workspace.templateId, (templateStatements: string) => {
             let request: GetDatabaseRequest = {
                 workspaceId: workspace.id,
                 templateNeeded: templateStatements == null
@@ -317,7 +317,7 @@ export class NetworkManager {
                         workspace.database.templateStatements = templateStatements
                     } else {
                         if(workspace.database.templateStatements != null){
-                            cacheManager.saveTemplateToCache(workspace.databaseId, workspace.database.templateStatements);
+                            cacheManager.saveTemplateToCache(workspace.templateId, workspace.database.templateStatements);
                         }
                     }
                     callback(null);

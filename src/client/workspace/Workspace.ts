@@ -25,6 +25,8 @@ export class Workspace {
     databaseId: number;
     database: WDatabase;
 
+    templateId: number;
+
     sql_history: string;
 
     permissions: number;
@@ -47,7 +49,8 @@ export class Workspace {
             path: "",
             isFolder: false,  
             permissions: this.permissions,
-            database_id: this.databaseId
+            database_id: this.databaseId,
+            template_id: this.templateId
         }
 
         if(withFiles){
@@ -72,6 +75,7 @@ export class Workspace {
         w.sql_history = ws.sql_history;
         w.permissions = ws.permissions;
         w.databaseId = ws.database_id;
+        w.templateId = ws.template_id;
 
         for(let f of ws.files){
 
