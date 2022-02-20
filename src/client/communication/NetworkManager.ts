@@ -314,10 +314,10 @@ export class NetworkManager {
                 if(response.success){
                     workspace.database = WDatabase.fromDatabaseData(response.database)
                     if(templateStatements != null){
-                        workspace.database.templateStatements = templateStatements
+                        workspace.database.templateStatements = JSON.parse(templateStatements)
                     } else {
                         if(workspace.database.templateStatements != null){
-                            cacheManager.saveTemplateToCache(workspace.templateId, workspace.database.templateStatements);
+                            cacheManager.saveTemplateToCache(workspace.templateId, JSON.stringify(workspace.database.templateStatements));
                         }
                     }
                     callback(null);

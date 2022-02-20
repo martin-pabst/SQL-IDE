@@ -563,7 +563,7 @@ export type DatabaseData = {
     schule_id: number,
     template_id: number,
     template: DatabaseData,
-    statements: string,
+    statements: string[],
     published_to: number,
     version: number,
     description: string,

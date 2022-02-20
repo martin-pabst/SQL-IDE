@@ -52,7 +52,7 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    initializeWorker(sql: string, callbackAfterInitializing?: () => void,
+    initializeWorker(queries: string[], callbackAfterInitializing?: () => void,
         callbackAfterRetrievingStructure?: () => void) {
         if (this.worker != null) {
             this.worker.terminate();
@@ -97,7 +97,7 @@ export class DatabaseTool {
 
             };
 
-            let queries: string[] = sql.split(";\n\n");
+            if(queries == null) queries = [];
 
             let execQuery = () => {
                 if (queries.length > 0) {
@@ -105,7 +105,8 @@ export class DatabaseTool {
                     that.executeQuery(query, (result) => {
                         execQuery();
                     }, (error) => {
-                        console.log("Error while setting up database: " + error);
+                        console.log({"error": "Error while setting up database: " + error, "query": query});
+                        console.log()
                         execQuery();
                     })
                 } else {
@@ -181,9 +182,9 @@ export class DatabaseTool {
         }
     }
 
-    getSQLStatements(filename: string, callback: (sql: string) => void) {
+    getSQLStatements(filename: string, callback: (queries: string[]) => void) {
         jQuery.get('assets/databases/' + filename, function (sql: string) {
-            callback(sql);
+            callback(sql.split(";\n"));
         }, 'text');
     }
 

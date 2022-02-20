@@ -5,11 +5,11 @@ export class WDatabase {
     id: number;
     name: string;
 
-    templateStatements: string;
+    templateStatements: string[];
     templateId: number;
     templateName: string;
 
-    statements: string;
+    statements: string[];
     published_to: number;
     version: number;
     description: string;

@@ -494,11 +494,13 @@ export class ProjectExplorer {
 
             let dbTool = this.main.getDatabaseTool();
 
-            let sql: string = "";
-            if (w.database.templateStatements != null) sql += w.database.templateStatements;
-            if (!sql.endsWith(";")) sql += ";";
-            sql += w.database.statements;
-            dbTool.initializeWorker(sql,
+            let statements: string[] = w.database.templateStatements;
+            if(statements == null) statements = [];
+            if(w.database.statements != null){
+                statements = statements.concat(w.database.statements);
+            }
+
+            dbTool.initializeWorker(statements,
                 () => {
                     this.main.currentWorkspace = w;
                     
@@ -543,6 +545,9 @@ export class ProjectExplorer {
         }
 
         if (w.database == null) {
+            jQuery('#bitteWartenText').html('Bitte warten, hole Datenbank vom Server ...');
+            jQuery('#bitteWarten').css('display', 'flex');
+    
             this.main.networkManager.fetchDatabase(w, callback);
         } else {
             callback(null);

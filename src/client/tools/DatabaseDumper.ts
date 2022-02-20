@@ -63,12 +63,12 @@ export class DatabaseDumper {
 
     dumpTableData(tableData: TableData, statements: string[], maxRecordsPerInsertStatement: number) {
 
-        let insertIntoStatement = `insert into ${}`
+        let insertIntoStatement = `insert into ${tableData.table}`
 
         let i = 0;
         while(i < tableData.values.length){
 
-            let st = this.getInsertIntoStatement(tableData);
+            // let st = this.getInsertIntoStatement(tableData);
 
         }
 

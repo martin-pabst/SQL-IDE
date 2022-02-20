@@ -126,7 +126,7 @@ export class Notifier {
             let statements = newStatements;
             if(statements.length > 0){
                 this.main.resultsetPresenter.executeStatementsString(statements, 0, () => {
-                    that.database.statements += ResultsetPresenter.StatementDelimiter + statements.join(ResultsetPresenter.StatementDelimiter);
+                    that.database.statements = that.database.statements.concat(statements)
                     that.database.version = firstNewStatementIndex + newStatements.length - 1;
                     if(doRefreshDatabaseExplorer){
                         that.main.databaseExplorer.refresh();

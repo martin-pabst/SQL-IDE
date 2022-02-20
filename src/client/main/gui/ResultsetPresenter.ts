@@ -103,8 +103,8 @@ export class ResultsetPresenter {
 
                             // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
                             // Add all new statements to local statement list
-                            statements_before.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st);
-                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements += ResultsetPresenter.StatementDelimiter + st.sqlCleaned == null ? st.sql : st.sqlCleaned);
+                            statements_before.forEach(st => database.statements.push(st));
+                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements.push(st.sqlCleaned == null ? st.sql : st.sqlCleaned));
                             database.version = new_version;
 
                             // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2
@@ -132,7 +132,7 @@ export class ResultsetPresenter {
 
     resetDatabase(database: WDatabase) {
         this.main.databaseTool.initializeWorker(database.templateStatements, () => {
-            this.main.databaseTool.executeQuery(database.statements, () => {
+            this.main.databaseTool.executeQuery(database.statements.join(";\n"), () => {
                 this.main.getDatabaseExplorer().refresh();
             }, (error) => { })
         })
