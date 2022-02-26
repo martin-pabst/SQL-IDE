@@ -656,7 +656,8 @@ export type SetDatabaseSecretResponse = {
 export type SetPublishedToRequest = {
     workspaceId: number,
     publishedTo: number,
-    databaseName: string
+    databaseName: string,
+    description: string
 }
 
 export type SetPublishedToResponse = {

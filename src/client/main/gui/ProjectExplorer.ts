@@ -197,7 +197,10 @@ export class ProjectExplorer {
 
         let $newWorkspaceAction = jQuery('<div class="img_add-database-dark jo_button jo_active" style="margin-right: 4px"' +
             ' title="Neue Datenbank anlegen">');
-        $newWorkspaceAction.on('mousedown', (e) => {
+
+        let mousePointer = window.PointerEvent ? "pointer" : "mouse";
+
+        $newWorkspaceAction.on(mousePointer + 'down', (e) => {
             e.stopPropagation();
 
             let owner_id: number = that.main.user.id;
@@ -241,9 +244,11 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.selectCallback =
             (workspace: Workspace) => {
-                that.main.networkManager.sendUpdates(() => {
-                    that.setWorkspaceActive(workspace);
-                });
+                if(workspace != this.main.currentWorkspace){
+                    that.main.networkManager.sendUpdates(() => {
+                        that.setWorkspaceActive(workspace);
+                    });
+                }
             }
 
             this.workspaceListPanel.newFolderCallback = (newElement: AccordionElement, successCallback) => {
@@ -537,6 +542,7 @@ export class ProjectExplorer {
                         this.setModuleActive(null);
                     }
 
+                    
                 },
                 () => {
                     this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
@@ -701,9 +707,9 @@ export class ProjectExplorer {
 
         if (color == null) {
             color = "transparent";
-            caption = "Meine WORKSPACES";
+            caption = "Meine Datenbanken";
         } else {
-            caption = "Schüler-WORKSPACES";
+            caption = "Schüler-Datenbanken";
         }
 
         this.fileListPanel.$listElement.parent().css('background-color', color);

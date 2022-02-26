@@ -25,7 +25,7 @@ export class DatabaseSettingsDialog {
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
                 Zugriffscodes für andere Benutzer:
                 </div>
-                
+                                
                 <div>
                     <table class="jo_ds_secret_table">
                     <tr>
@@ -37,6 +37,13 @@ export class DatabaseSettingsDialog {
                         <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
                     </tr>
                     </table>
+                </div>
+
+                <div class="jo_ds_settings_caption" style="margin-top: 20px">
+                Beschreibung:
+                </div>
+                <div>
+                <textarea class="jo_ds_settings_description" maxlength="1000"></textarea>
                 </div>
 
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
@@ -91,7 +98,8 @@ export class DatabaseSettingsDialog {
         })
 
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
-            <string>jQuery('.jo_databasename').val(), published_to, () => { this.showMainWindow(); })
+            <string>jQuery('.jo_databasename').val(), published_to, <string>jQuery('.jo_ds_settings_description').val(),
+             () => { this.showMainWindow(); })
     }
 
     setValues(){
@@ -110,6 +118,7 @@ export class DatabaseSettingsDialog {
             }
             // jQuery('#jo_ds_publishedTo input').attr('checked', '');
             jQuery('#b'+response.publishedTo).prop('checked', true);
+            jQuery('.jo_ds_settings_description').val(this.workspace.database.description);
         })
     }
 

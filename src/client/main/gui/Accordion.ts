@@ -664,7 +664,7 @@ export class AccordionPanel {
         }
 
         if (that.withDeleteButton) {
-            element.$htmlFirstLine.find('.jo_delete').on(mousePointer + 'down', (ev) => {
+            element.$htmlFirstLine.find('.jo_delete').on(mousePointer + 'up', (ev) => {
                 ev.preventDefault();
                 openContextMenu([{
                     caption: "Abbrechen",

@@ -67,6 +67,7 @@ export class NewDatabaseDialog {
                 $tle.append(jQuery(`<div class="jo_tle_firstline">${tle.name} <span class="jo_tle_ownername"> (von ${tle.ownerName})</span></div>`))
                 $tle.append(jQuery(`<div class="jo_tle_secondline">${tle.description}</div>`))
                 $tle.data('templateId', tle.id);
+                $tle.data('name', tle.name);
 
                 $templatelist.append($tle);
                 tle.$tle = <JQuery<HTMLDivElement>>$tle;
@@ -108,12 +109,13 @@ export class NewDatabaseDialog {
                 case "emptyDatabase":
                     break;
                 case "fromTemplate":
-                    let $template = jQuery('.jo_templateListEntry').find('.jo_active');
+                    let $template = jQuery('.jo_templateListEntry.jo_active');
                     if ($template.length != 1) {
                         alert('Bitte wählen Sie genau eine Vorlage aus.');
                         return;
                     } else {
                         workspaceData.template_database_id = $template.data('templateId');
+                        if(workspaceData.name == "Neue Datenbank") workspaceData.name = $template.data('name');
                     }
                     break;
                 case "useExistingDatabase":
@@ -129,11 +131,11 @@ export class NewDatabaseDialog {
             }
 
 
-            this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string, id?: number) => {
+            this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string) => {
                 if (error != null) { alert(error); return; }
 
                 let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
-                w.id = id;
+                w.id = workspaceData.id;
                 w.sql_history = "";
 
                 let projectExplorer = this.main.projectExplorer;

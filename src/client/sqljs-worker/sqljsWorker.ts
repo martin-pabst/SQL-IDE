@@ -55,7 +55,11 @@ function worker(event) {
                 buff = db["export"]();
                 result = {
                     id: data["id"],
-                    buffer: buff
+                    results: [
+                        {
+                            buffer: buff
+                        }
+                    ]
                 };
                 try {
                     //@ts-ignore

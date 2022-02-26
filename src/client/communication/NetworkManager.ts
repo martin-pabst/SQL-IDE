@@ -170,11 +170,12 @@ export class NetworkManager {
         }, (message) => {alert(message)})
     }
 
-    setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, callback: ()=> void){
+    setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, description: string, callback: ()=> void){
         let request: SetPublishedToRequest = {
             workspaceId: workspace_id,
             databaseName: name,
-            publishedTo: published_to
+            publishedTo: published_to,
+            description: description
         };
 
         ajax("setPublishedTo", request, (response: SetPublishedToResponse) => {
@@ -317,7 +318,7 @@ export class NetworkManager {
                         workspace.database.templateStatements = JSON.parse(templateStatements)
                     } else {
                         if(workspace.database.templateStatements != null){
-                            cacheManager.saveTemplateToCache(workspace.templateId, JSON.stringify(workspace.database.templateStatements));
+                            cacheManager.saveTemplateToCache(workspace.database.templateId, JSON.stringify(workspace.database.templateStatements));
                         }
                     }
                     callback(null);

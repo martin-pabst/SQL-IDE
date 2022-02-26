@@ -6,7 +6,8 @@ export type DatabaseDirectoryEntry = {
 
 export type QueryResult = {
     columns: string[],
-    values: any[][]
+    values: any[][],
+    buffer?: Uint8Array
 }
 
 export type QuerySuccessCallback = (results: QueryResult[]) => void;
@@ -25,6 +26,8 @@ export type ColumnStructure = {
 
     notNull: boolean;
     defaultValue: string;
+
+    dumpValueFunction?: (any) => string
 }
 
 export type TableStructure = {
@@ -52,7 +55,7 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    initializeWorker(queries: string[], callbackAfterInitializing?: () => void,
+    initializeWorker(queries: string[], callbackAfterInitializing?: (errors: string[]) => void,
         callbackAfterRetrievingStructure?: () => void) {
         if (this.worker != null) {
             this.worker.terminate();
@@ -67,6 +70,8 @@ export class DatabaseTool {
         this.worker = new Worker('js/sqljs-worker/sqljsWorker.js');
         // this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
         let that = this;
+
+        let errors: string[] = [];
 
         this.worker.onmessage = () => {
             // console.log("Database opened (" + (performance.now() - t)/1000 + " s)");
@@ -105,12 +110,13 @@ export class DatabaseTool {
                     that.executeQuery(query, (result) => {
                         execQuery();
                     }, (error) => {
+                        errors.push("Error while setting up database: " + error + ", query: " + query);
                         console.log({"error": "Error while setting up database: " + error, "query": query});
                         console.log()
                         execQuery();
                     })
                 } else {
-                    if (callbackAfterInitializing != null) callbackAfterInitializing();
+                    if (callbackAfterInitializing != null) callbackAfterInitializing(errors);
                     that.retrieveDatabaseStructure(() => {
                         // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
                         if (callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
@@ -145,6 +151,7 @@ export class DatabaseTool {
         };
 
         this.worker.onerror = (e) => {
+            errors.push("Worker error: " + e);
             console.log("Worker error: " + e);
         }
 
@@ -171,6 +178,23 @@ export class DatabaseTool {
         });
 
     }
+
+    export(successCallback: (buffer: Uint8Array) => void, errorCallback: QueryErrorCallback) {
+
+        let id = this.queryId++;
+
+        this.querySuccessCallbacksMap.set(id, (results) => { successCallback(results[0].buffer)  });
+        this.queryErrorCallbackMap.set(id, errorCallback);
+
+        this.worker.postMessage({
+            id: id,
+            action: "export",
+            params: {}
+        });
+
+    }
+
+    
 
     getDirectoryEntries(callback: (entries: DatabaseDirectoryEntry[]) => void) {
         if (this.databaseDirectoryEntries != null) {

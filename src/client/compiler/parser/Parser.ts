@@ -427,7 +427,7 @@ export class Parser {
     parseAlterTable(): AlterTableNode {
 
         let startPosition = this.getCurrentPosition();
-        this.nextToken(); // skip "Delete"
+        this.nextToken(); // skip "alter"
 
         let node: AlterTableNode = {
             type: TokenType.keywordAlter,
@@ -493,12 +493,11 @@ export class Parser {
                     this.pushError("Erwartet wird der Name einer Spalte der Tabelle " + node.tableIdentifier + ".");
                     return;
                 }
-            case TokenType.identifier:
                 node.kind = "renameColumn";
                 node.oldColumnName = <string>this.cct.value;
                 node.oldColumnPosition = this.getCurrentPosition();
-                this.addCompletionHintHere(false, false, ["to"], 3);
                 this.nextToken();
+                this.addCompletionHintHere(false, false, ["to"], 3);
                 node.endPosition = this.getEndOfCurrentToken();
                 if (!this.expect(TokenType.keywordTo, true)) return;
                 node.endPosition = this.getEndOfCurrentToken();
