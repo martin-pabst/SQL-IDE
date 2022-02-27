@@ -36,7 +36,7 @@ export class SymbolResolver {
             let errorsBeforeStatement = this.errorList.length;
 
             let astNode = statement.ast;
-            if(astNode == null) continue;
+            if (astNode == null) continue;
 
             switch (astNode.type) {
                 case TokenType.keywordSelect:
@@ -172,14 +172,21 @@ export class SymbolResolver {
         let table = node.symbolTable.findTable(node.tableIdentifier);
         if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
 
+
         // if(node.whereNodeBegin != null){
         //     let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
         //     symbolTable.storeTableSymbols(table);
         // }
 
+
         if (node.whereNode != null) {
+            let whereSymbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
+            whereSymbolTable.storeTableSymbols(table);
             this.resolveTerm(node.whereNode);
+            this.symbolTableStack.pop();
         }
+
+
 
     }
 
@@ -680,8 +687,8 @@ export class SymbolResolver {
                         value.sqlType = SQLBaseType.fromConstantType(value.constantType);
                         // constantType == 40 means: null
                         // TODO: check if column is nullable!
-                        if(value.constantType == TokenType.keywordNull){
-                            if(!column.isNullable || column.notNull){
+                        if (value.constantType == TokenType.keywordNull) {
+                            if (!column.isNullable || column.notNull) {
                                 this.pushError("Die Spalte " + column.identifier + " ist nicht nullable, daher kann null hier nicht eingefügt werden.", "error", value.position);
                             }
                         } else if (!value.sqlType.canCastTo(column.type)) {
