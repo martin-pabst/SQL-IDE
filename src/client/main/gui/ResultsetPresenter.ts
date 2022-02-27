@@ -131,10 +131,8 @@ export class ResultsetPresenter {
     }
 
     resetDatabase(database: WDatabase) {
-        this.main.databaseTool.initializeWorker(database.templateStatements, () => {
-            this.main.databaseTool.executeQuery(database.statements.join(";\n"), () => {
+        this.main.databaseTool.initializeWorker(database.templateDump, database.statements, () => {
                 this.main.getDatabaseExplorer().refresh();
-            }, (error) => { })
         })
     }
 

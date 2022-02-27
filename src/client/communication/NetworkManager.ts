@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -8,7 +8,7 @@ import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
 
 export class NetworkManager {
-    
+
     timerhandle: any;
 
     ownUpdateFrequencyInSeconds: number = 20;
@@ -21,8 +21,8 @@ export class NetworkManager {
 
     interval: any;
 
-    constructor(private main: Main, private $updateTimerDiv: JQuery<HTMLElement>){        
-        
+    constructor(private main: Main, private $updateTimerDiv: JQuery<HTMLElement>) {
+
     }
 
     initializeTimer() {
@@ -30,43 +30,43 @@ export class NetworkManager {
         let that = this;
         this.$updateTimerDiv.find('svg').attr('width', that.updateFrequencyInSeconds);
 
-        if(this.interval != null) clearInterval(this.interval);
+        if (this.interval != null) clearInterval(this.interval);
 
         let counterTillForcedUpdate: number = this.forcedUpdateEvery;
 
-        this.interval = setInterval(()=>{
-            
-            if(that.main.user == null) return; // don't call server if no user is logged in
+        this.interval = setInterval(() => {
+
+            if (that.main.user == null) return; // don't call server if no user is logged in
 
             that.secondsTillNextUpdate--;
 
-            if(that.secondsTillNextUpdate < 0 ){
+            if (that.secondsTillNextUpdate < 0) {
                 that.secondsTillNextUpdate = that.updateFrequencyInSeconds;
                 counterTillForcedUpdate--;
                 let forceUpdate = counterTillForcedUpdate == 0;
-                if(forceUpdate) counterTillForcedUpdate = this.forcedUpdateEvery;
-                that.sendUpdates(() => {}, forceUpdate);
+                if (forceUpdate) counterTillForcedUpdate = this.forcedUpdateEvery;
+                that.sendUpdates(() => { }, forceUpdate);
             }
 
             let $rect = this.$updateTimerDiv.find('.jo_updateTimerRect');
 
             $rect.attr('width', that.secondsTillNextUpdate + "px");
-            
-            if(that.errorHappened){
-                $rect.css('fill', '#c00000');                
-                this.$updateTimerDiv.attr('title',"Fehler beim letzten Speichervorgang -> Werd's wieder versuchen");
+
+            if (that.errorHappened) {
+                $rect.css('fill', '#c00000');
+                this.$updateTimerDiv.attr('title', "Fehler beim letzten Speichervorgang -> Werd's wieder versuchen");
             } else {
-                $rect.css('fill', '#008000');                
-                this.$updateTimerDiv.attr('title',that.secondsTillNextUpdate + " Sekunden bis zum nächsten Speichern");
+                $rect.css('fill', '#008000');
+                this.$updateTimerDiv.attr('title', that.secondsTillNextUpdate + " Sekunden bis zum nächsten Speichern");
             }
 
         }, 1000);
-        
+
     }
-    
-    sendUpdates(callback?: ()=>void, sendIfNothingIsDirty: boolean = false){
-        
-        if(this.main.user == null) return;
+
+    sendUpdates(callback?: () => void, sendIfNothingIsDirty: boolean = false) {
+
+        if (this.main.user == null) return;
 
         this.main.projectExplorer.writeEditorTextToFile();
 
@@ -75,15 +75,15 @@ export class NetworkManager {
         let wdList: WorkspaceData[] = [];
         let fdList: FileData[] = [];
 
-        for(let ws of this.main.workspaceList){
+        for (let ws of this.main.workspaceList) {
 
-            if(!ws.saved){
+            if (!ws.saved) {
                 wdList.push(ws.getWorkspaceData(false));
                 ws.saved = true;
             }
-            
-            for(let m of ws.moduleStore.getModules(false)){
-                if(!m.file.saved){
+
+            for (let m of ws.moduleStore.getModules(false)) {
+                if (!m.file.saved) {
                     m.file.text = m.getProgramTextFromMonacoModel();
                     fdList.push(m.getFileData(ws));
                     // console.log("Save file " + m.file.name);
@@ -91,10 +91,10 @@ export class NetworkManager {
                 }
             }
         }
-        
+
         let request: SendUpdatesRequest = {
             workspacesWithoutFiles: wdList,
-            files: fdList, 
+            files: fdList,
             owner_id: this.main.workspacesOwnerId,
             userId: this.main.user.id,
             language: 1,
@@ -103,30 +103,30 @@ export class NetworkManager {
         }
 
         let that = this;
-        if(wdList.length > 0 || fdList.length > 0 || sendIfNothingIsDirty){
+        if (wdList.length > 0 || fdList.length > 0 || sendIfNothingIsDirty) {
             ajax('sendUpdates', request, (response: SendUpdatesResponse) => {
                 that.errorHappened = !response.success;
-                if(!that.errorHappened){
+                if (!that.errorHappened) {
 
                     that.updateWorkspaces(request, response);
 
-                    if(callback != null){
+                    if (callback != null) {
                         callback();
                         return;
                     }
                 }
             }, () => {
                 that.errorHappened = true;
-            } );
+            });
         } else {
-            if(callback != null){
+            if (callback != null) {
                 callback();
                 return;
             }
         }
-        
+
     }
-    
+
     sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number, callback: (error: string) => void) {
 
         if (this.main.user.is_testuser) {
@@ -151,26 +151,26 @@ export class NetworkManager {
     }
 
 
-    getDatabaseSettings(workspace_id: number, callback: (response: GetDatabaseSettingsResponse)=> void){
+    getDatabaseSettings(workspace_id: number, callback: (response: GetDatabaseSettingsResponse) => void) {
         let request: GetDatabaseSettingsRequest = {
             workspaceId: workspace_id
         };
         ajax("getDatabaseSettings", request, (response: GetDatabaseSettingsResponse) => {
             callback(response);
-        }, (message) => {alert(message)})
+        }, (message) => { alert(message) })
     }
 
-    setNewSecret(workspace_id: number, kind: string, callback: (secret: string)=> void){
+    setNewSecret(workspace_id: number, kind: string, callback: (secret: string) => void) {
         let request: SetDatabaseSecretRequest = {
             workspaceId: workspace_id,
             secretKind: kind
         };
         ajax("setNewSecret", request, (response: SetDatabaseSecretResponse) => {
             callback(response.secret);
-        }, (message) => {alert(message)})
+        }, (message) => { alert(message) })
     }
 
-    setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, description: string, callback: ()=> void){
+    setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, description: string, callback: () => void) {
         let request: SetPublishedToRequest = {
             workspaceId: workspace_id,
             databaseName: name,
@@ -180,7 +180,7 @@ export class NetworkManager {
 
         ajax("setPublishedTo", request, (response: SetPublishedToResponse) => {
             callback();
-        }, (message) => {alert(message)})
+        }, (message) => { alert(message) })
     }
 
 
@@ -223,14 +223,14 @@ export class NetworkManager {
             let request: DistributeWorkspaceRequest = {
                 workspace_id: ws.id,
                 class_id: klasse?.id,
-                student_ids: student_ids, 
+                student_ids: student_ids,
                 language: 1
             }
-    
+
             ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
                 callback(response.message)
             }, callback);
-    
+
         }, false);
 
     }
@@ -246,7 +246,7 @@ export class NetworkManager {
         }
 
         ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            if(response.success){
+            if (response.success) {
                 callback(null);
             } else {
                 callback("Netzwerkfehler!");
@@ -255,7 +255,7 @@ export class NetworkManager {
 
     }
 
-    sendUpdateUserSettings(callback: (error: string) => void){
+    sendUpdateUserSettings(callback: (error: string) => void) {
 
         let request: UpdateUserSettingsRequest = {
             settings: this.main.user.settings,
@@ -264,7 +264,7 @@ export class NetworkManager {
         }
 
         ajax("updateUserSettings", request, (response: UpdateUserSettingsResponse) => {
-            if(response.success){
+            if (response.success) {
                 callback(null);
             } else {
                 callback("Netzwerkfehler!");
@@ -274,20 +274,20 @@ export class NetworkManager {
     }
 
 
-    getNewStatements(workspace: Workspace, callback: (statements: string[], firstNewStatementIndex: number) => void){
+    getNewStatements(workspace: Workspace, callback: (statements: string[], firstNewStatementIndex: number) => void) {
         let request: GetNewStatementsRequest = {
             workspaceId: workspace.id,
             version_before: workspace.database.version
         }
 
         ajax("getNewStatements", request, (response: GetNewStatementsResponse) => {
-            if(response.success){
+            if (response.success) {
                 callback(response.newStatements, response.firstNewStatementIndex);
             }
         });
     }
 
-    AddDatabaseStatements(workspace: Workspace, statements: string[], callback: (statements_before: string[], new_version: number) => void){
+    AddDatabaseStatements(workspace: Workspace, statements: string[], callback: (statements_before: string[], new_version: number) => void) {
         let request: AddDatabaseStatementsRequest = {
             workspaceId: workspace.id,
             version_before: workspace.database.version,
@@ -295,47 +295,87 @@ export class NetworkManager {
         }
 
         ajax("addDatabaseStatements", request, (response: AddDatabaseStatementsResponse) => {
-            if(response.success){
+            if (response.success) {
                 callback(response.statements_before, response.new_version);
             }
         });
     }
 
-    fetchDatabase(workspace: Workspace, callback: (error: string) => void){
+    fetchDatabase(workspace: Workspace, callback: (error: string) => void) {
 
         let cacheManager: CacheManager = new CacheManager();
 
-        cacheManager.fetchTemplateFromCache(workspace.templateId, (templateStatements: string) => {
-            let request: GetDatabaseRequest = {
-                workspaceId: workspace.id,
-                templateNeeded: templateStatements == null
-            }
-    
-            ajax("getDatabase", request, (response: getDatabaseResponse)=> {
-                if(response.success){
-                    workspace.database = WDatabase.fromDatabaseData(response.database)
-                    if(templateStatements != null){
-                        workspace.database.templateStatements = JSON.parse(templateStatements)
+        let request: GetDatabaseRequest = {
+            workspaceId: workspace.id
+        }
+
+        ajax("getDatabase", request, (response: getDatabaseResponse) => {
+            if (response.success) {
+
+                workspace.database = WDatabase.fromDatabaseData(response.database)
+                cacheManager.fetchTemplateFromCache(workspace.database.templateId, (templateDump: Uint8Array) => {
+
+                    if (templateDump != null) {
+                        // @ts-ignore
+                        workspace.database.templateDump = pako.inflate(templateDump);
+                        callback(null);
+                        return;
                     } else {
-                        if(workspace.database.templateStatements != null){
-                            cacheManager.saveTemplateToCache(workspace.database.templateId, JSON.stringify(workspace.database.templateStatements));
+                        if (workspace.database.templateId == null) {
+                            callback(null);
+                            return
                         }
+                        this.fetchTemplate(workspace.id, (template) => {
+                            if (template != null) {
+                                cacheManager.saveTemplateToCache(workspace.database.templateId, template);
+                                // @ts-ignore
+                                workspace.database.templateDump = pako.inflate(template);
+                                callback(null);
+                                return;
+                            } else {
+                                callback("Konnte das Template nicht laden.");
+                                return;
+                            }
+                        })
                     }
-                    callback(null);
-                } else {
-                    callback("Netzwerkfehler!");
-                }
-            }, callback )
+                })
+            } else {
+                callback("Netzwerkfehler!");
+            }
         });
 
 
     }
 
-    fetchTemplateList(callback: (templateList: TemplateListEntry[]) => void){
-        let request: GetTemplateListRequest = {user_id: this.main.user.id}
 
-        ajax("getTemplateList", request, (response: GetTemplateListResponse)=> {
-            if(response.success){
+    fetchTemplate(workspaceId: number, callback: (template: Uint8Array) => void) {
+        let request: GetTemplateRequest = {
+            workspaceId: workspaceId
+        }
+
+        $.ajax({
+            type: 'POST',
+            async: true,
+            data: JSON.stringify(request),
+            contentType: 'application/json',
+            url: "servlet/getTemplate",
+            xhrFields: { responseType: 'arraybuffer' },
+            success: function (response: any) {
+                callback(new Uint8Array(response));
+            },
+            error: function (jqXHR, message) {
+                alert("Konnte das Template nicht laden.");
+                callback(null);
+            }
+        });
+
+    }
+
+    fetchTemplateList(callback: (templateList: TemplateListEntry[]) => void) {
+        let request: GetTemplateListRequest = { user_id: this.main.user.id }
+
+        ajax("getTemplateList", request, (response: GetTemplateListResponse) => {
+            if (response.success) {
                 callback(response.templateList);
             } else {
                 callback([]);
@@ -343,11 +383,11 @@ export class NetworkManager {
         }, (message) => {
             alert(message);
             callback([]);
-        } )
+        })
 
     }
 
-    updateWorkspaces(sendUpdatesRequest: SendUpdatesRequest, sendUpdatesResponse: SendUpdatesResponse){
+    updateWorkspaces(sendUpdatesRequest: SendUpdatesRequest, sendUpdatesResponse: SendUpdatesResponse) {
 
         let idToRemoteWorkspaceDataMap: Map<number, WorkspaceData> = new Map();
 
@@ -372,23 +412,23 @@ export class NetworkManager {
 
 
 
-        for(let workspace of this.main.workspaceList){
+        for (let workspace of this.main.workspaceList) {
             let remoteWorkspace: WorkspaceData = idToRemoteWorkspaceDataMap.get(workspace.id);
-            if(remoteWorkspace != null){
+            if (remoteWorkspace != null) {
                 let idToRemoteFileDataMap: Map<number, FileData> = new Map();
                 remoteWorkspace.files.forEach(fd => idToRemoteFileDataMap.set(fd.id, fd));
-                
+
                 let idToModuleMap: Map<number, Module> = new Map();
                 // update/delete files if necessary
-                for(let module of workspace.moduleStore.getModules(false)){
+                for (let module of workspace.moduleStore.getModules(false)) {
                     let fileId = module.file.id;
                     idToModuleMap.set(fileId, module);
                     let remoteFileData = idToRemoteFileDataMap.get(fileId);
-                    if(remoteFileData == null){
+                    if (remoteFileData == null) {
                         this.main.projectExplorer.fileListPanel.removeElement(module);
                         this.main.currentWorkspace.moduleStore.removeModule(module);
-                    } else if(remoteFileData.version > module.file.version){
-                        if(fileIdsSended.indexOf(fileId) < 0 || remoteFileData.forceUpdate){
+                    } else if (remoteFileData.version > module.file.version) {
+                        if (fileIdsSended.indexOf(fileId) < 0 || remoteFileData.forceUpdate) {
                             module.file.text = remoteFileData.text;
                             module.model.setValue(remoteFileData.text);
 
@@ -400,15 +440,15 @@ export class NetworkManager {
                 }
 
                 // add files if necessary
-                for(let remoteFile of remoteWorkspace.files){
-                    if(idToModuleMap.get(remoteFile.id) == null){
+                for (let remoteFile of remoteWorkspace.files) {
+                    if (idToModuleMap.get(remoteFile.id) == null) {
                         this.createFile(workspace, remoteFile);
                     }
                 }
             }
-        }        
+        }
 
-        if(newWorkspaceNames.length > 0){
+        if (newWorkspaceNames.length > 0) {
             let message: string = newWorkspaceNames.length > 1 ? "Folgende Workspaces hat Deine Lehrkraft Dir gesendet: " : "Folgenden Workspace hat Deine Lehrkraft Dir gesendet: ";
             message += newWorkspaceNames.join(", ");
             alert(message);
@@ -445,7 +485,7 @@ export class NetworkManager {
             this.createFile(w, fileData);
         }
 
-        if(withSort){
+        if (withSort) {
             this.main.projectExplorer.workspaceListPanel.sortElements();
             this.main.projectExplorer.fileListPanel.sortElements();
         }

@@ -127,7 +127,7 @@ export class MainEmbedded implements MainBase {
         this.databaseTool = new DatabaseTool();
         if(this.config.databaseFilename != null){
             this.databaseTool.getSQLStatements(this.config.databaseFilename, (queries) => {
-                this.databaseTool.initializeWorker(queries, () => {
+                this.databaseTool.initializeWorker(null, queries, () => {
                     
                     this.databaseExplorer.refresh();
 

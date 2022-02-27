@@ -5,7 +5,7 @@ export class WDatabase {
     id: number;
     name: string;
 
-    templateStatements: string[];
+    templateDump: Uint8Array;
     templateId: number;
     templateName: string;
 
@@ -24,12 +24,8 @@ export class WDatabase {
         db.published_to = data.published_to;
         db.version = data.version;
         db.description = data.description;
-
-        if(data.template != null){
-            db.templateStatements = data.template.statements;
-            db.templateId = data.template.id;
-            db.templateName = data.template.name;
-        }
+        db.templateDump = null;
+        db.templateId = data.template_id;
 
         return db;
     }

@@ -1,5 +1,6 @@
 import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
 import { makeTabs } from "../../tools/HtmlTools.js";
+import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 
@@ -56,6 +57,11 @@ export class DatabaseSettingsDialog {
                     <input type="radio" id="b2" name="publishedFilter" value="2" style="visibility: none"><label id="lb2" for="b2" style="visibility: none">Freigabe für meine Schule</label>
                     <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für alle Schulen</label>
                 </fieldset>
+
+                <div>
+                    <input type="checkbox" id="jo_upload_db" name="jo_upload_db">
+                    <label for="jo_upload_db">Aktuellen Zustand der Datenbank als Vorlage hochladen</label>
+                </div>
             </div>
 
 
@@ -85,6 +91,8 @@ export class DatabaseSettingsDialog {
             })
         })
 
+        jQuery('#jo_ds_publishedTo>input').on('change', (e) => {$('#jo_upload_db').prop('checked', !((<HTMLInputElement>jQuery('#b0')[0]).checked))});
+
     }
 
     saveNameAndPublishedTo(){
@@ -99,7 +107,12 @@ export class DatabaseSettingsDialog {
 
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
             <string>jQuery('.jo_databasename').val(), published_to, <string>jQuery('.jo_ds_settings_description').val(),
-             () => { this.showMainWindow(); })
+             () => {
+                 if($('#jo_upload_db').prop('checked')){
+                    new TemplateUploader().upload(this.workspace, this.main);                    
+                 }
+                 this.showMainWindow(); 
+                })
     }
 
     setValues(){
@@ -118,6 +131,9 @@ export class DatabaseSettingsDialog {
             }
             // jQuery('#jo_ds_publishedTo input').attr('checked', '');
             jQuery('#b'+response.publishedTo).prop('checked', true);
+
+            jQuery('#jo_upload_db').prop('checked', response.publishedTo != 0);
+
             jQuery('.jo_ds_settings_description').val(this.workspace.database.description);
         })
     }

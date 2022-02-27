@@ -55,8 +55,7 @@ export type WorkspaceData = {
     settings?: string,       // serialized WorkspaceSettings
     sql_history: string,
     permissions: number,
-    database_id: number, 
-    template_id: number
+    database_id: number
 }
 
 export type CreateWorkspaceData = {
@@ -572,8 +571,7 @@ export type DatabaseData = {
 }
 
 export type GetDatabaseRequest = {
-    workspaceId: number,
-    templateNeeded: boolean
+    workspaceId: number
 }
 
 export type getDatabaseResponse = {
@@ -663,4 +661,8 @@ export type SetPublishedToRequest = {
 export type SetPublishedToResponse = {
     success: boolean,
     error: string
+}
+
+export type GetTemplateRequest = {
+    workspaceId: number
 }

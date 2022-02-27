@@ -338,7 +338,8 @@ export class ProjectExplorer {
 
         this.$homeAction = jQuery('<div class="img_home-dark jo_button jo_active" style="margin-right: 4px"' +
             ' title="Meine eigenen Workspaces anzeigen">');
-        this.$homeAction.on('mousedown', (e) => {
+        
+        this.$homeAction.on('mouseup', (e) => {
 
             that.main.networkManager.sendUpdates(() => {
                 that.onHomeButtonClicked();
@@ -499,13 +500,10 @@ export class ProjectExplorer {
 
             let dbTool = this.main.getDatabaseTool();
 
-            let statements: string[] = w.database.templateStatements;
+            let statements: string[] = w.database.statements;
             if(statements == null) statements = [];
-            if(w.database.statements != null){
-                statements = statements.concat(w.database.statements);
-            }
 
-            dbTool.initializeWorker(statements,
+            dbTool.initializeWorker(w.database.templateDump, statements,
                 () => {
                     this.main.currentWorkspace = w;
                     
@@ -541,7 +539,6 @@ export class ProjectExplorer {
                     } else {
                         this.setModuleActive(null);
                     }
-
                     
                 },
                 () => {

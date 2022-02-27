@@ -23,6 +23,7 @@ export type ColumnStructure = {
     references?: ColumnStructure;
     referencesRawData?: any[];
     isPrimaryKey: boolean;
+    isAutoIncrement: boolean;
 
     notNull: boolean;
     defaultValue: string;
@@ -55,7 +56,7 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    initializeWorker(queries: string[], callbackAfterInitializing?: (errors: string[]) => void,
+    initializeWorker(template: Uint8Array, queries: string[], callbackAfterInitializing?: (errors: string[]) => void,
         callbackAfterRetrievingStructure?: () => void) {
         if (this.worker != null) {
             this.worker.terminate();
@@ -158,7 +159,7 @@ export class DatabaseTool {
         this.worker.postMessage({
             id: that.queryId++,
             action: "open",
-            buffer: null, /*Optional. An ArrayBuffer representing an SQLite Database file*/
+            buffer: template, /*Optional. An ArrayBuffer representing an SQLite Database file*/
         });
 
     }
@@ -227,7 +228,7 @@ export class DatabaseTool {
             if (sql1 != "") {
                 this.executeQuery(sql1, (result1) => {
                     // console.log("DB structure: ");
-                    console.log(result1);
+                    // console.log(result1);
 
                     that.databaseStructure = that.parseDatabaseStructure(result, result1)
 
@@ -290,6 +291,7 @@ export class DatabaseTool {
                 let columnStructure: ColumnStructure = {
                     name: name,
                     isPrimaryKey: isPrimaryKey,
+                    isAutoIncrement: isPrimaryKey && tableSQL.toLowerCase().indexOf("autoincrement") >= 0,
                     completeTypeSQL: type,
                     table: tableStructure,
                     typeLengths: [],

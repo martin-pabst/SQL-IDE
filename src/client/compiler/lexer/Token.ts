@@ -88,6 +88,8 @@ export enum TokenType {
     // semicolon
     semicolon, // ;
 
+    colon, // :
+
     // comma
     comma, // ,
 
@@ -233,6 +235,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     
     // semicolon
     [TokenType.semicolon]: ";", // ;
+    [TokenType.colon]: ":", // ;
 
     // comma
     [TokenType.comma]: ",", 
@@ -291,6 +294,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     "<>": TokenType.notEqual,
     
     ';': TokenType.semicolon, // ;
+    ':': TokenType.colon, // ;
 
     // whitespace
     ' ': TokenType.space,

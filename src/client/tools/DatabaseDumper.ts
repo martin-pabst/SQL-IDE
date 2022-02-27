@@ -11,7 +11,8 @@ type ColumnTypeInfo = {
     referencesTable: string,
     referencesColumn: string,
     defaultValue: string,
-    isPrimaryKey: boolean
+    isPrimaryKey: boolean,
+    isAutoIncrement: boolean
 }
 
 export class DatabaseDumper {
@@ -70,6 +71,7 @@ export class DatabaseDumper {
             completeTypeSQL: type,
             defaultValue: cti.defaultValue,
             isPrimaryKey: cti.isPrimaryKey,
+            isAutoIncrement: cti.isAutoIncrement,
             notNull: cti.notNull,
             table: this.getTableStructure(tableIdentifier),
             dumpValueFunction: this.getDumpValueFunction(type)
@@ -118,7 +120,7 @@ export class DatabaseDumper {
         this.newDbTool = new DatabaseTool();
         let statements = this.dump();
         let errors: string[];
-        this.newDbTool.initializeWorker(statements, (errors1) => {
+        this.newDbTool.initializeWorker(null, statements, (errors1) => {
 
             errors = errors1;
 

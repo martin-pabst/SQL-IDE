@@ -869,6 +869,7 @@ export class Parser {
             type: TokenType.columnDef,
             identifier: identifier,
             isPrimary: false,
+            isAutoIncrement: false,
             position: position,
             baseType: null,
             notNull: false
@@ -938,7 +939,7 @@ export class Parser {
 
         let alreadySeenKeywords: TokenType[] = [];
 
-        while ([TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
+        while ([TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
             if(alreadySeenKeywords.indexOf(this.tt)>=0){
                 this.pushError('Das Schlüsselwort ' + TokenTypeReadable[this.tt] + " darf bei der Definition einer Spalte nicht öfters als ein Mal vorkommen.");
             }
@@ -946,6 +947,10 @@ export class Parser {
             alreadySeenKeywords.push(this.tt);
 
             switch (this.tt) {
+                case TokenType.keywordAutoincrement:
+                    this.nextToken();
+                    node.isAutoIncrement = true;
+                break;
                 case TokenType.keywordPrimary:
                     if (primaryKeyAlreadyDefined) this.pushError("In einer Tabelle darf es nur einen einzigen primary key geben.");
                     this.nextToken(); // skip "primary"
@@ -955,8 +960,6 @@ export class Parser {
                         this.addCompletionHintHere(false, false, ["autoincrement, \n"])
                     }
                     node.isPrimary = true;
-                    //@ts-ignore
-                    if (this.tt == TokenType.keywordAutoincrement) this.nextToken();
                     break;
                 case TokenType.keywordReferences:
                     node.referencesPosition = this.getCurrentPosition();
@@ -1014,6 +1017,10 @@ export class Parser {
                     }
                     break;
             }
+        }
+
+        if(node.isAutoIncrement && !node.isPrimary){
+            this.pushError("autoincrement gibt es nur bei Primärschlüsseln, d.h. es fehlt wahrscheinlich 'primary key'.", "error", node.position);
         }
 
     }

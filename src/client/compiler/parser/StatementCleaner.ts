@@ -69,7 +69,7 @@ export class StatementCleaner {
     cleanColumnDef(column: CreateTableColumnNode):string {
 
         let st: string = `${column.identifier} ${column.baseType}`;
-        if(column.parameters.length > 0){
+        if(column.parameters != null && column.parameters.length > 0){
             st += `(${column.parameters.join(", ")})`;
         }
         if(column.notNull){
@@ -80,6 +80,9 @@ export class StatementCleaner {
         }
         if(column.isPrimary){
             st += " primary key";
+        }
+        if(column.isAutoIncrement){
+            st += " autoincrement";
         }
         if(column.referencesColumn != null){
             let c: string = column.referencesColumn;

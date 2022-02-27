@@ -57,6 +57,11 @@
     color: var(--scrollbar-thumb-active);
 }
 
+.jo_dbautoincrement {
+    margin-left: 5px;
+    color: #af25af;
+}
+
 .jo_columnlist {
     padding-left: 33px;
     display: flex;

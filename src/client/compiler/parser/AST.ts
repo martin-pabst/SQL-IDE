@@ -77,6 +77,7 @@ export type CreateTableColumnNode = {
     position: TextPosition,
     identifier: string,
     isPrimary: boolean,
+    isAutoIncrement: boolean,
     baseType: SQLBaseType,
     parameters?: number[],
     referencesTable?: string,
