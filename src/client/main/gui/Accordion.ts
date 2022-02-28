@@ -427,9 +427,7 @@ export class AccordionPanel {
            <div class="jo_fileimage"></div>
            <div class="jo_filename">${escapeHtml(element.name)}</div>
            <div class="jo_textAfterName"></div>
-           <div class="jo_additionalButtonHomework"></div>
-           <div class="jo_additionalButtonStart"></div>
-           <div class="jo_additionalButtonRepository"></div>
+           <div class="jo_additionalButtonSettings"></div>
            ${this.withDeleteButton ? '<div class="jo_delete img_delete jo_button jo_active' + (false ? " jo_delete_always" : "") + '"></div>' : ""}
            ${!jo_mouseDetected ? '<div class="jo_settings_button img_ellipsis-dark jo_button jo_active"></div>' : ""}
            </div>`);

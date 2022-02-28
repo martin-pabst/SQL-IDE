@@ -2,6 +2,7 @@ import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js"
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
+import { AccordionElement } from "./Accordion.js";
 
 type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase";
 
@@ -141,13 +142,17 @@ export class NewDatabaseDialog {
                 let projectExplorer = this.main.projectExplorer;
 
                 this.main.workspaceList.push(w);
-                projectExplorer.workspaceListPanel.addElement({
+                let accordionElement: AccordionElement = {
                     name: workspaceData.name,
                     externalElement: w,
                     iconClass: "workspace",
                     isFolder: false,
                     path: []
-                }, true);
+                };
+
+                projectExplorer.workspaceListPanel.addElement(accordionElement, true);
+
+                w.renderSettingsButton(accordionElement);
 
                 projectExplorer.workspaceListPanel.sortElements();
                 projectExplorer.fileListPanel.sortElements();

@@ -1,6 +1,7 @@
 import { WorkspaceData } from "../communication/Data.js";
 import { Module, ModuleStore } from "../compiler/parser/Module.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
+import { DatabaseSettingsDialog } from "../main/gui/DatabaseSettingsDialog.js";
 import { Main } from "../main/Main.js";
 import { MainBase } from "../main/MainBase.js";
 import { WDatabase } from "./WDatabase.js";
@@ -59,6 +60,28 @@ export class Workspace {
         }
 
         return wd;
+    }
+
+    renderSettingsButton(panelElement: AccordionElement) {
+        let $buttonDiv = panelElement?.$htmlFirstLine?.find('.jo_additionalButtonSettings');
+        if ($buttonDiv == null) return;
+        
+        // let myMain: Main = <Main>this.main;
+
+            let $button = jQuery('<div class="jo_settingsButton img_settings jo_button jo_active" title="Datenbank-Einstellungen..."></div>');
+            $buttonDiv.append($button);
+            let that = this;
+            $button.on('mousedown', (e) => e.stopPropagation());
+            $button.on('click', (e) => {
+                e.stopPropagation();
+
+                new DatabaseSettingsDialog(<any>that.main, that);
+
+            });
+
+        // } else {
+        //     $buttonDiv.find('.jo_startButton').remove();
+        // }
     }
 
 

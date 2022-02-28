@@ -13,6 +13,7 @@ export class WDatabase {
     published_to: number;
     version: number;
     description: string;
+    owner_id: number;
 
     static fromDatabaseData(data: DatabaseData): WDatabase {
 
@@ -26,7 +27,7 @@ export class WDatabase {
         db.description = data.description;
         db.templateDump = null;
         db.templateId = data.template_id;
-
+        db.owner_id = data.owner_id;
         return db;
     }
 

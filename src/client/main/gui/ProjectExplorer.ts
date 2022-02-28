@@ -276,6 +276,7 @@ export class ProjectExplorer {
                 if (error == null) {
                     folder.id = wd.id;
                     successCallback(folder);
+
                 } else {
                     alert("Fehler: " + error);
                     that.workspaceListPanel.removeElement(newElement);
@@ -464,7 +465,7 @@ export class ProjectExplorer {
             };
 
             this.workspaceListPanel.addElement(w.panelElement, false);
-
+            w.renderSettingsButton(w.panelElement);
         }
 
         this.workspaceListPanel.sortElements();

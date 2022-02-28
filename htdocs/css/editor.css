@@ -666,15 +666,20 @@ body .monaco-editor-hover .monaco-tokenized-source {
     /* background-image: url('../assets/projectexplorer/start-dark.svg'); */
 }
 
-.jo_file>.jo_delete {
+.jo_file>.jo_delete, .jo_file>.jo_additionalButtonSettings {
     display: none;
 }
 
-.jo_file:hover>.jo_delete {
+.jo_file:hover>.jo_delete, .jo_file:hover>.jo_additionalButtonSettings{
     display: block;
     margin-top: 2px;
     width: 16px;
     height: 16px;
+}
+
+.jo_additionalButtonSettings {
+    margin-right: 4px;
+    margin-top: 1px;
 }
 
 .jo_file>.jo_delete:hover, .jo_file>div>.jo_startButton:hover {
