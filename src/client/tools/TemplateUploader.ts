@@ -4,8 +4,7 @@ import { Workspace } from "../workspace/Workspace.js";
 export class TemplateUploader {
 
     upload(workspace: Workspace, main: Main){
-        jQuery('#bitteWartenText').html('Bitte warten, lade Vorlage auf den Server hoch ...');
-        jQuery('#bitteWarten').css('display', 'flex');
+        main.waitOverlay.show('Bitte warten, lade Vorlage auf den Server hoch ...');
 
         let dbTool = main.getDatabaseTool();
         dbTool.export((buffer) => {
@@ -23,13 +22,13 @@ export class TemplateUploader {
                 url: "servlet/uploadTemplate",
                 success: function (response: any) {
         
-                    jQuery('#bitteWarten').css('display', 'none');
+                    main.waitOverlay.hide();
                     return;
         
                 },
                 error: function (jqXHR, message) {
                     alert('message');
-                    jQuery('#bitteWarten').css('display', 'none');
+                    main.waitOverlay.hide();
                 }
             }
             )        
@@ -37,7 +36,7 @@ export class TemplateUploader {
 
         }, (error)=>{
             alert("Fehler beim Hochladen: " + error)
-            jQuery('#bitteWarten').css('display', 'none');
+            main.waitOverlay.hide();
         })
 
     }

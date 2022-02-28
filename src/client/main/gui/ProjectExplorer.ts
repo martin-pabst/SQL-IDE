@@ -244,101 +244,101 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.selectCallback =
             (workspace: Workspace) => {
-                if(workspace != this.main.currentWorkspace){
+                if (workspace != this.main.currentWorkspace) {
                     that.main.networkManager.sendUpdates(() => {
                         that.setWorkspaceActive(workspace);
                     });
                 }
             }
 
-            this.workspaceListPanel.newFolderCallback = (newElement: AccordionElement, successCallback) => {
-                let owner_id: number = that.main.user.id;
-                if (that.main.workspacesOwnerId != null) {
-                    owner_id = that.main.workspacesOwnerId;
-                }
-    
-                let folder: Workspace = new Workspace(newElement.name, that.main, owner_id);
-                folder.isFolder = true;
-    
-                folder.path = newElement.path.join("/");
-                folder.panelElement = newElement;
-                newElement.externalElement = folder;
-                that.main.workspaceList.push(folder);
+        this.workspaceListPanel.newFolderCallback = (newElement: AccordionElement, successCallback) => {
+            let owner_id: number = that.main.user.id;
+            if (that.main.workspacesOwnerId != null) {
+                owner_id = that.main.workspacesOwnerId;
+            }
 
-                let wd: CreateWorkspaceData = {
-                    id: -1,
-                    isFolder: true,
-                    name: folder.name,
-                    path: folder.path
+            let folder: Workspace = new Workspace(newElement.name, that.main, owner_id);
+            folder.isFolder = true;
+
+            folder.path = newElement.path.join("/");
+            folder.panelElement = newElement;
+            newElement.externalElement = folder;
+            that.main.workspaceList.push(folder);
+
+            let wd: CreateWorkspaceData = {
+                id: -1,
+                isFolder: true,
+                name: folder.name,
+                path: folder.path
+            }
+
+            that.main.networkManager.sendCreateWorkspace(wd, that.main.workspacesOwnerId, (error: string) => {
+                if (error == null) {
+                    folder.id = wd.id;
+                    successCallback(folder);
+                } else {
+                    alert("Fehler: " + error);
+                    that.workspaceListPanel.removeElement(newElement);
                 }
-    
-                that.main.networkManager.sendCreateWorkspace(wd, that.main.workspacesOwnerId, (error: string) => {
+            });
+
+        }
+
+        this.workspaceListPanel.moveCallback = (ae: AccordionElement | AccordionElement[]) => {
+            if (!Array.isArray(ae)) ae = [ae];
+            for (let a of ae) {
+                let ws: Workspace = a.externalElement;
+                ws.path = a.path.join("/");
+                ws.saved = false;
+            }
+            this.main.networkManager.sendUpdates();
+        }
+
+        this.workspaceListPanel.dropElementCallback = (dest: AccordionElement, droppedElement: AccordionElement, dropEffekt: "copy" | "move") => {
+            let workspace: Workspace = dest.externalElement;
+            let module: Module = droppedElement.externalElement;
+
+            if (workspace.moduleStore.getModules(false).indexOf(module) >= 0) return; // module is already in destination workspace
+
+            let f: File = {
+                name: module.file.name,
+                dirty: true,
+                saved: false,
+                text: module.file.text,
+                text_before_revision: null,
+                submitted_date: null,
+                student_edited_after_revision: false,
+                version: module.file.version,
+                panelElement: null
+            };
+
+            if (dropEffekt == "move") {
+                // move file
+                let oldWorkspace = that.main.currentWorkspace;
+                oldWorkspace.moduleStore.removeModule(module);
+                that.fileListPanel.removeElement(module);
+                that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, () => { });
+            }
+
+            let m = new Module(f, that.main);
+            let modulStore = workspace.moduleStore;
+            modulStore.putModule(m);
+            that.main.networkManager.sendCreateFile(m, workspace, that.main.workspacesOwnerId,
+                (error: string) => {
                     if (error == null) {
-                        folder.id = wd.id;
-                        successCallback(folder);
                     } else {
-                        alert("Fehler: " + error);
-                        that.workspaceListPanel.removeElement(newElement);
+                        alert('Der Server ist nicht erreichbar!');
+
                     }
                 });
-    
-            }
-    
-            this.workspaceListPanel.moveCallback = (ae: AccordionElement | AccordionElement[]) => {
-                if (!Array.isArray(ae)) ae = [ae];
-                for (let a of ae) {
-                    let ws: Workspace = a.externalElement;
-                    ws.path = a.path.join("/");
-                    ws.saved = false;
-                }
-                this.main.networkManager.sendUpdates();
-            }
-    
-            this.workspaceListPanel.dropElementCallback = (dest: AccordionElement, droppedElement: AccordionElement, dropEffekt: "copy" | "move") => {
-                let workspace: Workspace = dest.externalElement;
-                let module: Module = droppedElement.externalElement;
-    
-                if (workspace.moduleStore.getModules(false).indexOf(module) >= 0) return; // module is already in destination workspace
-    
-                let f: File = {
-                    name: module.file.name,
-                    dirty: true,
-                    saved: false,
-                    text: module.file.text,
-                    text_before_revision: null,
-                    submitted_date: null,
-                    student_edited_after_revision: false,
-                    version: module.file.version,
-                    panelElement: null
-                };
-    
-                if (dropEffekt == "move") {
-                    // move file
-                    let oldWorkspace = that.main.currentWorkspace;
-                    oldWorkspace.moduleStore.removeModule(module);
-                    that.fileListPanel.removeElement(module);
-                    that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, () => { });
-                }
-    
-                let m = new Module(f, that.main);
-                let modulStore = workspace.moduleStore;
-                modulStore.putModule(m);
-                that.main.networkManager.sendCreateFile(m, workspace, that.main.workspacesOwnerId,
-                    (error: string) => {
-                        if (error == null) {
-                        } else {
-                            alert('Der Server ist nicht erreichbar!');
-    
-                        }
-                    });
-    
-            }
-    
+
+        }
+
 
 
         this.$homeAction = jQuery('<div class="img_home-dark jo_button jo_active" style="margin-right: 4px"' +
             ' title="Meine eigenen Workspaces anzeigen">');
-        
+
         this.$homeAction.on('mouseup', (e) => {
 
             that.main.networkManager.sendUpdates(() => {
@@ -486,75 +486,76 @@ export class ProjectExplorer {
 
     setWorkspaceActive(w: Workspace) {
 
-        if(w != null){
+        if (w != null) {
             this.fileListPanel.$buttonNew.show();
         }
 
         this.workspaceListPanel.select(w, false);
 
-        let callback = (error: string) => {
-            if (error != null) {
-                alert(error);
-                return;
-            }
-
-            let dbTool = this.main.getDatabaseTool();
-
-            let statements: string[] = w.database.statements;
-            if(statements == null) statements = [];
-
-            dbTool.initializeWorker(w.database.templateDump, statements,
-                () => {
-                    this.main.currentWorkspace = w;
-                    
-                    if(this.main.user.id == w.owner_id){
-                        this.main.user.currentWorkspace_id = w.id;
-                    }
-
-                    this.renderFiles(w);
-
-                    if (w != null) {
-                        let nonSystemModules = w.moduleStore.getModules(false);
-
-                        if (w.currentlyOpenModule != null) {
-                            this.setModuleActive(w.currentlyOpenModule);
-                        } else if (nonSystemModules.length > 0) {
-                            this.setModuleActive(nonSystemModules[0]);
-                        } else {
-                            this.setModuleActive(null);
-                        }
-
-                        for (let m of nonSystemModules) {
-                            m.file.dirty = true;
-                        }
-
-                        if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
-
-                            Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
-
-                        }
-
-                        this.main.notifier.connect(w);
-
-                    } else {
-                        this.setModuleActive(null);
-                    }
-                    
-                },
-                () => {
-                    this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
-                });
-
-        }
+        let callback = (error: string) => {this.initializeDatabaseTool(error, w)};
 
         if (w.database == null) {
-            jQuery('#bitteWartenText').html('Bitte warten, hole Datenbank vom Server ...');
-            jQuery('#bitteWarten').css('display', 'flex');
-    
+            this.main.waitOverlay.show("Bitte warten, hole Datenbank vom Server ...");
+
             this.main.networkManager.fetchDatabase(w, callback);
         } else {
             callback(null);
         }
+
+    }
+
+    initializeDatabaseTool(error: string, w: Workspace) {
+        if (error != null) {
+            alert(error);
+            return;
+        }
+
+        let dbTool = this.main.getDatabaseTool();
+
+        let statements: string[] = w.database.statements;
+        if (statements == null) statements = [];
+
+        dbTool.initializeWorker(w.database.templateDump, statements,
+            () => {
+                this.main.currentWorkspace = w;
+
+                if (this.main.user.id == w.owner_id) {
+                    this.main.user.currentWorkspace_id = w.id;
+                }
+
+                this.renderFiles(w);
+
+                if (w != null) {
+                    let nonSystemModules = w.moduleStore.getModules(false);
+
+                    if (w.currentlyOpenModule != null) {
+                        this.setModuleActive(w.currentlyOpenModule);
+                    } else if (nonSystemModules.length > 0) {
+                        this.setModuleActive(nonSystemModules[0]);
+                    } else {
+                        this.setModuleActive(null);
+                    }
+
+                    for (let m of nonSystemModules) {
+                        m.file.dirty = true;
+                    }
+
+                    if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
+
+                        Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
+
+                    }
+
+                    this.main.notifier.connect(w);
+
+                } else {
+                    this.setModuleActive(null);
+                }
+
+            },
+            () => {
+                this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
+            });
 
     }
 

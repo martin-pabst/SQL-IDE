@@ -1,3 +1,5 @@
+import { MainBase } from "../main/MainBase.js";
+
 export type DatabaseDirectoryEntry = {
     name: string,
     description: string,
@@ -56,15 +58,20 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
+    constructor(private main: MainBase){
+
+    }
+
     initializeWorker(template: Uint8Array, queries: string[], callbackAfterInitializing?: (errors: string[]) => void,
         callbackAfterRetrievingStructure?: () => void) {
-        if (this.worker != null) {
+        
+        this.main.getWaitOverlay().show('Bitte warten, die Datenbank wird initialisiert...');
+        
+            if (this.worker != null) {
             this.worker.terminate();
         }
 
         let t = performance.now();
-        jQuery('#bitteWartenText').html('Bitte warten, die Datenbank wird initialisiert ...');
-        jQuery('#bitteWarten').css('display', 'flex');
 
         // console.log("Starting worker...");
 
@@ -104,9 +111,12 @@ export class DatabaseTool {
             };
 
             if(queries == null) queries = [];
+            queries = queries.slice();
+            let queryCount = queries.length;
 
             let execQuery = () => {
                 if (queries.length > 0) {
+                    this.main.getWaitOverlay().setProgress(`${Math.round((1-queries.length/queryCount)*100) + " %"}`)
                     let query = queries.shift();
                     that.executeQuery(query, (result) => {
                         execQuery();
@@ -121,7 +131,7 @@ export class DatabaseTool {
                     that.retrieveDatabaseStructure(() => {
                         // console.log("Database structure retrieved (" + (performance.now() - t)/1000 + " s)");
                         if (callbackAfterRetrievingStructure) callbackAfterRetrievingStructure();
-                        jQuery('#bitteWarten').css('display', 'none');
+                        this.main.getWaitOverlay().hide();
 
                     });
                 }

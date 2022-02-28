@@ -126,13 +126,20 @@ body .monaco-editor-hover .monaco-tokenized-source {
     animation-iteration-count: infinite;
 }
 
-#bitteWarten>div>div {
+#bitteWarten>div>div, #bitteWartenProgress {
     font-size: 32px;
     color: white;
     text-shadow:  1px  1px 1px gray,
     1px -1px 1px gray,
    -1px  1px 1px gray,
-   -1px -1px 1px gray;}
+   -1px -1px 1px gray;
+}
+
+#bitteWartenProgress {
+    height: 60px;
+    padding-top: 20px;
+}
+
 
 /* Login */
 #login, #bitteWarten {
@@ -144,6 +151,10 @@ body .monaco-editor-hover .monaco-tokenized-source {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+#bitteWarten {
+    background-color: #1e1e1e88;
 }
 
 #login-heading {

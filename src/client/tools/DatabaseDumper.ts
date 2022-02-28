@@ -1,3 +1,4 @@
+import { MainBase } from "../main/MainBase.js";
 import { ColumnStructure, DatabaseStructure, DatabaseTool, TableStructure } from "./DatabaseTools.js";
 
 type TableData = {
@@ -22,7 +23,7 @@ export class DatabaseDumper {
 
     newDbTool: DatabaseTool;
 
-    constructor(private dbTool: DatabaseTool){
+    constructor(private dbTool: DatabaseTool, private main: MainBase){
 
     }
 
@@ -117,9 +118,10 @@ export class DatabaseDumper {
     }
 
     writeDatabase(callback: (error: string, dbTool: DatabaseTool) => void){
-        this.newDbTool = new DatabaseTool();
+        this.newDbTool = new DatabaseTool(this.main);
         let statements = this.dump();
         let errors: string[];
+        
         this.newDbTool.initializeWorker(null, statements, (errors1) => {
 
             errors = errors1;

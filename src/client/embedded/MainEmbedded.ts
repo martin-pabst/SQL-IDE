@@ -17,6 +17,7 @@ import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
 import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
+import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -72,6 +73,10 @@ export class MainEmbedded implements MainBase {
         return null;
     }
 
+    getWaitOverlay(): WaitOverlay {
+        return this.waitOverlay;
+    }
+
     config: JavaOnlineConfig;
 
     editor: Editor;
@@ -116,6 +121,8 @@ export class MainEmbedded implements MainBase {
 
     databaseExplorer: DatabaseExplorer;
 
+    waitOverlay: WaitOverlay = new WaitOverlay();
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
@@ -124,7 +131,7 @@ export class MainEmbedded implements MainBase {
 
         this.databaseExplorer = new DatabaseExplorer(this,this.$dbTreeDiv);
 
-        this.databaseTool = new DatabaseTool();
+        this.databaseTool = new DatabaseTool(this);
         if(this.config.databaseFilename != null){
             this.databaseTool.getSQLStatements(this.config.databaseFilename, (queries) => {
                 this.databaseTool.initializeWorker(null, queries, () => {

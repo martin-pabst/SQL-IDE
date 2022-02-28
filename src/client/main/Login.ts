@@ -86,8 +86,7 @@ export class Login {
 
                     jQuery('#login').hide();
 
-                    jQuery('#bitteWartenText').html('Bitte warten ...');
-                    jQuery('#bitteWarten').css('display', 'flex');
+                    this.main.waitOverlay.show('Bitte warten...');
 
                     let user: UserData = response.user;
                     if (user.settings == null || user.settings.helperHistory == null) {
@@ -111,7 +110,7 @@ export class Login {
 
                         that.main.mainMenu.initGUI(user);
 
-                        jQuery('#bitteWarten').hide();
+                        that.main.waitOverlay.hide();
                         $loginSpinner.hide();
                         jQuery('#menupanel-username').html(escapeHtml(user.rufname) + " " + escapeHtml(user.familienname));
 
@@ -152,8 +151,7 @@ export class Login {
 
         jQuery('#buttonLogout').on('click', () => {
 
-            jQuery('#bitteWartenText').html('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
-            jQuery('#bitteWarten').css('display', 'flex');
+            this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
 
             if (this.main.workspacesOwnerId != this.main.user.id) {
                 this.main.projectExplorer.onHomeButtonClicked();
@@ -170,7 +168,7 @@ export class Login {
                     this.main.networkManager.sendUpdateUserSettings(() => {});
 
                     jQuery('#login').show();
-                    jQuery('#bitteWarten').css('display', 'none');
+                    this.main.waitOverlay.hide();
                     jQuery('#login-message').empty();
                     this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
                     this.main.projectExplorer.fileListPanel.clear();

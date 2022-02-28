@@ -26,6 +26,7 @@ import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { Notifier } from "../communication/Notifier.js";
 import { checkIfMousePresent } from "../tools/HtmlTools.js";
+import { WaitOverlay } from "./gui/WaitOverlay.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -80,6 +81,10 @@ export class Main implements MainBase {
         return this.resultsetPresenter;
     }
 
+    getWaitOverlay(): WaitOverlay {
+        return this.waitOverlay;
+    }
+
     workspaceList: Workspace[] = [];
     workspacesOwnerId: number;
 
@@ -124,6 +129,8 @@ export class Main implements MainBase {
 
     notifier: Notifier;
 
+    waitOverlay: WaitOverlay = new WaitOverlay();
+
     initGUI() {
 
         checkIfMousePresent();
@@ -131,7 +138,7 @@ export class Main implements MainBase {
         this.login = new Login(this);
         this.login.initGUI();
 
-        this.databaseTool = new DatabaseTool();
+        this.databaseTool = new DatabaseTool(this);
         this.databaseExplorer = new DatabaseExplorer(this, jQuery(".jo_db_tree"));
 
         this.actionManager = new ActionManager(null, this);
