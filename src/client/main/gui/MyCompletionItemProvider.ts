@@ -199,7 +199,8 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                             insertText: insertText,
                             insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
                             kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Class,
-                            range: undefined
+                            range: undefined,
+                            sortText: "aa" + symbol.identifier
                         });
                         tableIdentifiers[symbol.identifier] = true;
                     }
@@ -249,13 +250,17 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         for (let text of completionHint.hintKeywords) {
             let insertText = praefix + text + suffix;
             let snippet = this.keywordToSnippetMap[text];
-            if (snippet != null) {
+
+            let ci = this.keywordCompletionItems.get(text);
+            if (ci != null) {
+                completionItems.push(ci);
+            } else if (snippet != null) {
                 let label = snippet.replace("$0", "").replace("$1", "").replace("$2", "").replace(/ /g, "").replace(/\n/g, "").replace(/\t/g, "");
                 completionItems.push({
                     label: label,
                     detail: "",
                     filterText: text,
-                    insertText: insertText,
+                    insertText: snippet,
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                     kind: monaco.languages.CompletionItemKind.Snippet,
                     range: undefined
@@ -268,14 +273,9 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     insertText: text,
                     insertTextRules: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.KeepWhitespace,
                     kind: insertText.indexOf("$") >= 0 ? monaco.languages.CompletionItemKind.Snippet : monaco.languages.CompletionItemKind.Keyword,
-                    range: undefined
+                    range: undefined,
+                    sortText: text == "from" ? "*" : undefined
                 })
-            }
-
-
-            let ci = this.keywordCompletionItems.get(text);
-            if (ci != null) {
-                completionItems.push(ci);
             }
 
         }
@@ -325,15 +325,15 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
 
     setupKeywordCompletionItems() {
-        this.keywordCompletionItems.set("select",
+        this.keywordCompletionItems.set("delete from",
             {
-                label: "select <Spalten> from <Tabellen> where <Bedingung>",
-                detail: "Select-Anweisung",
-                filterText: 'select',
+                label: "delete from <Tabelle> where <Bedingung>",
+                detail: "Anweisung zum Löschen von Datensätzen",
+                filterText: `delete from`,
                 // insertText: "while(${1:Bedingung}){\n\t$0\n}",
-                insertText: `select $2 from $1\nwhere $0\n`,
+                insertText: `delete from `,
                 command: {
-                    id: "editor.action.triggerParameterHints",
+                    id: "editor.action.triggerSuggest",
                     title: '123',
                     arguments: []
                 },
@@ -342,15 +342,47 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                 range: undefined
             });
 
-        this.keywordCompletionItems.set("from",
+        this.keywordCompletionItems.set("drop table",
             {
-                label: "from <Tabellen> where <Bedingung>",
-                detail: "from-Teil der select-Anweisung",
-                filterText: 'from',
+                label: "drop table <Tabelle>",
+                detail: "Anweisung zum Löschen einer Tabelle",
+                filterText: 'drop table',
                 // insertText: "while(${1:Bedingung}){\n\t$0\n}",
-                insertText: `from $1\nwhere $0\n`,
+                insertText: `drop table `,
                 command: {
-                    id: "editor.action.triggerParameterHints",
+                    id: "editor.action.triggerSuggest",
+                    title: '123',
+                    arguments: []
+                },
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                range: undefined
+            });
+
+        this.keywordCompletionItems.set("alter",
+            {
+                label: "alter table <Tabelle> <rename to, rename column, add column, drop column>",
+                detail: "Anweisung zum Ändern des Schemas (alter table <Tabelle> <rename to, rename column, add column, drop column>)",
+                filterText: 'alter',
+                // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+                insertText: `alter table `,
+                command: {
+                    id: "editor.action.triggerSuggest",
+                    title: '123',
+                    arguments: []
+                },
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                range: undefined
+            });
+
+        this.keywordCompletionItems.set("select",
+            {
+                label: "select <Spalten> from <Tabellen> where <Bedingung>",
+                detail: "Select-Anweisung",
+                filterText: 'select',
+                // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+                insertText: `select $2 from $1\nwhere $0\n`,
+                command: {
+                    id: "editor.action.triggerSuggest",
                     title: '123',
                     arguments: []
                 },
@@ -358,6 +390,40 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                 kind: monaco.languages.CompletionItemKind.Snippet,
                 range: undefined
             });
+
+        this.keywordCompletionItems.set("create table",
+            {
+                label: "create table <Tabellenbezeichner> (<Spaltendefinitionen>)",
+                detail: "Create table-Anweisung (Erstellt eine neue Tabelle)",
+                filterText: 'create',
+                // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+                insertText: `create table $1 (\n\t$0\n);`,
+                command: {
+                    id: "editor.action.triggerSuggest",
+                    title: '123',
+                    arguments: []
+                },
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                range: undefined
+            });
+
+        // this.keywordCompletionItems.set("from",
+        //     {
+        //         label: "from <Tabellen> where <Bedingung>",
+        //         detail: "from-Teil der select-Anweisung",
+        //         filterText: 'from',
+        //         // insertText: "while(${1:Bedingung}){\n\t$0\n}",
+        //         insertText: `from $1\nwhere $0\n`,
+        //         command: {
+        //             id: "editor.action.triggerSuggest",
+        //             title: '123',
+        //             arguments: []
+        //         },
+        //         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        //         kind: monaco.languages.CompletionItemKind.Snippet,
+        //         range: undefined
+        //     });
 
     }
 

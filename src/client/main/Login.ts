@@ -92,14 +92,6 @@ export class Login {
                     if (user.settings == null || user.settings.helperHistory == null) {
                         user.settings = {
                             helperHistory: {
-                                consoleHelperDone: false,
-                                newFileHelperDone: false,
-                                newWorkspaceHelperDone: false,
-                                speedControlHelperDone: false,
-                                homeButtonHelperDone: false,
-                                stepButtonHelperDone: false,
-                                repositoryButtonDone: false,
-                                folderButtonDone: false
                             },
                             viewModes: null,
                             classDiagram: null

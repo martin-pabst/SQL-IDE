@@ -339,7 +339,8 @@ export class ProjectExplorer {
         this.$homeAction = jQuery('<div class="img_home-dark jo_button jo_active" style="margin-right: 4px"' +
             ' title="Meine eigenen Workspaces anzeigen">');
 
-        this.$homeAction.on('mouseup', (e) => {
+        this.$homeAction.on(mousePointer +'down', (e) => {
+            e.stopPropagation();
 
             that.main.networkManager.sendUpdates(() => {
                 that.onHomeButtonClicked();
@@ -347,7 +348,6 @@ export class ProjectExplorer {
 
             that.main.bottomDiv.hideHomeworkTab();
 
-            e.stopPropagation();
         })
 
         this.workspaceListPanel.addAction(this.$homeAction);
@@ -540,9 +540,9 @@ export class ProjectExplorer {
                         m.file.dirty = true;
                     }
 
-                    if (nonSystemModules.length == 0 && !this.main.user.settings.helperHistory.newFileHelperDone) {
+                    if (nonSystemModules.length == 0) {
 
-                        Helper.showHelper("newFileHelper", this.main, this.fileListPanel.$captionElement);
+                        Helper.showHelper("newSQLFileHelper", this.main, this.fileListPanel.$captionElement);
 
                     }
 
@@ -707,7 +707,7 @@ export class ProjectExplorer {
             color = "transparent";
             caption = "Meine Datenbanken";
         } else {
-            caption = "Schüler-Datenbanken";
+            caption = "Schüler-DB";
         }
 
         this.fileListPanel.$listElement.parent().css('background-color', color);

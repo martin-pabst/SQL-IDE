@@ -67,11 +67,15 @@ function createDb(SQL, buffer) {
             var dateStr = splitStr[0];
             //var timeStr = splitStr[1];
 
-            if (dateStr.length != 3) return false;
-            var dd = parseInt(dateStr[2]);
-            var mm = parseInt(dateStr[1]);
-            var yy = parseInt(dateStr[0]);
-            // Create list of days of a month [assume there is no leap year by default]
+            // if (dateStr.length != 3) return false;
+            // var dd = parseInt(dateStr[2]);
+            // var mm = parseInt(dateStr[1]);
+            // var yy = parseInt(dateStr[0]);
+            if (dateStr.length != 10) return false;
+            var dd = parseInt(dateStr.substring(8,10));
+            var mm = parseInt(dateStr.substring(5, 7));
+            var yy = parseInt(dateStr.substring(0, 4));
+              // Create list of days of a month [assume there is no leap year by default]
             var ListofDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
             if (mm == 1 || mm > 2) {
                 if (dd > ListofDays[mm - 1]) {

@@ -9,6 +9,7 @@ import { MyReferenceProvider } from "./MyReferenceProvider.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { defineVscSQL } from "./VscSql.js";
 import { MainBase } from "../MainBase.js";
+import { Helper } from "./Helper.js";
 
 export class Editor {
 
@@ -472,6 +473,10 @@ export class Editor {
 
 
         this.main.getActionManager().setActive('execute', executeActionActive);
+
+        if(executeActionActive && !this.main.isEmbedded()){
+            Helper.showHelper("playButtonHelper", <any>this.main, jQuery('div.img_start-dark'));
+        }
 
 
         this.elementDecoration = this.editor.deltaDecorations(this.elementDecoration, decorations);

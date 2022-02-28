@@ -234,10 +234,10 @@ export class SQLDerivedType extends SQLType {
 
 let textTypes = ["varchar", "text" ,"tinytext", "mediumtext", "longtext"];
 
-var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= pv[0])`,
-    (v: string, pv) => v.substr(0, pv[0]), textTypes);
+var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
+    (v: string, pv) => v.substring(0, pv[0]), textTypes);
 
-var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes);
+var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes.concat(["date", "datetime"]));
 var tinyTextType = new SQLBaseType("tinyText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 var mediumTextType = new SQLBaseType("mediumText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 var longTextType = new SQLBaseType("longText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
@@ -248,19 +248,19 @@ var decimalType = new SQLBaseType("decimal", ["Gesamtzahl der Stellen", "Nachkom
     (v: number, pv) => { let vk = Math.trunc(v); let nk = v - vk; return "" + vk + (pv[1] > 0 ? "." + Math.round(nk * tens[pv[1]]) : "") },
     floatTypes);
 var numericType = new SQLBaseType("numeric", ["Gesamtzahl der Stellen", "Nachkommastellen"], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
-var doubleType = new SQLBaseType("double", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
+var doubleType = new SQLBaseType("double", ["Gesamtzahl der Stellen", "Nachkommastellen"], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 var realType = new SQLBaseType("real", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 var floatType = new SQLBaseType("float", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 
 let inttypes = ["int", "integer", "tinyint", "smallint", "mediumint", "bigint"];
 let numberTypes = inttypes.concat(floatTypes);
 
-var intType = new SQLBaseType("int", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
-var integerType = new SQLBaseType("integer", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
-var tinyIntType = new SQLBaseType("tinyint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
-var smallIntType = new SQLBaseType("smallint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
-var mediumIntType = new SQLBaseType("mediumint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
-var bigIntType = new SQLBaseType("bigint", ["Maximale Anzahl der Stellen"], (ci, pv) => "", (v: number, pv) => "" + Math.round(v), numberTypes);
+var intType = new SQLBaseType("int", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
+var integerType = new SQLBaseType("integer", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
+var tinyIntType = new SQLBaseType("tinyint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
+var smallIntType = new SQLBaseType("smallint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
+var mediumIntType = new SQLBaseType("mediumint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
+var bigIntType = new SQLBaseType("bigint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
 
 var dateType = new SQLBaseType("date", [], (ci, pv) => `check(isDate(${ci}))`, (v: string, pv) => v, []);
 var dateTimeType = new SQLBaseType("datetime", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, ["timestamp"]);

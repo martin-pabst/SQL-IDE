@@ -1,13 +1,5 @@
 export type UserSettings = {
     helperHistory: {
-        newWorkspaceHelperDone: boolean,
-        newFileHelperDone: boolean,
-        speedControlHelperDone: boolean,
-        consoleHelperDone: boolean,
-        homeButtonHelperDone: boolean,
-        stepButtonHelperDone: boolean,
-        repositoryButtonDone: boolean,
-        folderButtonDone: boolean
     },
     //    theme: string,  // old!
     viewModes: ViewModes,

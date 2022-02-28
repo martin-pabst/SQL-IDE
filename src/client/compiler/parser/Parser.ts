@@ -54,6 +54,7 @@ export class Parser {
         value: "das Ende des Programms"
     };
 
+    beginStatementKeywords = ["select", "insert into", "update", "create table", "delete from", "alter table", "drop table"];
 
     constructor(private isInConsoleMode: boolean) {
 
@@ -71,7 +72,8 @@ export class Parser {
         if (this.tokenList.length == 0) {
             this.module.sqlStatements = [];
             this.module.errors[1] = this.errorList;
-            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20, column: 100, length: 0 }, false, false, ["select", "insert into", "update", "create table", "delete from", "alter table", "drop table"]);
+            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20000, column: 100, length: 0 }, false, false, 
+                this.beginStatementKeywords);
             return;
         }
 
@@ -328,7 +330,8 @@ export class Parser {
 
             let oldPos = this.pos;
 
-            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false, ["select", "update", "create table", "insert into"]);
+            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false, 
+             this.beginStatementKeywords);
 
             let errorsBeforeStatement: number = this.errorList.length;
 
@@ -381,7 +384,8 @@ export class Parser {
 
         }
 
-        this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false, ["select", "update", "create table", "insert into"]);
+        this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false, 
+            this.beginStatementKeywords);
 
         return mainProgram;
 
@@ -698,11 +702,14 @@ export class Parser {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "create"
 
-        this.expect(TokenType.keywordTable, true);
+        if(!this.expect(TokenType.keywordTable, true)){
+            this.module.addCompletionHint(startPosition, this.getCurrentPositionPlus(3), false, false, ["table"]);
+        }
 
         let identifier = "";
         if (this.expect(TokenType.identifier, false)) {
             identifier = <string>this.cct.value;
+            this.module.addCompletionHint(this.getCurrentPosition(), this.getCurrentPositionPlus(identifier.length + 3), false, false, ["("]);
             this.nextToken();
         }
 
@@ -1168,13 +1175,17 @@ export class Parser {
         }
 
         node.columnList = this.parseColumnList([TokenType.keywordFrom], true);
-
+        
         let columnListKeywordArray = ["distinct", "as", "*"];
+        if(node.columnList.findIndex(c => c.type == TokenType.allColumns) >= 0){
+            columnListKeywordArray.pop();
+        }
+
         this.module.addCompletionHint(columnListStart, this.getCurrentPositionPlus(1), true, true, columnListKeywordArray)
 
         // parse from ...
         if (!this.expect(TokenType.keywordFrom, true)) {
-            columnListKeywordArray.push("from");
+            columnListKeywordArray.unshift("from");
             return null;
         }
 

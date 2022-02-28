@@ -68,7 +68,12 @@ export class StatementCleaner {
 
     cleanColumnDef(column: CreateTableColumnNode):string {
 
-        let st: string = `${column.identifier} ${column.baseType}`;
+        let type = column.baseType.toString();
+        if(type == "int" && column.isAutoIncrement){
+            type = "integer";
+        }
+
+        let st: string = `${column.identifier} ${type}`;
         if(column.parameters != null && column.parameters.length > 0){
             st += `(${column.parameters.join(", ")})`;
         }
@@ -94,6 +99,11 @@ export class StatementCleaner {
             if(["binary", "nocase", "rtrim"].indexOf(collate) >= 0){
                 st += " collate " + collate;
             }
+        }
+        let parameters = column.parameters? column.parameters : [0, 0];
+        let checkFunction = column.baseType.checkFunction(column.identifier, parameters);
+        if(checkFunction != ""){
+            st += " " + checkFunction;
         }
         return st;
     }

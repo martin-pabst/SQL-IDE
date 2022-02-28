@@ -309,7 +309,7 @@ export class Main implements MainBase {
 
         if (this.workspaceList.length == 0) {
 
-            Helper.showHelper("newWorkspaceHelper", this, this.projectExplorer.workspaceListPanel.$captionElement);
+            Helper.showHelper("newDatabaseHelper", this, this.projectExplorer.workspaceListPanel.$captionElement);
 
         }
 

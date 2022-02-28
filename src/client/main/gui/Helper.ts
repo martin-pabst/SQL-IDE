@@ -71,10 +71,6 @@ export class Helper {
 
         let helperHistory = main.user.settings!.helperHistory;
 
-        if (id == "speedControlHelper" && helperHistory["speedControlHelperDone"]) {
-            id = "stepButtonHelper";
-        }
-
         let flag = id + "Done";
 
         if (helperHistory != null && (helperHistory[flag] == null || !helperHistory[flag])) {
@@ -85,40 +81,31 @@ export class Helper {
             let direction: HelperDirection = "left";
 
             switch (id) {
-                case "repositoryButton":
-                    text = `Wenn der aktuelle Workspace mit einem Repository verknüft ist, erscheint hier der "Synchronisieren-Button". Ein Klick darauf öffnet einen Dialog, in dem die Dateien des Workspace mit denen des Repositorys abgeglichen werden können.`;
-                    direction = "top";
-                    break;
-                case "newFileHelper":
-                    text = `Es gibt noch keine Programmdatei im Workspace. <br> Nutzen Sie den Button 
-                        <span class='img_add-file-dark jo_inline-image'></span> um eine Programmdatei anzulegen.
+                case "newDatabaseHelper":
+                    text = `Es gibt noch keine Datenbank. <br> Nutzen Sie den Button
+                        <span class='img_add-database-dark jo_inline-image'></span> um eine Datenbank anzulegen.
                         `;
                     direction = "left";
                     break;
-                case "newWorkspaceHelper":
-                    text = `Es gibt noch keinen Workspace. <br> Nutzen Sie den Button
-                        <span class='img_add-workspace-dark jo_inline-image'></span> um einen Workspace anzulegen.
-                        `;
-                    direction = "left";
-                    break;
+                    case "newSQLFileHelper":
+                        text = `Es gibt noch keine Datei mit SQL-Anweisungen. <br> Nutzen Sie den Button 
+                            <span class='img_add-file-dark jo_inline-image'></span> um eine neue Datei anzulegen.
+                            `;
+                        direction = "left";
+                        break;
                 case "homeButtonHelper":
                     text = "Mit dem Home-Button <span class='img_home-dark jo_inline-image'></span> können Sie wieder zu Ihren eigenen Workspaces wechseln.";
                     direction = "top";
                     $element = jQuery('.img_home-dark');
                     break;
-                case "stepButtonHelper":
-                    text = `Mit den Buttons "Step over"
-                        (<span class='img_step-over-dark jo_inline-image'></span>, Taste F8), 
-                        "Step into" 
-                        (<span class='img_step-into-dark jo_inline-image'></span>, Taste F7) und 
-                        "Step out" 
-                        (<span class='img_step-out-dark jo_inline-image'></span>, Taste F9)  
-                        können Sie das Programm schrittweise ausführen und sich nach jedem Schritt die Belegung der Variablen ansehen. <br>
-                        <ul><li><span class='img_step-over-dark jo_inline-image'></span> Step over führt den nächsten Schritt aus, insbesondere werden Methodenaufrufe in einem Schritt durchgeführt.</li>
-                        <li><span class='img_step-into-dark jo_inline-image'></span> Step into führt auch den nächsten Schritt aus, geht bei Methodenaufrufen aber in die Methode hinein und führt auch die Anweisungen innerhalb der Methode schrittweise aus.</li>
-                        <li><span class='img_step-out-dark jo_inline-image'></span> Befindet sich die Programmausführung innerhalb einer Methode, so bewirkt ein Klick auf Step out, dass der Rest der Methode ausgeführt wird und die Programmausführung erst nach der Aufrufstelle der Methode anhält.</li>
-                        </ul>
-                        `;
+                case "playButtonHelper":
+                    text = `Mit dem "Start-Button"
+                        (<span class='img_start-dark jo_inline-image'></span>) 
+                        oder der Tastenkombination &lt;Strg&gt;&nbsp;+&nbsp&lt;Enter&gt; 
+                        wird die Anweisung ausgeführt, in der der Cursor gerade steht. 
+                        <br> Wollen Sie mehrere Anweisungen hintereinander ausführen, so markieren 
+                        Sie alle Anweisungen und klicken Sie dann auf <span class='img_start-dark jo_inline-image'></span>
+                        oder drücken Sie  &lt;Strg&gt;&nbsp;+&nbsp&lt;Enter&gt;. `;
                     direction = "top";
                     break;
                 case "consoleHelper": 

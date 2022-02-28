@@ -7,6 +7,7 @@ import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
 import { SQLMethodStore } from "./SQLMethods.js";
+import { isDate, isDateTime } from "../../tools/StringTools.js";
 
 
 export class SymbolResolver {
@@ -96,6 +97,13 @@ export class SymbolResolver {
     }
 
     pushNewSymbolTable(positionFrom: TextPosition, positionTo: TextPosition): SymbolTable {
+        if(positionTo == null) {
+            positionTo = {
+                line: 100000,
+                column: 1,
+                length: 1
+            }
+        };
         let st: SymbolTable = new SymbolTable(this.getCurrentSymbolTable(), positionFrom, positionTo);
         this.symbolTableStack.push(st);
         return st;
@@ -688,12 +696,28 @@ export class SymbolResolver {
                         value.sqlType = SQLBaseType.fromConstantType(value.constantType);
                         // constantType == 40 means: null
                         // TODO: check if column is nullable!
+                        let destType = column.type.toString().toLocaleLowerCase();
                         if (value.constantType == TokenType.keywordNull) {
                             if (!column.isNullable || column.notNull) {
                                 this.pushError("Die Spalte " + column.identifier + " ist nicht nullable, daher kann null hier nicht eingefügt werden.", "error", value.position);
                             }
                         } else if (!value.sqlType.canCastTo(column.type)) {
-                            this.pushError("Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.", "error", value.position);
+                            let error: string = "Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.";
+
+                            if(destType == "date") error += "<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.";
+                            if(destType == "datetime") error += "<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.";
+
+                            this.pushError(error, "error", value.position);
+                        } else if(destType == "date"){
+                            if(!isDate(value.constant)){
+                                let error: string = `'${value.constant}' ist kein date-Wert.<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.`;
+                                this.pushError(error, "error", value.position);
+                            }
+                        } else if(destType == "datetime"){
+                            if(!isDateTime(value.constant)){
+                                let error: string = `'${value.constant}' ist kein datetime-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
+                                this.pushError(error, "error", value.position);
+                            }
                         }
                     }
                 }
