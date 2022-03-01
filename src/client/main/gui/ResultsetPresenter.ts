@@ -13,6 +13,10 @@ type RuntimeError = {
     message: string
 }
 
+export interface WriteQueryListener {
+    notify(statements: SQLStatement[]): void;
+}
+
 export class ResultsetPresenter {
 
     $paginationDiv: JQuery<HTMLDivElement>;
@@ -26,6 +30,8 @@ export class ResultsetPresenter {
     paginationSize: number = 1000;
 
     result: QueryResult;
+
+    writeQueryListeners: WriteQueryListener[] = [];
 
     public static StatementDelimiter: string = ";\n\n"
 
@@ -62,6 +68,10 @@ export class ResultsetPresenter {
             }
         })
 
+    }
+
+    public addWriteQueryListener(listener: WriteQueryListener) {
+        this.writeQueryListeners.push(listener);
     }
 
     private activateButtons() {
@@ -109,6 +119,10 @@ export class ResultsetPresenter {
 
             if (sucessfullyExecutedModifyingStatements.length == 0)
                 return;
+
+            this.main.getDatabaseExplorer().refresh();
+
+            this.writeQueryListeners.forEach(listener => listener.notify(sucessfullyExecutedModifyingStatements))
         })
     }
 
@@ -179,6 +193,7 @@ export class ResultsetPresenter {
 
         if (index >= statements.length) {
             this.showErrors(errors);
+
             callback();
             return;
         }

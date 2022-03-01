@@ -217,12 +217,6 @@ export class DatabaseTool {
         }
     }
 
-    getSQLStatements(filename: string, callback: (queries: string[]) => void) {
-        jQuery.get('assets/databases/' + filename, function (sql: string) {
-            callback(sql.split(";\n"));
-        }, 'text');
-    }
-
     retrieveDatabaseStructure(callback: (dbStructure: DatabaseStructure) => void) {
 
         /*

@@ -18,6 +18,7 @@
     <link rel='stylesheet' type='text/css' media='screen' href='css/databaseExplorer.css'>
     <link rel='stylesheet' type='text/css' media='screen' href='css/embedded.css'>
     <script src="lib/jquery/jquery-3.3.1.js"></script>
+    <script src="lib/pako/pako.js"></script>
     <script src="lib/markdownit/markdownit.min.js"></script>
     <script src="lib/monaco-editor/dev/vs/loader.js"></script>
 
@@ -33,7 +34,7 @@
 
     <div class="sql-online" style="width: calc(100% - 10px); height: 600px; margin-left: 5px" data-sql-online="{
         'id': 'abcd',
-        'databaseFilename': 'terra.sql'
+        'databaseFilename': 'assets/databases/terra.dbDump'
     }">
         <script type="text/plain" title="Test1.sql" data-type="sql">
 select * from test;

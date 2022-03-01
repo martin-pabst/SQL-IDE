@@ -18,6 +18,8 @@ import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
 import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { WaitOverlay } from "../main/gui/WaitOverlay.js";
+import { WriteQueryManager } from "./WriteQueryManager.js";
+import { Databaseloader } from "../tools/DatabaseLoader.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -125,31 +127,35 @@ export class MainEmbedded implements MainBase {
 
     resultsetPresenter: ResultsetPresenter;
 
+    writeQueryManager: WriteQueryManager;
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
 
+        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseFilename);
+
         this.initGUI($div);
 
-        this.databaseExplorer = new DatabaseExplorer(this,this.$dbTreeDiv);
 
+        this.databaseExplorer = new DatabaseExplorer(this,this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
         if(this.config.databaseFilename != null){
-            this.databaseTool.getSQLStatements(this.config.databaseFilename, (queries) => {
-                this.databaseTool.initializeWorker(null, queries, () => {
-                    
+            new Databaseloader().load(this.config.databaseFilename, (loadableDb) => {
+                this.databaseTool.initializeWorker(loadableDb.binDump, loadableDb.statements, () => {}, () => {
+                    this.writeQueryManager.databaseReady(this.databaseTool);                    
                     this.databaseExplorer.refresh();
-
                 })
             })
         }
 
         this.initScripts();
 
-        this.indexedDB = new EmbeddedIndexedDB();
+        this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
         this.indexedDB.open(() => {
 
             if (this.config.id != null) {
+                this.writeQueryManager.indexedDBReady(this.indexedDB);
                 this.readScripts();
             }
 
@@ -487,6 +493,7 @@ export class MainEmbedded implements MainBase {
         });
 
         this.resultsetPresenter = new ResultsetPresenter(this, $bottomDivInner);
+        this.resultsetPresenter.addWriteQueryListener(this.writeQueryManager);
 
         setTimeout(() => {
             this.editor.editor.layout();

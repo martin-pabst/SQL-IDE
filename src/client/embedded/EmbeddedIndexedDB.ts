@@ -2,11 +2,15 @@ export class EmbeddedIndexedDB {
 
     private db: IDBDatabase;
 
+    constructor(private databaseIdentifier: string){
+
+    }
+
     public open(successCallback: () => void) {
 
         if (window.indexedDB) {
 
-            let request: IDBOpenDBRequest = window.indexedDB.open("LearnJ", 1);
+            let request: IDBOpenDBRequest = window.indexedDB.open(this.databaseIdentifier, 1);
 
             let that = this;
 
@@ -27,12 +31,11 @@ export class EmbeddedIndexedDB {
             request.onupgradeneeded = function(ev: Event){
                 // @ts-ignore
                 that.db = ev.target.result;
-                let objectStore = that.db.createObjectStore("scripts", { keyPath: "scriptId", autoIncrement: false});
+                let objectStoreScripts = that.db.createObjectStore("scripts", { keyPath: "scriptId", autoIncrement: false});
+                objectStoreScripts.transaction.oncomplete = function(event) {}
 
-
-                objectStore.transaction.oncomplete = function(event) {
-
-                }
+                let objectStoreDatabases = that.db.createObjectStore("databases", { keyPath: "databaseId", autoIncrement: false});
+                objectStoreScripts.transaction.oncomplete = function(event) {}
 
             }
 
@@ -78,6 +81,46 @@ export class EmbeddedIndexedDB {
                 callback(null);
             } else {
                 callback(request.result.script);
+            }
+        }
+
+    }
+
+    public writeDatabase(databaseID: string, database: string){
+
+        let databaseObjectStore = this.db.transaction("databases", "readwrite").objectStore("databases");
+
+        databaseObjectStore.put({
+            databaseId: databaseID,
+            database: database
+        });
+
+    }
+
+    public removeDatabase(databaseId: string){
+
+        let databaseObjectStore = this.db.transaction("databases", "readwrite").objectStore("databases");
+
+        databaseObjectStore.delete(databaseId);
+
+    }
+
+
+    public getDatabase(databaseId: string, callback: (database: string) => void){
+
+        let databaseObjectStore = this.db.transaction("databases", "readwrite").objectStore("databases");
+
+        let request = databaseObjectStore.get(databaseId);
+
+        request.onerror = (event) => {
+            callback(null);
+        }
+
+        request.onsuccess = (event) => {
+            if(request.result == null){
+                callback(null);
+            } else {
+                callback(request.result.database);
             }
         }
 
