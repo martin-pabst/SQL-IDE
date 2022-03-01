@@ -177,14 +177,14 @@ export class MainEmbedded implements MainBase {
 
 
     readConfig($div: JQuery<HTMLElement>) {
-        let configJson: string | object = $div.data("java-online");
+        let configJson: string | object = $div.data("sql-online");
         if (configJson != null && typeof configJson == "string") {
             this.config = JSON.parse(configJson.split("'").join('"'));
         } else {
             this.config = {}
         }
 
-        if (this.config.withFileList == null) this.config.withFileList = true;
+        if (this.config.withFileList == null) this.config.withFileList = false;
         if (this.config.withOutput == null) this.config.withOutput = true;
         if (this.config.withErrorList == null) this.config.withErrorList = true;
         if (this.config.withBottomPanel == null) this.config.withBottomPanel = true;
