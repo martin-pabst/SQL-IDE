@@ -207,7 +207,7 @@ export class DatabaseDumper {
 
     getDumpValueFunction(sqlType: string): (value: any) => string {
         let type = sqlType.toLocaleLowerCase();
-        if(type.indexOf('char') >= 0){
+        if(type.indexOf('char') >= 0 || type.indexOf('text') >= 0){
             return (value) => `'${value}'`;
         }
         if(type.indexOf('timestamp') >= 0 || type.indexOf('date') >= 0){

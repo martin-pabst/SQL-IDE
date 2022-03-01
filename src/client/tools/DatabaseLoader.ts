@@ -1,3 +1,5 @@
+import { DatabaseTool } from "./DatabaseTools.js";
+
 export type LoadableDatabase = {
     binDump?: Uint8Array,
     statements?: string[]
@@ -5,25 +7,31 @@ export type LoadableDatabase = {
 
 export class Databaseloader {
 
-    public load(url: string, callback: (db: LoadableDatabase) => void){
+    public load(url: string, callback: (db: LoadableDatabase) => void) {
         let urlWithoutProtocol = url.replace("https://", "")
-           .replace("http://", "").toLocaleLowerCase();
+            .replace("http://", "").toLocaleLowerCase();
 
         let isBinary = urlWithoutProtocol.endsWith(".dbdump");
 
-        if(isBinary){
-            this.loadBinary(url, urlWithoutProtocol, callback);            
+        if (isBinary) {
+            this.loadBinary(url, urlWithoutProtocol, callback);
         } else {
             this.loadSql(url, urlWithoutProtocol, callback);
         }
 
     }
 
+
     loadBinary(url: string, urlWithoutProtocol: string, callback: (db: LoadableDatabase) => void) {
 
-        this.fetchTemplateFromCache(urlWithoutProtocol, true, (templateDump) => {
-            // @ts-ignore
-            if(templateDump != null) callback({binDump: pako.inflate(templateDump)})
+        this.fetchTemplateFromCache(urlWithoutProtocol, true, (templateDump: Uint8Array) => {
+
+            if (templateDump != null) {
+                // @ts-ignore
+                if (DatabaseTool.isCompressed(templateDump)) templateDump = pako.inflate(templateDump);
+                callback({ binDump: templateDump })
+            }
+
             let that = this;
 
             jQuery.ajax({
@@ -33,15 +41,16 @@ export class Databaseloader {
                 xhrFields: { responseType: 'arraybuffer' },
                 success: function (response: any) {
                     let db = new Uint8Array(response);
+                    // @ts-ignore
+                    if (DatabaseTool.isCompressed(db)) db = pako.inflate(db);
                     that.saveDatabaseToCache(urlWithoutProtocol, db);
-                    //@ts-ignore
-                    callback({binDump: pako.inflate(db)});
+                    callback({ binDump: db });
                 },
                 error: function (jqXHR, message) {
                     callback(null);
                 }
             });
-    
+
 
         })
 
@@ -51,21 +60,21 @@ export class Databaseloader {
 
         this.fetchTemplateFromCache(urlWithoutProtocol, false, (sql: string) => {
             let that = this;
-            if(sql != null) callback({statements: that.cutSqlToStatements(sql)})
+            if (sql != null) callback({ statements: that.cutSqlToStatements(sql) })
 
             jQuery.get(url, (sql: string) => {
-                    that.saveDatabaseToCache(urlWithoutProtocol, sql);
-                    callback({statements: that.cutSqlToStatements(sql)});
-                }, "text")
+                that.saveDatabaseToCache(urlWithoutProtocol, sql);
+                callback({ statements: that.cutSqlToStatements(sql) });
+            }, "text")
         });
 
     }
 
     cutSqlToStatements(sql: string): string[] {
         sql = sql.replace(/\r\n/g, "\n");
-                
+
         let statements: string[] = [];
-        if(sql.indexOf("~@~") >= 0){
+        if (sql.indexOf("~@~") >= 0) {
             statements = sql.split("~@~");
         } else {
             statements = sql.split(";\n");
@@ -74,29 +83,29 @@ export class Databaseloader {
     }
 
 
-    fetchTemplateFromCache(databaseIdentifier: string, isBinary: boolean, callback: (templateDump: Uint8Array|string) => void) {
-        if(databaseIdentifier == null){callback(null); return;}
+    fetchTemplateFromCache(databaseIdentifier: string, isBinary: boolean, callback: (templateDump: Uint8Array | string) => void) {
+        if (databaseIdentifier == null) { callback(null); return; }
         let that = this;
-        if(!this.cacheAvailable()) callback(null);
+        if (!this.cacheAvailable()) callback(null);
         this.getCache((cache) => {
             cache.match(databaseIdentifier).then(
-                (value)=>{
-                    if(isBinary){
+                (value) => {
+                    if (isBinary) {
                         value.arrayBuffer().then((buffer) => callback(new Uint8Array(buffer)));
                     } else {
                         value.text().then((text) => callback(text));
                     }
                 })
                 .catch(() => callback(null));
-        })        
+        })
     }
 
-    saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array|string) {
-        if(!this.cacheAvailable()) return;
+    saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array | string) {
+        if (!this.cacheAvailable()) return;
         let that = this;
         this.getCache((cache) => {
             cache.put(databaseIdentifier, new Response(templateDump));
-        })        
+        })
     }
 
     cacheAvailable(): boolean {
@@ -106,7 +115,7 @@ export class Databaseloader {
     getCache(callback: (cache: Cache) => void) {
         caches.open('my-cache').then(callback);
     }
-    
+
 
 
 

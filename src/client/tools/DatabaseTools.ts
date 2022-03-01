@@ -238,13 +238,13 @@ export class DatabaseTool {
 
                     callback(that.databaseStructure);
 
-                }, (error) => { });
+                }, (error) => { console.log(error)});
             } else {
                 that.databaseStructure = { tables: [] };
                 callback(that.databaseStructure);
             }
 
-        }, (error) => { });
+        }, (error) => { console.log(error) });
 
 
     }
@@ -336,5 +336,27 @@ export class DatabaseTool {
         return this.databaseStructure;
 
     }
+
+    static isCompressed(dump: Uint8Array): boolean {
+
+        let sqliteMagicBytes: number[] = [0x53, 0x51, 0x4c, 0x69, 0x74, 0x65];
+        let zlibMagicByte: number = 0x78;
+
+        let found: boolean = true;
+        for (let i = 0; i < sqliteMagicBytes.length; i++) {
+            if (sqliteMagicBytes[i] != dump[i]) {
+                found = false;
+                break;
+            }
+        }
+        if (found) return false;
+
+        if (dump[0] == zlibMagicByte) return true;
+
+        console.log("DatabaseDumper.isCompressed: Can't figure out if dump is compressed.")
+        return false;
+
+    }
+
 
 }

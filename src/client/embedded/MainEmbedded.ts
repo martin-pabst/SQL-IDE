@@ -20,6 +20,7 @@ import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
 import { Databaseloader } from "../tools/DatabaseLoader.js";
+import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -144,7 +145,7 @@ export class MainEmbedded implements MainBase {
             new Databaseloader().load(this.config.databaseFilename, (loadableDb) => {
                 this.databaseTool.initializeWorker(loadableDb.binDump, loadableDb.statements, () => {}, () => {
                     this.writeQueryManager.databaseReady(this.databaseTool);                    
-                    this.databaseExplorer.refresh();
+                    this.databaseExplorer.refreshAfterRetrievingDBStructure();
                 })
             })
         }
@@ -472,8 +473,6 @@ export class MainEmbedded implements MainBase {
 
         this.$rightDivInner.append($rightSideContainer);
 
-        new ProgramControlButtons(this, $controlsDiv);
-
         new EmbeddedSlider($rightDiv, true, false, () => {
             this.editor.editor.layout();
         });
@@ -492,8 +491,31 @@ export class MainEmbedded implements MainBase {
             }], ev.pageX + 2, ev.pageY + 2);
         });
 
+
+        let $buttonOpen = jQuery('<label type="file" class="img_open-file jo_button jo_active"' +
+            'style="margin-right: 8px;" title="Workspace aus Datei laden"><input type="file" style="display:none"></label>');
+
+        let that = this;
+
+        $buttonOpen.find('input').on('change', (event) => {
+            //@ts-ignore
+            var files: FileList = event.originalEvent.target.files;
+            that.loadDatabaseFromFile(files[0]);
+        })
+
+        let $buttonSave = jQuery('<div class="img_save-dark jo_button jo_active"' +
+            'style="margin-right: 8px;" title="Workspace in Datei speichern"></div>');
+
+
+        $buttonSave.on('click', () => { that.saveDatabaseToFile() });
+
+        $controlsDiv.append($buttonOpen, $buttonSave);
+
         this.resultsetPresenter = new ResultsetPresenter(this, $bottomDivInner);
         this.resultsetPresenter.addWriteQueryListener(this.writeQueryManager);
+
+
+        new ProgramControlButtons(this, $controlsDiv);
 
         setTimeout(() => {
             this.editor.editor.layout();
@@ -503,17 +525,27 @@ export class MainEmbedded implements MainBase {
 
 
     }
-
-    // <div class="bitteWarten">
-    //     <div style="margin-bottom: 30px">
-    //         <div class="bitteWartenText"></div>
-    //     </div>
-    //     <div>
-    //         <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="">
-    //     </div>
-    //     <div class="bitteWartenProgress"></div>
-    // </div>
-
+    
+    saveDatabaseToFile() {
+        new DatabaseImportExport().saveToFile(this.databaseTool);
+    }
+    
+    loadDatabaseFromFile(file: globalThis.File) {
+        new DatabaseImportExport().loadFromFile(file, (db) => {
+            if(db == null){
+                alert('Es ist ein Fehler beim Import aufgetreten.');
+                return;
+            }
+            this.databaseTool.initializeWorker(db.binDump, [], (errors) => {
+                if(errors.length > 0){
+                    alert('Es sind Fehler beim Import aufgetreten. Ausführliche Fehlermeldungen sehen Sie in der Konsole (F12).')
+                    console.log(errors)
+                }
+            }, () => {
+                this.databaseExplorer.refreshAfterRetrievingDBStructure()
+            })
+        })
+    }
 
     makeWaitDiv(): JQuery<HTMLElement> {
         let waitHtml = `
