@@ -126,7 +126,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
     animation-iteration-count: infinite;
 }
 
-#bitteWarten>div>div, #bitteWartenProgress {
+.bitteWarten>div>div, .bitteWartenProgress {
     font-size: 32px;
     color: white;
     text-shadow:  1px  1px 1px gray,
@@ -135,14 +135,14 @@ body .monaco-editor-hover .monaco-tokenized-source {
    -1px -1px 1px gray;
 }
 
-#bitteWartenProgress {
+.bitteWartenProgress {
     height: 60px;
     padding-top: 20px;
 }
 
 
 /* Login */
-#login, #bitteWarten {
+#login, .bitteWarten {
     z-index: 1000;
     position: absolute;
     height: 100%;
@@ -153,8 +153,9 @@ body .monaco-editor-hover .monaco-tokenized-source {
     justify-content: center;
 }
 
-#bitteWarten {
+.bitteWarten {
     background-color: #1e1e1e88;
+    align-items: center;
 }
 
 #login-heading {
@@ -198,6 +199,10 @@ body .monaco-editor-hover .monaco-tokenized-source {
     border: 2px solid  var(--slider);
     border-radius: 10px;
     padding: 2em;
+}
+
+#login-password {
+    margin-top: 20px;
 }
 
 #login-center>input {

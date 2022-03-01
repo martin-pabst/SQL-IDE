@@ -4,7 +4,9 @@ import { SQLStatement } from "../../compiler/parser/Parser.js";
 import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
 import { QueryResult } from "../../tools/DatabaseTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
+import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 
 type RuntimeError = {
     statement: SQLStatement,
@@ -27,7 +29,8 @@ export class ResultsetPresenter {
 
     public static StatementDelimiter: string = ";\n\n"
 
-    constructor(private main: Main) {
+    constructor(private main: MainBase, private $bottomDiv: JQuery<HTMLElement>) {
+
         this.$paginationDiv = jQuery('.jo_pagination');
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
         this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto">0001 - 1000</span> von <span class="jo_pagination_all">5000</span></div>');
@@ -73,33 +76,58 @@ export class ResultsetPresenter {
 
         let hasDDLStatements: boolean = statements.some(st => this.isDDLStatement(st));
         let hasWriteStatements: boolean = statements.some(st => this.isWriteStatement(st));
-        let workspace = this.main.currentWorkspace;
+        let workspace = this.main.getCurrentWorkspace();
         let database = workspace.database;
 
-        if(hasDDLStatements && workspace.permissions <= 2){
+        if (hasDDLStatements && workspace.permissions <= 2) {
             alert("Der Benutzer hat keine Berechtigung zum Ändern der Tabellenstruktur.");
             return;
         }
 
-        if(hasWriteStatements && workspace.permissions <= 1){
+        if (hasWriteStatements && workspace.permissions <= 1) {
             alert("Der Benutzer hat keine Berechtigung zum Einfügen/Löschen/Ändern von Datensätzen.");
             return;
         }
 
         if (hasDDLStatements || hasWriteStatements) {
-            // Step 1: Update Database to newest version to avoid potential database reset
-            this.main.networkManager.getNewStatements(workspace, (new_statements, firstStatementIndex) => {
+            if (this.main.isEmbedded()) {
+                this.executeDDLWriteStatementsEmbedded(workspace, statements, database);
 
-                this.main.notifier.executeNewStatements(new_statements, firstStatementIndex, () => {}, 
+            } else {
+                this.executeDDLWriteStatementsInOnlineIDE(workspace, statements, database);
+            }
+
+        } else {
+            this.executeStatements(statements, 0, [], () => { });
+        }
+
+    }
+
+    executeDDLWriteStatementsEmbedded(workspace: Workspace, statements: SQLStatement[], database: WDatabase) {
+        let sucessfullyExecutedModifyingStatements: SQLStatement[] = [];
+        this.executeStatements(statements, 0, sucessfullyExecutedModifyingStatements, () => {
+
+            if (sucessfullyExecutedModifyingStatements.length == 0)
+                return;
+        })
+    }
+
+    private executeDDLWriteStatementsInOnlineIDE(workspace: Workspace, statements: SQLStatement[], database: WDatabase) {
+        let main: Main = <Main>this.main;
+        // Step 1: Update Database to newest version to avoid potential database reset
+        main.networkManager.getNewStatements(workspace, (new_statements, firstStatementIndex) => {
+
+            main.notifier.executeNewStatements(new_statements, firstStatementIndex, () => { },
                 () => {
                     // Step 2: Execute new statements to see which are successful
                     let sucessfullyExecutedModifyingStatements: SQLStatement[] = [];
                     this.executeStatements(statements, 0, sucessfullyExecutedModifyingStatements, () => {
 
-                        if (sucessfullyExecutedModifyingStatements.length == 0) return;
+                        if (sucessfullyExecutedModifyingStatements.length == 0)
+                            return;
 
                         // Step 3: Send successful statements to server in order to retrieve new db-version-number
-                        this.main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned), (statements_before, new_version) => {
+                        main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned), (statements_before, new_version) => {
 
                             // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
                             // Add all new statements to local statement list
@@ -115,24 +143,19 @@ export class ResultsetPresenter {
 
                             } else {
 
-                                this.main.getDatabaseExplorer().refresh();
+                                main.getDatabaseExplorer().refresh();
 
                             }
 
-                        })
+                        });
                     });
-                }, false)
-            })
-
-        } else {
-            this.executeStatements(statements, 0, [], () => { });
-        }
-
+                }, false);
+        });
     }
 
     resetDatabase(database: WDatabase) {
-        this.main.databaseTool.initializeWorker(database.templateDump, database.statements, () => {
-                this.main.getDatabaseExplorer().refresh();
+        this.main.getDatabaseTool().initializeWorker(database.templateDump, database.statements, () => {
+            this.main.getDatabaseExplorer().refresh();
         })
     }
 
@@ -143,7 +166,7 @@ export class ResultsetPresenter {
         }
 
         if (fromIndex < statements.length) {
-            this.main.databaseTool.executeQuery(statements[fromIndex],
+            this.main.getDatabaseTool().executeQuery(statements[fromIndex],
                 (results) => { this.executeStatementsString(statements, fromIndex + 1, callback) },
                 (error) => { console.log("Error when executing statement " + statements[fromIndex] + "\nError : " + error); this.executeStatementsString(statements, fromIndex + 1, callback) });
         } else {
@@ -178,22 +201,22 @@ export class ResultsetPresenter {
             if (laterSelectExists) {
                 callback1();
             } else {
-                if(statement.ast.limitNode == null){
+                if (statement.ast.limitNode == null) {
                     statement.sql.trimRight();
-                    while(statement.sql.endsWith(";") || statement.sql.endsWith("\n") || statement.sql.endsWith("\r")){
+                    while (statement.sql.endsWith(";") || statement.sql.endsWith("\n") || statement.sql.endsWith("\r")) {
                         statement.sql = statement.sql.substring(0, statement.sql.length - 1);
                         statement.sql.trimRight();
                     }
                     statement.sql += " limit 100000";
                 }
-                this.main.databaseTool.executeQuery(statement.sql,
+                this.main.getDatabaseTool().executeQuery(statement.sql,
                     (results) => { this.presentResultsIntern(statement.sql, results); callback1(); },
                     (error) => { errors.push({ statement: statement, message: error }); callback1(); });
             }
         } else {
             let sql = new StatementCleaner().clean(statement);
             console.log(sql);
-            this.main.databaseTool.executeQuery(sql, (results) => { successfullyExecutedModifyingStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
+            this.main.getDatabaseTool().executeQuery(sql, (results) => { successfullyExecutedModifyingStatements.push(statement); callback1(); }, (error) => { errors.push({ statement: statement, message: error }); callback1(); });
         }
 
     }
@@ -266,27 +289,29 @@ export class ResultsetPresenter {
 
     }
 
-    showTable(identifier: string){
+    showTable(identifier: string) {
         let statement = "select * from " + identifier + ";";
-        this.main.databaseTool.executeQuery(statement,
-            (results) => { this.presentResultsIntern(statement, results);  },
-            (error) => {  });
+        this.main.getDatabaseTool().executeQuery(statement,
+            (results) => { this.presentResultsIntern(statement, results); },
+            (error) => { });
     }
 
 
 
     showErrors(errors: RuntimeError[]) {
+        let $runtimeErrorsTab = this.$bottomDiv.find('.jo_runtimeerrorsTab');
+        let $runtimeErrorsTabHeading = this.$bottomDiv.find('.jo_runtimeerrorsTabheading');
 
-        $('.jo_runtimeerrorsTab').empty();
+        $runtimeErrorsTab.empty();
         this.showErrorDecorations(errors);
 
         if (errors.length == 0) return;
 
         let mousePointer = window.PointerEvent ? "pointer" : "mouse";
-        jQuery('.jo_runtimeerrorsTabheading').trigger(mousePointer + "down");
+        $runtimeErrorsTabHeading.trigger(mousePointer + "down");
 
         let $errorList = jQuery('<div class="jo_errorlist"></div>');
-        jQuery('.jo_runtimeerrorsTab').append($errorList);
+        $runtimeErrorsTab.append($errorList);
 
         for (let error of errors) {
             let query = error.statement.sql;
@@ -296,16 +321,16 @@ export class ResultsetPresenter {
             let $errorLine = $('<div class="jo_error-line" style="flex-direction:column; width: fit-content"></div>')
             $errorList.append($errorLine);
 
-            $errorLine.on(mousePointer + 'down', ()=>{
+            $errorLine.on(mousePointer + 'down', () => {
                 let range = {
                     startColumn: error.statement.from.column, startLineNumber: error.statement.from.line,
                     endColumn: error.statement.to.column, endLineNumber: error.statement.to.line
                 };
-        
+
                 this.main.getMonacoEditor().revealRangeInCenter(range);
                 $errorList.find('.jo_error-line').removeClass('jo_active');
                 $errorLine.addClass('jo_active');
-        
+
             })
 
 
@@ -335,12 +360,14 @@ export class ResultsetPresenter {
     }
 
     private presentResultsIntern(query: string, results: QueryResult[]) {
+        let $resultTabheading = this.$bottomDiv.find('.jo_resultTabheading');
+        let $resultHeader = this.$bottomDiv.find('.jo_result-header');
 
         let mousePointer = window.PointerEvent ? "pointer" : "mouse";
-        jQuery('.jo_resultTabheading').trigger(mousePointer + "down");
+        $resultTabheading.trigger(mousePointer + "down");
         this.result = results.pop();
 
-        let headerDiv = jQuery('.jo_result-header');
+        let headerDiv = $resultHeader;
 
         query = query.replace(/\n/g, " ");
         query = query.replace(/\s\s+/g, ' ');
@@ -359,8 +386,8 @@ export class ResultsetPresenter {
 
     }
 
-    public clear(){
-        let $bodyDiv = jQuery('.jo_result-body');
+    public clear() {
+        let $bodyDiv = this.$bottomDiv.find('.jo_result-body');
         $bodyDiv.empty();
         this.$paginationDiv.hide();
     }
@@ -369,9 +396,9 @@ export class ResultsetPresenter {
     private showResultPending: boolean = false;
 
     private showResults() {
-        let $bodyDiv = jQuery('.jo_result-body');
+        let $bodyDiv = this.$bottomDiv.find('.jo_result-body');
 
-        if(this.result == null){
+        if (this.result == null) {
             this.$infoDiv.find('.jo_pagination_fromto').html('---');
             $bodyDiv.html('Die Datenbank lieferte eine leere Ergebnistabelle.');
             return;

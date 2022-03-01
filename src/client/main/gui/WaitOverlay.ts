@@ -2,21 +2,28 @@ export class WaitOverlay {
 
     visible: boolean = false;
     fadeOutPending: boolean = false;
+    $bitteWartenText: JQuery<HTMLElement>;
+    $bitteWartenProgress: JQuery<HTMLElement>;
+
+    constructor(private $waitDiv: JQuery<HTMLElement>){
+        this.$bitteWartenText = $waitDiv.find('.bitteWartenText');
+        this.$bitteWartenProgress = $waitDiv.find('.bitteWartenProgress');
+    }
 
     show(message: string){
         this.fadeOutPending = false;
-        jQuery('#bitteWartenText').html(message);
-        jQuery('#bitteWartenProgress').html('');
+        this.$bitteWartenText.html(message);
+        this.$bitteWartenProgress.html('');
         if(!this.visible){
             this.visible = true;
-            jQuery('#bitteWarten').css('display', 'flex');
-            jQuery('#bitteWarten').hide();
-            jQuery('#bitteWarten').fadeIn(400);
+            this.$waitDiv.css('display', 'flex');
+            this.$waitDiv.hide();
+            this.$waitDiv.fadeIn(400);
         }
     }
 
     setProgress(message: string){
-        jQuery('#bitteWartenProgress').html(message);
+        this.$bitteWartenProgress.html(message);
     }
 
     hide(){
@@ -25,8 +32,8 @@ export class WaitOverlay {
             setTimeout(() => {
                 if(this.fadeOutPending){
                     this.fadeOutPending = false;
-                    jQuery('#bitteWarten').fadeOut(200, () => {
-                        jQuery('#bitteWarten').css('display', 'none');
+                    this.$waitDiv.fadeOut(200, () => {
+                        this.$waitDiv.css('display', 'none');
                     })
                     this.visible = false;        
                 }                

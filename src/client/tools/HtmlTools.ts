@@ -85,20 +85,27 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
             $item.css('color', mi.color);
         }
         if (mi.link == null) {
-            $item.on(mousePointer + 'up.contextmenu', (e) => {
-                e.stopPropagation();
+            $item.on(mousePointer + 'up.contextmenu', (ev) => {
+                ev.stopPropagation();
                 jQuery('.jo_contextmenu').remove();
                 jQuery(document).off(mousePointer + "up.contextmenu");
+                jQuery(document).off(mousePointer + "down.contextmenu");
                 jQuery(document).off("keydown.contextmenu");
                 mi.callback();
             });
+            $item.on(mousePointer + 'down.contextmenu', (ev) => {
+                ev.stopPropagation();
+            });
         } else {
             let $link = $item.find('a');
-            $link.on(mousePointer + "down", (event) => {
+            $link.on(mousePointer + "up", (event) => {
                 event.stopPropagation();
                 setTimeout(() => {
                     $item.hide();
                 }, 500);
+            })
+            $link.on(mousePointer + "down", (event) => {
+                event.stopPropagation();
             })
 
         }
@@ -117,15 +124,15 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
         $contextMenu.append($item);
     }
 
-    jQuery(document).on(mousePointer + "up.contextmenu", () => {
-        jQuery(document).off(mousePointer + "up.contextmenu");
+    jQuery(document).on(mousePointer + "down.contextmenu", (e) => {
+        jQuery(document).off(mousePointer + "down.contextmenu");
         jQuery(document).off("keydown.contextmenu");
         jQuery('.jo_contextmenu').remove();
     })
 
     jQuery(document).on("keydown.contextmenu", (ev) => {
         if (ev.key == "Escape") {
-            jQuery(document).off(mousePointer + "down.contextmenu");
+            jQuery(document).off(mousePointer + "up.contextmenu");
             jQuery(document).off("keydown.contextmenu");
             jQuery('.jo_contextmenu').remove();
         }
@@ -232,15 +239,15 @@ export function checkIfMousePresent() {
     }
 }
 
-export function animateToTransparent($element: JQuery<HTMLElement>, cssProperty: string, startColorRgb: number[], duration: number){
+export function animateToTransparent($element: JQuery<HTMLElement>, cssProperty: string, startColorRgb: number[], duration: number) {
     let colorPraefix = 'rgba(' + startColorRgb[0] + ", " + startColorRgb[1] + ", " + startColorRgb[2] + ", ";
     let value = 1.0;
-    let delta = value/(duration/20);
+    let delta = value / (duration / 20);
 
     let animate = () => {
         $element.css(cssProperty, colorPraefix + value + ")");
         value -= delta;
-        if(value < 0){
+        if (value < 0) {
             $element.css(cssProperty, "");
         } else {
             setTimeout(animate, 20);
@@ -251,14 +258,14 @@ export function animateToTransparent($element: JQuery<HTMLElement>, cssProperty:
 }
 
 export function downloadFile(obj: any, filename: string) {
-    var blob = new Blob([JSON.stringify(obj)], {type: 'text/plain'});
+    var blob = new Blob([JSON.stringify(obj)], { type: 'text/plain' });
     //@ts-ignore
     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
         //@ts-ignore
         window.navigator.msSaveOrOpenBlob(blob, filename);
-    } else{
+    } else {
         var e = document.createEvent('MouseEvents'),
-        a = document.createElement('a');
+            a = document.createElement('a');
         a.download = filename;
         a.href = window.URL.createObjectURL(blob);
         a.dataset.downloadurl = ['text/plain', a.download, a.href].join(':');
@@ -267,4 +274,38 @@ export function downloadFile(obj: any, filename: string) {
         a.dispatchEvent(e);
         a.remove();
     }
+}
+
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        var successful = document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+    }
+
+    document.body.removeChild(textArea);
+}
+
+export function copyTextToClipboard(text) {
+    if (!navigator.clipboard) {
+        fallbackCopyTextToClipboard(text);
+        return;
+    }
+    navigator.clipboard.writeText(text).then(function () {
+    }, function (err) {
+        console.error('Async: Could not copy text: ', err);
+    });
 }

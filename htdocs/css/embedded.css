@@ -273,8 +273,14 @@
 .joe_tabheading-right {
     display: flex;
     flex-direction: row;
-    padding: 2px;
+    padding: 4px 10px;
 }
+
+.joe_paginationHeading {
+    position: absolute;
+    right: 20px;
+}
+
 .joe_controlsDiv {
     display: flex;
 }

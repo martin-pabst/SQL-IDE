@@ -16,6 +16,7 @@
 // </div>
 
 import { Main } from "../Main.js";
+import { MainBase } from "../MainBase.js";
 import { ResultsetPresenter } from "./ResultsetPresenter.js";
 
 
@@ -32,16 +33,16 @@ export class ProgramControlButtons {
     // $buttonEdit: JQuery<HTMLElement>;
 
 
-    constructor(private main: Main, private $buttonsContainer: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, private $buttonsContainer: JQuery<HTMLElement>) {
 
         this.$buttonStart = jQuery('<div title="Start" class="img_start-dark jo_button"></div>');
-        let am = this.main.actionManager;
+        let am = this.main.getActionManager();
 
         am.registerAction("execute", ['Strg + Enter'],
             () => {
                 if (am.isActive("execute")) {
 
-                    this.main.resultsetPresenter.executeSelectedStatements();
+                    this.main.getResultsetPresenter().executeSelectedStatements();
                 }
 
             }, "SQL-Statement ausführen", this.$buttonStart

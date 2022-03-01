@@ -70,7 +70,7 @@ export class MainEmbedded implements MainBase {
     }
 
     getResultsetPresenter(): ResultsetPresenter {
-        return null;
+        return this.resultsetPresenter;
     }
 
     getWaitOverlay(): WaitOverlay {
@@ -121,7 +121,9 @@ export class MainEmbedded implements MainBase {
 
     databaseExplorer: DatabaseExplorer;
 
-    waitOverlay: WaitOverlay = new WaitOverlay();
+    waitOverlay: WaitOverlay;
+
+    resultsetPresenter: ResultsetPresenter;
 
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
@@ -396,6 +398,10 @@ export class MainEmbedded implements MainBase {
         let $topDiv = jQuery('<div class="joe_topDiv"></div>');
         $div.append($topDiv);
 
+        let $waitDiv = this.makeWaitDiv();
+        $div.append($waitDiv);
+        this.waitOverlay = new WaitOverlay($waitDiv);
+
         let $resetModalWindow = this.makeCodeResetModalWindow($div);
 
         let $rightDiv = this.makeRightDiv();
@@ -461,9 +467,13 @@ export class MainEmbedded implements MainBase {
         $topDiv.append($rightDiv);
 
         let $rightSideContainer = jQuery('<div class="jo_rightdiv-rightside-container"></div>');
-        let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis-dark"></div>');
-        $rightSideContainer.append($infoButton);
+        let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis-dark" style="margin-right: 10px"></div>');
+
+        $controlsDiv.append($infoButton);
+
         this.$rightDivInner.append($rightSideContainer);
+
+        new ProgramControlButtons(this, $controlsDiv);
 
         new EmbeddedSlider($rightDiv, true, false, () => {
             this.editor.editor.layout();
@@ -471,7 +481,7 @@ export class MainEmbedded implements MainBase {
 
         new EmbeddedSlider($bottomDiv, true, true, () => { this.editor.editor.layout(); });
 
-        $infoButton.on('mousedown', (ev) => {
+        $infoButton.on('mouseup', (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
             openContextMenu([{
@@ -483,6 +493,8 @@ export class MainEmbedded implements MainBase {
             }], ev.pageX + 2, ev.pageY + 2);
         });
 
+        this.resultsetPresenter = new ResultsetPresenter(this, $bottomDivInner);
+
         setTimeout(() => {
             this.editor.editor.layout();
             this.compiler = new Compiler(this);
@@ -490,6 +502,32 @@ export class MainEmbedded implements MainBase {
         }, 200);
 
 
+    }
+
+    // <div class="bitteWarten">
+    //     <div style="margin-bottom: 30px">
+    //         <div class="bitteWartenText"></div>
+    //     </div>
+    //     <div>
+    //         <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="">
+    //     </div>
+    //     <div class="bitteWartenProgress"></div>
+    // </div>
+
+
+    makeWaitDiv(): JQuery<HTMLElement> {
+        let waitHtml = `
+        <div class="bitteWarten">
+        <div style="margin-bottom: 30px">
+            <div class="bitteWartenText"></div>
+        </div>
+        <div>
+            <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="">
+        </div>
+        <div class="bitteWartenProgress"></div>
+        </div>
+        `;
+        return jQuery(waitHtml);
     }
 
     makeBracketErrorDiv(): JQuery<HTMLElement> {
@@ -613,21 +651,25 @@ export class MainEmbedded implements MainBase {
 
         let $tabheadings = jQuery('<div class="jo_tabheadings"></div>');
         $tabheadings.css('position', 'relative');
-        let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading"></div>');
+        let $thLeftSide = jQuery('<div class="joe_tabheading-right jo_noHeading"></div>');
 
-        $thRightSide.append($buttonDiv);
+        $thLeftSide.append($buttonDiv);
+        $tabheadings.append($thLeftSide);
 
         if (this.config.withErrorList) {
             let $thErrors = jQuery('<div class="jo_tabheading jo_active" data-target="jo_errorsTab" style="line-height: 24px">Fehler</div>');
             $tabheadings.append($thErrors);
         }
 
-
         if (this.config.withOutput) {
-            let $thPCode = jQuery('<div class="jo_tabheading" data-target="jo_resultTab" style="line-height: 24px">Ausgabe</div>');
+            let $thPCode = jQuery('<div class="jo_tabheading jo_resultTabheading" data-target="jo_resultTab" style="line-height: 24px">Ausgabe</div>');
             $tabheadings.append($thPCode);
         }
 
+        let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">Fehler bei Ausführung</div>');
+        $tabheadings.append($thRuntimeError);
+
+        let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');
         $tabheadings.append($thRightSide);
 
         $bottomDiv.append($tabheadings);
@@ -639,11 +681,20 @@ export class MainEmbedded implements MainBase {
             $tabs.append($tabError);
         }
 
-
         if (this.config.withOutput) {
-            let $tabPCode = jQuery('<div class="jo_scrollable jo_resultTab">Ausgabe...</div>');
+            let $tabPCode = jQuery(`<div class="jo_editorFontSize jo_resultTab">
+            <div class="jo_result-inner">
+                <div class="jo_result-header"></div>
+                <div class="jo_scrollable jo_result-body"></div>
+            </div>
+            </div>
+    `);
             $tabs.append($tabPCode);
         }
+
+        let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
+        $tabs.append($tabRtErrors);
+
 
         $bottomDiv.append($tabs);
 

@@ -47,15 +47,15 @@
     </div>
 
     <!-- Bitte-Warten-Text nach dem Logout (bis die Einstellungen gespeichert sind)-->
-    <div id="bitteWarten">
+    <div class="bitteWarten">
         <div style="margin-bottom: 30px">
-            <div id="bitteWartenText"></div>
+            <div class="bitteWartenText"></div>
         </div>
         <div>
             <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="">
         </div>
-        <div id="bitteWartenProgress"></div>
-</div>
+        <div class="bitteWartenProgress"></div>
+    </div>
 
     <!-- Login-Seite -->
     <div id="login">
@@ -64,10 +64,12 @@
         <div style="flex-grow: 1"></div>
         <div>
             <div id="login-center">
+                <form>
                 <input id="login-username" type="text" placeholder="Benutzername" spellcheck="false" tabindex="1">
                 <input id="login-password" type="password" placeholder="Passwort" spellcheck="false" tabindex="2">
                 <div id="login-message"></div>
                 <div id="login-button" tabindex="3">Login</div>
+            </form>
             </div>
         </div>
         <div id="login-spinner">

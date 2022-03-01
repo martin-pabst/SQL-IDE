@@ -129,7 +129,7 @@ export class Main implements MainBase {
 
     notifier: Notifier;
 
-    waitOverlay: WaitOverlay = new WaitOverlay();
+    waitOverlay: WaitOverlay = new WaitOverlay(jQuery('.bitteWarten'));
 
     initGUI() {
 
@@ -167,7 +167,7 @@ export class Main implements MainBase {
 
         new ProgramControlButtons(this, jQuery('#controls'));
 
-        this.resultsetPresenter = new ResultsetPresenter(this);
+        this.resultsetPresenter = new ResultsetPresenter(this, jQuery('.jo_bottomdiv-inner'));
 
         this.notifier = new Notifier(this);
 

@@ -162,6 +162,10 @@ export class Module {
         let selStart = {line: sel.startLineNumber, column: sel.startColumn};
         let selEnd = {line: sel.endLineNumber, column: sel.endColumn};
 
+        if(this.sqlStatements == null){
+            return [];
+        }
+
         return this.sqlStatements.filter(stmt => {
             return !(this.compare(stmt.to, selStart) < 0 || this.compare(stmt.from, selEnd) > 0);
         })
