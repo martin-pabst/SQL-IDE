@@ -395,8 +395,9 @@ export class MainEmbedded implements MainBase {
 
         let $centerDiv = jQuery('<div class="joe_centerDiv"></div>');
 
-        let $topDiv = jQuery('<div class="joe_topDiv"></div>');
-        $div.append($topDiv);
+        // let $topDiv = jQuery('<div class="joe_topDiv"></div>');
+        // $div.append($topDiv);
+        $div.append($centerDiv);
 
         let $waitDiv = this.makeWaitDiv();
         $div.append($waitDiv);
@@ -416,7 +417,7 @@ export class MainEmbedded implements MainBase {
         let $bracketErrorDiv = this.makeBracketErrorDiv();
         $editorDiv.append($bracketErrorDiv);
 
-        $topDiv.append($editorDiv);
+        // $topDiv.append($editorDiv);
 
         this.$resetButton.hide();
 
@@ -439,15 +440,6 @@ export class MainEmbedded implements MainBase {
         makeTabs($bottomDivInner);
         $div.append($bottomDiv);
 
-        if (!this.config.withBottomPanel) {
-            $centerDiv.prepend($controlsDiv);
-            $controlsDiv.addClass('joe_controlPanel_top');
-            $editorDiv.css({
-                'position': 'relative',
-                'height': '1px'
-            });
-        }
-
         $div.addClass('joe_javaOnlineDiv');
 
         this.editor = new Editor(this, false, true);
@@ -464,7 +456,8 @@ export class MainEmbedded implements MainBase {
         this.rightDiv = new RightDiv(this, this.$rightDivInner);
         this.rightDiv.initGUI();
 
-        $topDiv.append($rightDiv);
+        $centerDiv.append($editorDiv, $bottomDiv)
+        $div.append($rightDiv);
 
         let $rightSideContainer = jQuery('<div class="jo_rightdiv-rightside-container"></div>');
         let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis-dark" style="margin-right: 10px"></div>');
@@ -651,7 +644,7 @@ export class MainEmbedded implements MainBase {
 
         let $tabheadings = jQuery('<div class="jo_tabheadings"></div>');
         $tabheadings.css('position', 'relative');
-        let $thLeftSide = jQuery('<div class="joe_tabheading-right jo_noHeading"></div>');
+        let $thLeftSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_controlsTabheading"></div>');
 
         $thLeftSide.append($buttonDiv);
         $tabheadings.append($thLeftSide);

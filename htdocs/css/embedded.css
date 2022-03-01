@@ -18,7 +18,7 @@
 .joe_javaOnlineDiv {
     display: flex;
     position: relative;
-    flex-direction: column;
+    flex-direction: row;
     background-color: var(--backgroundDark);
     color: var(--fontColorNormal);
     font-family: 'Roboto', sans-serif;
@@ -199,7 +199,7 @@
 
 .joe_bottomDiv {
     position: relative;
-    height: 150px;
+    height: 75%;
     display: flex;
     flex-direction: row;
     border-top: 1px solid gray;
@@ -274,6 +274,12 @@
     display: flex;
     flex-direction: row;
     padding: 4px 10px;
+}
+
+.joe_controlsTabheading {
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+    margin-right: 30px;
 }
 
 .joe_paginationHeading {
