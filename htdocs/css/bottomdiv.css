@@ -144,6 +144,10 @@
     margin-right: 5px;
 }
 
+.jo_panelEntryCopyButton {
+    margin-right: 5px;
+}
+
 .jo_panelEntryRollbackButton:not(.jo_active) {
     filter: grayscale() brightness(80%);
 }

@@ -22,6 +22,7 @@ import { WriteQueryManager } from "./WriteQueryManager.js";
 import { Databaseloader } from "../tools/DatabaseLoader.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 import { HistoryViewer } from "../main/gui/HistoryViewer.js";
+import { WDatabase } from "../workspace/WDatabase.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -105,7 +106,8 @@ export class MainEmbedded implements MainBase {
 
     $hintDiv: JQuery<HTMLElement>;
     $monacoDiv: JQuery<HTMLElement>;
-    $resetButton: JQuery<HTMLElement>;
+    $codeResetButton: JQuery<HTMLElement>;
+    $databaseResetButton: JQuery<HTMLElement>;
 
     programIsExecutable = false;
     version: number = 0;
@@ -137,6 +139,9 @@ export class MainEmbedded implements MainBase {
 
     historyViewer: HistoryViewer;
 
+    initialTemplateDump: Uint8Array;
+    initialStatements: string[];
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
@@ -146,31 +151,40 @@ export class MainEmbedded implements MainBase {
         this.initGUI($div);
 
 
-        this.databaseExplorer = new DatabaseExplorer(this,this.$dbTreeDiv);
+        this.databaseExplorer = new DatabaseExplorer(this, this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
-        if(this.config.databaseFilename != null){
+        if (this.config.databaseFilename != null) {
             new Databaseloader().load(this.config.databaseFilename, (loadableDb) => {
-                this.databaseTool.initializeWorker(loadableDb.binDump, loadableDb.statements, () => {}, () => {
-                    this.writeQueryManager.databaseReady(this.databaseTool);                    
-                    this.databaseExplorer.refreshAfterRetrievingDBStructure();
-                })
+                this.initialTemplateDump = loadableDb.binDump;
+                this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
+                this.resetDatabase(() => {
+                    this.initScripts();
+
+                    this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
+                    this.indexedDB.open(() => {
+
+                        if (this.config.id != null) {
+                            this.writeQueryManager.indexedDBReady(this.indexedDB);
+                            this.readScripts();
+                        }
+
+                    });
+
+                });
             })
         }
 
-        this.initScripts();
-
-        this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
-        this.indexedDB.open(() => {
-
-            if (this.config.id != null) {
-                this.writeQueryManager.indexedDBReady(this.indexedDB);
-                this.readScripts();
-            }
-
-        });
 
         this.semicolonAngel = new SemicolonAngel(this);
 
+    }
+
+    resetDatabase(callback: () => void) {
+        this.databaseTool.initializeWorker(this.initialTemplateDump, this.initialStatements, () => { }, () => {
+            this.writeQueryManager.databaseReady(this.databaseTool);
+            this.databaseExplorer.refreshAfterRetrievingDBStructure();
+            callback();
+        })
     }
 
     initScripts() {
@@ -281,7 +295,7 @@ export class MainEmbedded implements MainBase {
                             });
 
                             that.fileExplorer?.addModule(module);
-                            that.$resetButton.fadeIn(1000);
+                            that.$codeResetButton.fadeIn(1000);
 
                             // console.log("Retrieving script " + scriptId);
                         }
@@ -417,25 +431,31 @@ export class MainEmbedded implements MainBase {
         $div.append($waitDiv);
         this.waitOverlay = new WaitOverlay($waitDiv);
 
-        let $resetModalWindow = this.makeCodeResetModalWindow($div);
+        let $codeResetModalWindow = this.makeCodeResetModalWindow($div);
+        let $databaseResetModalWindow = this.makeDatabaseResetModalWindow($div);
 
         let $rightDiv = this.makeRightDiv();
 
         let $editorDiv = jQuery('<div class="joe_editorDiv"></div>');
         this.$monacoDiv = jQuery('<div class="joe_monacoDiv"></div>');
         this.$hintDiv = jQuery('<div class="joe_hintDiv jo_scrollable"></div>');
-        this.$resetButton = jQuery('<div class="joe_resetButton jo_button jo_active" title="Code auf Ausgangszustand zurücksetzen">Code Reset</div>');
+        this.$codeResetButton = jQuery('<div class="joe_codeResetButton jo_button jo_active" title="Code auf Ausgangszustand zurücksetzen">Code Reset</div>');
+        this.$databaseResetButton = jQuery('<div class="joe_databaseResetButton jo_button jo_active" title="Datenbank auf Ausgangszustand zurücksetzen">Datenbank Reset</div>');
 
-        $editorDiv.append(this.$monacoDiv, this.$hintDiv, this.$resetButton);
+        $editorDiv.append(this.$monacoDiv, this.$hintDiv, this.$codeResetButton, this.$databaseResetButton);
 
         let $bracketErrorDiv = this.makeBracketErrorDiv();
         $editorDiv.append($bracketErrorDiv);
 
         // $topDiv.append($editorDiv);
 
-        this.$resetButton.hide();
+        this.$codeResetButton.hide();
 
-        this.$resetButton.on("click", () => { $resetModalWindow.show(); })
+        this.$codeResetButton.on("click", () => { $codeResetModalWindow.show(); })
+
+        this.$databaseResetButton.hide();
+
+        this.$databaseResetButton.on("click", () => { $databaseResetModalWindow.show(); })
 
         this.$hintDiv.hide();
 
@@ -524,7 +544,7 @@ export class MainEmbedded implements MainBase {
 
         new ProgramControlButtons(this, $controlsDiv);
 
-        this.historyViewer = new HistoryViewer(this, $div.find('.historyTab'));
+        this.historyViewer = new HistoryViewer(this, $div.find('.jo_historyTab'));
 
         setTimeout(() => {
             this.editor.editor.layout();
@@ -534,19 +554,19 @@ export class MainEmbedded implements MainBase {
 
 
     }
-    
+
     saveDatabaseToFile() {
         new DatabaseImportExport().saveToFile(this.databaseTool);
     }
-    
+
     loadDatabaseFromFile(file: globalThis.File) {
         new DatabaseImportExport().loadFromFile(file, (db) => {
-            if(db == null){
+            if (db == null) {
                 alert('Es ist ein Fehler beim Import aufgetreten.');
                 return;
             }
             this.databaseTool.initializeWorker(db.binDump, [], (errors) => {
-                if(errors.length > 0){
+                if (errors.length > 0) {
                     alert('Es sind Fehler beim Import aufgetreten. Ausführliche Fehlermeldungen sehen Sie in der Konsole (F12).')
                     console.log(errors)
                 }
@@ -609,17 +629,63 @@ export class MainEmbedded implements MainBase {
 
         $parent.append($window);
 
-        jQuery(".joe_codeResetModalCancel").on("click", () => {
+        $parent.find(".joe_codeResetModalCancel").on("click", () => {
             $window.hide();
         });
 
-        jQuery(".joe_codeResetModalOK").on("click", () => {
+        $parent.find(".joe_codeResetModalOK").on("click", () => {
 
             this.initScripts();
             this.deleteScriptsInDB();
 
             $window.hide();
-            this.$resetButton.hide();
+            this.$codeResetButton.hide();
+            this.compileRunsAfterCodeReset = 1;
+
+        });
+
+        return $window;
+    }
+
+    makeDatabaseResetModalWindow($parent: JQuery<HTMLElement>): JQuery<HTMLElement> {
+        let $window = jQuery(
+            `
+            <div class="joe_databaseResetModal">
+            <div style="flex: 1"></div>
+            <div style="display: flex">
+                <div style="flex: 1"></div>
+                <div style="padding-left: 30px;">
+                <div style="color: red; margin-bottom: 10px; font-weight: bold">Warnung:</div>
+                <div>Soll die Datenbank wirklich auf den Ausgangszustand zurückgesetzt werden?</div>
+                <div>Alle bisher ausgeführten Anweisungen (siehe Tab Write History) werden dann rückgängig gemacht.</div>
+                </div>
+                <div style="flex: 1"></div>
+            </div>
+            <div class="joe_databaseResetModalButtons">
+            <div class="joe_databaseResetModalCancel jo_button jo_active">Abbrechen</div>
+            <div class="joe_databaseResetModalOK jo_button jo_active">OK</div>
+            </div>
+            <div style="flex: 2"></div>
+            </div>
+        `
+        );
+
+        $window.hide();
+
+        $parent.append($window);
+
+        $parent.find(".joe_databaseResetModalCancel").on("click", () => {
+            $window.hide();
+        });
+
+        $parent.find(".joe_databaseResetModalOK").on("click", () => {
+
+            $window.hide();
+            this.resetDatabase(() => {
+                this.writeQueryManager.reset();
+            });
+
+            this.$databaseResetButton.hide();
             this.compileRunsAfterCodeReset = 1;
 
         });
@@ -684,7 +750,7 @@ export class MainEmbedded implements MainBase {
     considerShowingCodeResetButton() {
         this.compileRunsAfterCodeReset++;
         if (this.compileRunsAfterCodeReset == 3) {
-            this.$resetButton.fadeIn(1000);
+            this.$codeResetButton.fadeIn(1000);
         }
     }
 
@@ -710,7 +776,7 @@ export class MainEmbedded implements MainBase {
         let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">Fehler bei Ausführung</div>');
         $tabheadings.append($thRuntimeError);
 
-        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">Fehler bei Ausführung</div>');
+        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">Write History</div>');
         $tabheadings.append($thHistory);
 
         let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');

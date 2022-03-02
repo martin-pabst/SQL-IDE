@@ -1,3 +1,5 @@
+import { MainEmbedded } from "../../embedded/MainEmbedded.js";
+import { copyTextToClipboard, openContextMenu } from "../../tools/HtmlTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
@@ -9,26 +11,21 @@ type HistoryPanelEntry = {
 }
 
 export class HistoryViewer {
-    
-    panelEntries: HistoryPanelEntry[] = [];
-    database: WDatabase;
 
-    constructor(private main: MainBase, private $historyPanel: JQuery<HTMLElement>){
+    panelEntries: HistoryPanelEntry[] = [];
+
+    constructor(private main: MainBase, private $historyPanel: JQuery<HTMLElement>) {
 
     }
 
-    clear(){
+    clear() {
         this.$historyPanel.empty();
         this.panelEntries = [];
     }
- 
-    showHistory(database: WDatabase){
+
+    clearAndShowStatements(statements: string[]) {
         this.clear();
-        this.database = database;
-        if(database == null) return;
-
-        this.appendStatements(database.statements);
-
+        this.appendStatements(statements);
     }
 
     appendStatements(statements: string[]) {
@@ -37,59 +34,81 @@ export class HistoryViewer {
             this.$historyPanel.prepend(panelEntry.$div);
             this.panelEntries.unshift(panelEntry);
         })
-        
-        this.makeLastButtonActive();        
+
+        this.makeLastButtonActive();
     }
 
-    makeLastButtonActive(){
+    makeLastButtonActive() {
         this.panelEntries.forEach(pe => pe.$rollbackButton.removeClass('jo_active'));
 
-        if(this.panelEntries.length > 0){
+        if (this.panelEntries.length > 0) {
             this.panelEntries[0].$rollbackButton.addClass('jo_active');
-        }       
+        }
     }
 
-    makePanelEntry(statement: string, index: number):HistoryPanelEntry{
+    makePanelEntry(statement: string, index: number): HistoryPanelEntry {
         let $div = <JQuery<HTMLDivElement>>jQuery(`<div class="jo_panelEntry"></div>`);
         let $index = jQuery(`<div class="jo_panelEntryIndex">${index}.</div>`);
         let $text = jQuery(`<div class="jo_panelEntryText"></div>`);
         let t: string = statement.substring(0, Math.min(400, statement.length));
-        if(statement.length > 400){
+        if (statement.length > 400) {
             t += "...";
         }
         $text.text(t);
-        let $button = <JQuery<HTMLDivElement>>jQuery(`<div class="img_undo jo_panelEntryRollbackButton jo_button" title="Rollback"></div>`)
+        let $copybutton = <JQuery<HTMLDivElement>>jQuery(`<div class="img_copy jo_panelEntryCopyButton jo_active jo_button" title="In die Zwischenablage kopieren"></div>`)
+        let $rollbackbutton = <JQuery<HTMLDivElement>>jQuery(`<div class="img_undo jo_panelEntryRollbackButton jo_button" title="Rollback"></div>`)
         let that = this;
-        $button.on('click', () => {
-            this.rollback();
+
+        $copybutton.on('click', () => {
+            copyTextToClipboard(statement);
         })
-        $div.append($index, $text, $button);
+
+        let mousePointer = window.PointerEvent ? "pointer" : "mouse";
+
+        $rollbackbutton.on(mousePointer + 'up', (ev) => {
+            ev.preventDefault();
+            openContextMenu([{
+                caption: "Abbrechen",
+                callback: () => {
+                }
+            }, {
+                caption: "Ich bin mir sicher: rollback!",
+                color: "#ff6060",
+                callback: () => {
+                    this.rollback();
+                }
+            }], ev.pageX + 2, ev.pageY + 2);
+            ev.stopPropagation();
+        })
+
+        $div.append($index, $text, $copybutton, $rollbackbutton);
         return {
             $div: $div,
             statement: statement,
-            $rollbackButton: $button
+            $rollbackButton: $rollbackbutton
         }
     }
 
-    rollback(){
-        if(this.panelEntries.length == 0) return;
+    rollback() {
+        if (this.panelEntries.length == 0) return;
 
-        if(this.main.isEmbedded()){
-            this.rollbackLocal();
+        if (this.main.isEmbedded()) {
+            this.rollbackEmbedded();
         } else {
             let main: Main = <Main>this.main;
             main.networkManager.rollback((error: string, rollbackLocalNeeded: boolean) => {
-                if(error == null && rollbackLocalNeeded){
+                if (error == null && rollbackLocalNeeded) {
                     this.rollbackLocal();
                 }
             });
         }
     }
 
-    rollbackLocal(){
-        this.database.statements.pop();
-        this.database.version--;
-        this.main.getDatabaseTool().initializeWorker(this.database.templateDump, this.database.statements, () => {
+    rollbackLocal() {
+        let database = this.main.getCurrentWorkspace().database;
+        database.statements.pop();
+        database.version--;
+        this.main.getDatabaseTool().initializeWorker(database.templateDump, database.statements, () => {
 
         }, () => {
             this.main.getDatabaseExplorer().refreshAfterRetrievingDBStructure();
@@ -97,6 +116,20 @@ export class HistoryViewer {
             lastPanelEntry.$div.remove();
             this.makeLastButtonActive();
         })
+    }
+
+    rollbackEmbedded() {
+        let main: MainEmbedded = <MainEmbedded>this.main;
+        main.writeQueryManager.rollback();
+
+        this.main.getDatabaseTool().initializeWorker(main.initialTemplateDump,
+            main.initialStatements.concat(main.writeQueryManager.writtenStatements), () => { },
+            () => {
+                this.main.getDatabaseExplorer().refreshAfterRetrievingDBStructure();
+                let lastPanelEntry = this.panelEntries.shift();
+                lastPanelEntry.$div.remove();
+                this.makeLastButtonActive();
+            })
     }
 
 }

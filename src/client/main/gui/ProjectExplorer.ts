@@ -556,7 +556,7 @@ export class ProjectExplorer {
             },
             () => {
                 this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
-                this.main.getHistoryViewer().showHistory(w.database);
+                this.main.getHistoryViewer().clearAndShowStatements(w.database.statements);
             });
 
     }
