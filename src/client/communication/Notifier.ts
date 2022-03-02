@@ -107,6 +107,11 @@ export class Notifier {
                 break;
             case 4: // keep alive
                 break;
+            case 5: // rollback
+                if(this.database.version > response.new_version){
+                    this.main.getHistoryViewer().rollbackLocal();
+                }
+                break;
         }
     }
 
@@ -126,6 +131,7 @@ export class Notifier {
             let statements = newStatements;
             if(statements.length > 0){
                 this.main.resultsetPresenter.executeStatementsString(statements, 0, () => {
+                    that.main.getHistoryViewer().appendStatements(statements);
                     that.database.statements = that.database.statements.concat(statements)
                     that.database.version = firstNewStatementIndex + newStatements.length - 1;
                     if(doRefreshDatabaseExplorer){

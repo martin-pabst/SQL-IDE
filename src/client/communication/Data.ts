@@ -531,7 +531,8 @@ export type WebSocketRequestKeepAlive = {
     command: 5
 }
 
-export type WebSocketResponse = WebSocketResponseSendingStatements | WebSocketResponseDisconnect | WebSocketResponseKeepAlive;
+export type WebSocketResponse = WebSocketResponseSendingStatements | WebSocketResponseDisconnect | 
+   WebSocketResponseKeepAlive | WebSocketResponseRollback;
 
 export type WebSocketResponseSendingStatements = {
     command: 2,
@@ -545,6 +546,11 @@ export type WebSocketResponseDisconnect = {
 
 export type WebSocketResponseKeepAlive = {
     command: 4
+}
+
+export type WebSocketResponseRollback = {
+    command: 5,
+    new_version: number
 }
 
 
@@ -657,4 +663,15 @@ export type SetPublishedToResponse = {
 
 export type GetTemplateRequest = {
     workspaceId: number
+}
+
+export type RollbackRequest = {
+    workspaceId: number,
+    version: number 
+}
+
+export type RollbackResponse = {
+    success: Boolean,
+    new_version: number,
+    message: string
 }

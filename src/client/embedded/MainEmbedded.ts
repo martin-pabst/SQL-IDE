@@ -21,6 +21,7 @@ import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
 import { Databaseloader } from "../tools/DatabaseLoader.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
+import { HistoryViewer } from "../main/gui/HistoryViewer.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -80,6 +81,10 @@ export class MainEmbedded implements MainBase {
         return this.waitOverlay;
     }
 
+    getHistoryViewer(): HistoryViewer {
+        return this.historyViewer;
+    }
+
     config: JavaOnlineConfig;
 
     editor: Editor;
@@ -129,6 +134,8 @@ export class MainEmbedded implements MainBase {
     resultsetPresenter: ResultsetPresenter;
 
     writeQueryManager: WriteQueryManager;
+
+    historyViewer: HistoryViewer;
 
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
@@ -517,6 +524,8 @@ export class MainEmbedded implements MainBase {
 
         new ProgramControlButtons(this, $controlsDiv);
 
+        this.historyViewer = new HistoryViewer(this, $div.find('.historyTab'));
+
         setTimeout(() => {
             this.editor.editor.layout();
             this.compiler = new Compiler(this);
@@ -701,6 +710,9 @@ export class MainEmbedded implements MainBase {
         let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">Fehler bei Ausführung</div>');
         $tabheadings.append($thRuntimeError);
 
+        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">Fehler bei Ausführung</div>');
+        $tabheadings.append($thHistory);
+
         let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');
         $tabheadings.append($thRightSide);
 
@@ -726,6 +738,9 @@ export class MainEmbedded implements MainBase {
 
         let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
         $tabs.append($tabRtErrors);
+
+        let $tabHistory = jQuery('<div class="jo_scrollable jo_historyTab"></div>');
+        $tabs.append($tabHistory);
 
 
         $bottomDiv.append($tabs);

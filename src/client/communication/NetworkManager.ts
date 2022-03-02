@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -520,6 +520,24 @@ export class NetworkManager {
 
     }
 
+    rollback(callback: (error: string, rollbackLocalNeeded: boolean) => void) {
+        let workspace = this.main.currentWorkspace;
+        let request: RollbackRequest = { workspaceId: workspace.id, version: workspace.database.version }
+
+        ajax("rollback", request, (response: RollbackResponse) => {
+            if (response.success) {
+                
+                callback(null, workspace.database.version > response.new_version);
+            } else {
+                alert(response.message);
+                callback(response.message, false);
+            }
+        }, (message) => {
+            alert(message);
+            callback(message, false);
+        })
+
+    }
 
 
 }

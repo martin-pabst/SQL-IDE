@@ -110,6 +110,44 @@
     overflow: visible;
 }
 
+.jo_historyTab {
+    overflow: auto;
+    height: 100%;
+    padding-left: 5px;
+    padding-right: 15px;
+}
+
+.jo_panelEntry {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-left: 5px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid gray;
+}
+
+.jo_panelEntryText {
+    font-size: 10pt;
+    font-family: 'Consolas', 'Roboto Mono', monospace;
+    width: calc(100% - 30px);
+}
+
+.jo_panelEntryIndex {
+    color: rgb(124, 182, 70);
+    margin-right: 5px;
+}
+
+.jo_panelEntryRollbackButton {
+    margin-right: 5px;
+}
+
+.jo_panelEntryRollbackButton:not(.jo_active) {
+    filter: grayscale() brightness(80%);
+}
+
 .jo_result-inner{
     display: flex;
     flex-direction: column;

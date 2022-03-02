@@ -146,7 +146,10 @@ export class ResultsetPresenter {
                             // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
                             // Add all new statements to local statement list
                             statements_before.forEach(st => database.statements.push(st));
-                            sucessfullyExecutedModifyingStatements.forEach(st => database.statements.push(st.sqlCleaned == null ? st.sql : st.sqlCleaned));
+                            this.main.getHistoryViewer().appendStatements(statements_before);
+                            let modifyingStatements = sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned)
+                            database.statements = database.statements.concat(modifyingStatements);
+                            this.main.getHistoryViewer().appendStatements(modifyingStatements);
                             database.version = new_version;
 
                             // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2

@@ -11,6 +11,7 @@ import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
+import { HistoryViewer } from "./gui/HistoryViewer.js";
 
 export interface MainBase {
     compileIfDirty();
@@ -32,4 +33,5 @@ export interface MainBase {
     getDatabaseExplorer(): DatabaseExplorer;
     getResultsetPresenter():ResultsetPresenter;
     getWaitOverlay(): WaitOverlay;
+    getHistoryViewer(): HistoryViewer;
 }

@@ -27,6 +27,7 @@ import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { Notifier } from "../communication/Notifier.js";
 import { checkIfMousePresent } from "../tools/HtmlTools.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
+import { HistoryViewer } from "./gui/HistoryViewer.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -85,6 +86,10 @@ export class Main implements MainBase {
         return this.waitOverlay;
     }
 
+    getHistoryViewer(): HistoryViewer {
+        return this.historyViewer;
+    }
+
     workspaceList: Workspace[] = [];
     workspacesOwnerId: number;
 
@@ -130,6 +135,7 @@ export class Main implements MainBase {
     notifier: Notifier;
 
     waitOverlay: WaitOverlay = new WaitOverlay(jQuery('.bitteWarten'));
+    historyViewer: HistoryViewer = new HistoryViewer(this, jQuery('.jo_historyTab'));
 
     initGUI() {
 
