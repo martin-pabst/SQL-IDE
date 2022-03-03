@@ -1,16 +1,19 @@
 import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { LoadableDatabase } from "../../tools/DatabaseLoader.js";
+import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { makeTabs } from "../../tools/HtmlTools.js";
+import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { AccordionElement } from "./Accordion.js";
 
-type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase";
+type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase" | "useDumpFile";
 
 export class NewDatabaseDialog {
 
     $dialog: JQuery<HTMLElement>;
+    database: LoadableDatabase;
 
     constructor(private main: Main, private owner_id: number) {
         this.init();
@@ -54,8 +57,9 @@ export class NewDatabaseDialog {
                  </div>
                 <div class="jo_createDatabaseUseDumpFile">
                     <div class="jo_createDatabaseDescription">Wähle hier die Datei mit dem Datenbank-Dump aus (Endung .dbDump):</div>
-                    <input type="file" id="jo_dumpfile" name="dumpfile" />
-                    <div class="jo_databaseimport_dropzone">Datei hierhin ziehen</div>
+                    <input type="file" class="jo_dumpfile" name="dumpfile" style="padding: 10px"/>
+                    <div class="jo_databaseimport_dropzone" style="width: 70vw; margin-left: 10px">Alternativ: Datei in dieses Feld ziehen</div>
+                    <div class="jo_databaseimport_ok"></div>
                  </div>
              </div>
 
@@ -127,6 +131,7 @@ export class NewDatabaseDialog {
             let createMode: CreateMode = "emptyDatabase";
             if (jQuery('.jo_createDatabaseFromTemplateTab').hasClass('jo_active')) createMode = "fromTemplate";
             if (jQuery('.jo_createDatabaseUseExistingTab').hasClass('jo_active')) createMode = "useExistingDatabase";
+            if (jQuery('.jo_createDatabaseUseDumpFile').hasClass('jo_active')) createMode = "useDumpFile";
 
             let workspaceData: CreateWorkspaceData = {
                 id: null,
@@ -137,6 +142,7 @@ export class NewDatabaseDialog {
 
             switch (createMode) {
                 case "emptyDatabase":
+                    this.createWorkspace(workspaceData);
                     break;
                 case "fromTemplate":
                     let $template = jQuery('.jo_templateListEntry.jo_active');
@@ -146,6 +152,7 @@ export class NewDatabaseDialog {
                     } else {
                         workspaceData.template_database_id = $template.data('templateId');
                         if (workspaceData.name == "Neue Datenbank") workspaceData.name = $template.data('name');
+                        this.createWorkspace(workspaceData);
                     }
                     break;
                 case "useExistingDatabase":
@@ -157,49 +164,81 @@ export class NewDatabaseDialog {
                     }
                     workspaceData.otherDatabaseId = Number.parseInt(code.substring(0, tIndex));
                     workspaceData.secret = code.substring(tIndex + 1);
+                    this.createWorkspace(workspaceData);
+                    break;
+                case "useDumpFile":
+                    if(this.database != null){
+                        new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump, (response) => {
+                            workspaceData.template_database_id = response.newTemplateId;
+                            this.createWorkspace(workspaceData);
+                        });
+
+                    } else {
+                        alert('Bitte laden Sie zuerst den Binärdump einer Datenbank hoch.')
+                        return;
+                    }
                     break;
             }
-
-
-            this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string) => {
-                if (error != null) { alert(error); return; }
-
-                let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
-                w.id = workspaceData.id;
-                w.sql_history = "";
-
-                let projectExplorer = this.main.projectExplorer;
-
-                this.main.workspaceList.push(w);
-                let accordionElement: AccordionElement = {
-                    name: workspaceData.name,
-                    externalElement: w,
-                    iconClass: "workspace",
-                    isFolder: false,
-                    path: []
-                };
-
-                projectExplorer.workspaceListPanel.addElement(accordionElement, true);
-
-                w.renderSettingsButton(accordionElement);
-
-                projectExplorer.workspaceListPanel.sortElements();
-                projectExplorer.fileListPanel.sortElements();
-
-                projectExplorer.setWorkspaceActive(w);
-
-                this.showMainWindow();
-
-            })
-
 
         });
 
     }
 
+    private createWorkspace(workspaceData: CreateWorkspaceData) {
+        this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string) => {
+            if (error != null) { alert(error); return; }
+
+            let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
+            w.id = workspaceData.id;
+            w.sql_history = "";
+
+            let projectExplorer = this.main.projectExplorer;
+
+            this.main.workspaceList.push(w);
+            let accordionElement: AccordionElement = {
+                name: workspaceData.name,
+                externalElement: w,
+                iconClass: "workspace",
+                isFolder: false,
+                path: []
+            };
+
+            projectExplorer.workspaceListPanel.addElement(accordionElement, true);
+
+            w.renderSettingsButton(accordionElement);
+
+            projectExplorer.workspaceListPanel.sortElements();
+            projectExplorer.fileListPanel.sortElements();
+
+            projectExplorer.setWorkspaceActive(w);
+
+            this.showMainWindow();
+
+        });
+    }
+
     importFile(files: FileList) {
+        let that = this;
         new DatabaseImportExport().loadFromFile(files[0], (db: LoadableDatabase) => {
-            // TODO!
+            let isDatabase: boolean = false;
+            if(DatabaseTool.getDumpType(db.binDump) == "binaryCompressed"){
+                // @ts-ignore
+                let dbUncompressed = pako.inflate(db.binDump);
+                if(DatabaseTool.getDumpType(dbUncompressed) == "binaryUncompressed"){
+                    isDatabase = true;
+                }
+            } else if(DatabaseTool.getDumpType(db.binDump) == "binaryUncompressed"){
+                //@ts-ignore
+                db.binDump = pako.deflate(db.binDump);
+                isDatabase = true;
+            }
+
+            if(isDatabase){
+                that.database = db;
+                jQuery('.jo_databaseimport_ok').html("Die Datenbankdatei wurde erfolgreich von Datei eingelesen. Sie können die Datenbank jetzt durch Klick auf den Button unten erstellen.");
+            } else {
+                alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
+            }
         });
     }
 

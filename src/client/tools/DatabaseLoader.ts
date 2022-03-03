@@ -28,7 +28,7 @@ export class Databaseloader {
 
             if (templateDump != null) {
                 // @ts-ignore
-                if (DatabaseTool.isCompressed(templateDump)) templateDump = pako.inflate(templateDump);
+                if (DatabaseTool.getDumpType(templateDump) == "binaryCompressed") templateDump = pako.inflate(templateDump);
                 callback({ binDump: templateDump })
             }
 
@@ -42,7 +42,7 @@ export class Databaseloader {
                 success: function (response: any) {
                     let db = new Uint8Array(response);
                     // @ts-ignore
-                    if (DatabaseTool.isCompressed(db)) db = pako.inflate(db);
+                    if (DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
                     that.saveDatabaseToCache(urlWithoutProtocol, db);
                     callback({ binDump: db });
                 },

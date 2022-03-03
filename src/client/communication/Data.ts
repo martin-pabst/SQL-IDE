@@ -675,3 +675,8 @@ export type RollbackResponse = {
     new_version: number,
     message: string
 }
+
+export type UploadTemplateResponse = {
+    success: boolean, 
+    newTemplateId?: number
+}

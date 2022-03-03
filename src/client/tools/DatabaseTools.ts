@@ -1,5 +1,7 @@
 import { MainBase } from "../main/MainBase.js";
 
+export type DatabaseDumpType = "binaryUncompressed" | "binaryCompressed" | "other";
+
 export type DatabaseDirectoryEntry = {
     name: string,
     description: string,
@@ -337,7 +339,7 @@ export class DatabaseTool {
 
     }
 
-    static isCompressed(dump: Uint8Array): boolean {
+    static getDumpType(dump: Uint8Array): DatabaseDumpType {
 
         let sqliteMagicBytes: number[] = [0x53, 0x51, 0x4c, 0x69, 0x74, 0x65];
         let zlibMagicByte: number = 0x78;
@@ -349,12 +351,11 @@ export class DatabaseTool {
                 break;
             }
         }
-        if (found) return false;
+        if (found) return "binaryUncompressed";
 
-        if (dump[0] == zlibMagicByte) return true;
+        if (dump[0] == zlibMagicByte) return "binaryCompressed";
 
-        console.log("DatabaseDumper.isCompressed: Can't figure out if dump is compressed.")
-        return false;
+        return "other";
 
     }
 

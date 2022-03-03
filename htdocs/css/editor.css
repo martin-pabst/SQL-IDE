@@ -1067,3 +1067,9 @@ body .monaco-editor-hover .monaco-tokenized-source {
     padding: 25px;
     text-align: center;
 }
+
+.jo_databaseimport_ok {
+    margin-left: 10px;
+    color: lightblue;
+    margin-top: 10px;
+}

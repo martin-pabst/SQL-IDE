@@ -13,7 +13,7 @@ export class DatabaseImportExport {
             let db: Uint8Array = new Uint8Array(ab);
 
             //@ts-ignore
-            if(DatabaseTool.isCompressed(db)) db = pako.inflate(db);
+            if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
             callback({binDump: db});
 
         };
