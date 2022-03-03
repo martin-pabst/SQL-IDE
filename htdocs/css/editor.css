@@ -1060,3 +1060,10 @@ body .monaco-editor-hover .monaco-tokenized-source {
     right: 24px;
     margin-top: 2px;
 }
+
+.jo_databaseimport_dropzone {
+    border: 2px dashed gray;
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+}

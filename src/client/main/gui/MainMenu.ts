@@ -2,6 +2,7 @@ import { Main } from "../Main.js";
 import { UserData } from "../../communication/Data.js";
 import { PasswordChanger } from "./UserMenu.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
+import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 
 export type Action = (identifier: string) => void;
 
@@ -133,6 +134,9 @@ export class MainMenu {
                     {
                         items: [
                             { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },
+                            { identifier: "Export als Binärdump (.dbDump-File)...", action: () => {  new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());
+                            } },
+
                         ]
                     }
                 },

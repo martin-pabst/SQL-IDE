@@ -1,4 +1,6 @@
 import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
+import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
+import { LoadableDatabase } from "../../tools/DatabaseLoader.js";
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
@@ -26,9 +28,10 @@ export class NewDatabaseDialog {
             </div>
 
              <div class="jo_tabheadings jo_cdtabheading">
-             <div class="jo_tabheading jo_active" data-target="jo_createEmptyDatabaseTab">Leere Datenbank</div>
-             <div class="jo_tabheading" data-target="jo_createDatabaseFromTemplateTab">Von Vorlage kopieren</div>
+             <div class="jo_tabheading" data-target="jo_createEmptyDatabaseTab">Leere Datenbank</div>
+             <div class="jo_tabheading jo_active" data-target="jo_createDatabaseFromTemplateTab">Von Vorlage kopieren</div>
              <div class="jo_tabheading" data-target="jo_createDatabaseUseExistingTab">Bestehende Datenbank mitnutzen</div>
+             <div class="jo_tabheading" data-target="jo_createDatabaseUseDumpFile">Import aus Binärdump (.dbDump-File)</div>
              </div>
              <div class="jo_tabs" style="width: 100%; margin-top: 10px">
                  <div class="jo_active jo_createEmptyDatabaseTab">
@@ -48,6 +51,11 @@ export class NewDatabaseDialog {
                     <div class="jo_ds_settings">
                        <div class="jo_ds_settings_caption">Zugriffscode:</div><div><input class="dialog-input jo_databasecodeinput"></input></div>
                     </div>
+                 </div>
+                <div class="jo_createDatabaseUseDumpFile">
+                    <div class="jo_createDatabaseDescription">Wähle hier die Datei mit dem Datenbank-Dump aus (Endung .dbDump):</div>
+                    <input type="file" id="jo_dumpfile" name="dumpfile" />
+                    <div class="jo_databaseimport_dropzone">Datei hierhin ziehen</div>
                  </div>
              </div>
 
@@ -85,9 +93,30 @@ export class NewDatabaseDialog {
                 $templatelist.find('.jo_templateListEntry').hide();
                 templatelist.forEach(tle => {
                     let tleString = tle.name + tle.ownerName + (tle.description ? tle.description : "");
-                    if(tleString.indexOf(s) >= 0) tle.$tle.show();
+                    if (tleString.indexOf(s) >= 0) tle.$tle.show();
                 })
             })
+        })
+
+        let $dropZone = jQuery('.jo_databaseimport_dropzone');
+
+        $dropZone.on('dragover', (evt) => {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.originalEvent.dataTransfer.dropEffect = 'copy';
+        })
+        $dropZone.on('drop', (evt) => {
+            evt.stopPropagation();
+            evt.preventDefault();
+
+            var files = evt.originalEvent.dataTransfer.files;
+            this.importFile(files);
+        })
+
+        jQuery('.jo_dumpfile').on('change', (event) => {
+            //@ts-ignore
+            var files: FileList = event.originalEvent.target.files;
+            this.importFile(files);
         })
 
 
@@ -116,7 +145,7 @@ export class NewDatabaseDialog {
                         return;
                     } else {
                         workspaceData.template_database_id = $template.data('templateId');
-                        if(workspaceData.name == "Neue Datenbank") workspaceData.name = $template.data('name');
+                        if (workspaceData.name == "Neue Datenbank") workspaceData.name = $template.data('name');
                     }
                     break;
                 case "useExistingDatabase":
@@ -166,6 +195,12 @@ export class NewDatabaseDialog {
 
         });
 
+    }
+
+    importFile(files: FileList) {
+        new DatabaseImportExport().loadFromFile(files[0], (db: LoadableDatabase) => {
+            // TODO!
+        });
     }
 
     showMainWindow() {
