@@ -37,12 +37,12 @@ export class NewDatabaseDialog {
              <div class="jo_tabheading" data-target="jo_createDatabaseUseDumpFile">Import aus Binärdump (.dbDump-File)</div>
              </div>
              <div class="jo_tabs" style="width: 100%; margin-top: 10px">
-                 <div class="jo_active jo_createEmptyDatabaseTab">
-                 <div class="jo_createDatabaseDescription">
-                 Erstellt wird eine leere Datenbank.
+                 <div class="jo_createEmptyDatabaseTab">
+                    <div class="jo_createDatabaseDescription">
+                        Erstellt wird eine leere Datenbank.
+                    </div>
                  </div>
-                 </div>
-                 <div class="jo_createDatabaseFromTemplateTab">
+                 <div class="jo_createDatabaseFromTemplateTab jo_active">
                     <div class="jo_ds_settings">
                        <div class="jo_ds_settings_caption">Vorlage suchen:</div><div><input class="dialog-input jo_templatename"></input></div>
                     </div>
