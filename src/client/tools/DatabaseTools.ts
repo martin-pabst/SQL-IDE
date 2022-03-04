@@ -77,7 +77,13 @@ export class DatabaseTool {
 
         // console.log("Starting worker...");
 
-        this.worker = new Worker('js/sqljs-worker/sqljsWorker.js');
+        let url: string = "js/sqljs-worker/sqljsWorker.js"
+        if(this.main.isEmbedded()){
+            //@ts-ignore
+            url = window.javaOnlineDir + url;
+        }
+
+        this.worker = new Worker(url);
         // this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
         let that = this;
 

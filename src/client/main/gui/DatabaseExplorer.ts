@@ -56,7 +56,7 @@ export class DatabaseExplorer {
               <div class="${isCollapsed ? 'img_tree-collapsed-dark' : 'img_tree-expanded-dark'} jo_treeswitch jo_button jo_active"></div>
               <div class="jo_tableheaderlink">
                 <div class="img_table"></div>
-                <div>${table.identifier}</div><div style="flex: 1"></div><div class="jo_tablesize">(${table.size} Datensätze)</div>
+                <div>${table.identifier}</div></div><div class="jo_tablesize">(${table.size}&nbsp;Datensätze)</div>
               </div>
             </div>
         </div>`);

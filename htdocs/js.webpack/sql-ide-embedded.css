@@ -1951,7 +1951,6 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_tableheaderlink {
     display: flex;
     flex-direction: row;
-    width: 100%;
 }
 
 .jo_tableheaderlink:hover {
@@ -1964,7 +1963,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 
 .jo_tablesize {
     color: var(--error-filename);
-    margin-right: 5px;
+    margin: 0px 5px;
 }
 
 .jo_references {
@@ -2000,11 +1999,14 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_column {
     display: flex;
     flex-direction: row;
+    width:max-content;
 }
 
 .jo_db_tree {
     overflow-y: auto;
 }
+
+
 :root {
     --defaultOutputColor: white;
     --runInputColor: white;
@@ -2338,6 +2340,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .joe_monacoDiv {
     width: 100%;
     height: 100%;
+    position: relative;
 }
 
 .joe_codeResetButton {
@@ -2356,7 +2359,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
     z-index: 10;
     position: absolute;
     bottom: 16px;
-    right: 130px;
+    right: 55px;
     padding: 5px;
     font-size: 10px;
     border: 1px solid gray;
@@ -2521,6 +2524,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 
 .joe_bottomDivInner {
     height: 100%;
+    width: 100%;
     flex-grow: 1;
     position: relative;
     display: flex;
@@ -2541,18 +2545,17 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .joe_tabheading-right {
     display: flex;
     flex-direction: row;
-    padding: 4px 10px;
+    padding: 4px 3px;
 }
 
 .joe_controlsTabheading {
     border-right: 1px solid gray;
     border-bottom: 1px solid gray;
-    margin-right: 30px;
 }
 
 .joe_paginationHeading {
     position: absolute;
-    right: 20px;
+    right: 0px;
 }
 
 .joe_controlsDiv {
@@ -2576,5 +2579,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .joe_slider:active {
     background-color: rgba(255, 0, 0, 0.397) !important;
 }
+
+::-webkit-scrollbar-corner { background: var(--backgroundDark); }
 
 /*# sourceMappingURL=sql-ide-embedded.css.map*/
