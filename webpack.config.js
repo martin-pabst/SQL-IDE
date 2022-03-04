@@ -72,7 +72,6 @@ const embeddedConfig = {
             './js/embedded/EmbeddedStarter.js',
             './css/editor.css',
             './css/bottomdiv.css',
-            './css/helper.css',
             './css/icons.css',
             './css/databaseExplorer.css',
             './css/run.css',
