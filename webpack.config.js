@@ -89,7 +89,7 @@ const embeddedConfig = {
     },
     output: {
         path: path.resolve(__dirname, 'htdocs/js.webpack'),
-        filename: 'javaOnline-embedded.js',
+        filename: 'sql-ide-embedded.js',
     },
     module: {
         rules: [
@@ -119,56 +119,13 @@ const embeddedConfig = {
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
           // all options are optional
-          filename: 'javaOnlineEmbedded.css',
+          filename: 'sql-ide-embedded.css',
           chunkFilename: 'Chunkfile.css',
           ignoreOrder: false, // Enable to remove warnings about conflicting order
         }),
       ]
 }
 
-const apiConfig = {
-    mode: 'production', // development
-    context: path.resolve(__dirname, 'htdocs'),
-    entry: {
-        home: [
-            './js/help/APIDoc.js'
-        ],
-        // style: [
-        //     './htdocs/css/embedded.css'
-        // ]
-    },
-    devtool: 'source-map',
-    performance: {
-        hints: false
-    },
-    output: {
-        path: path.resolve(__dirname, 'htdocs/js.webpack'),
-        filename: 'javaOnline-apiDoc.js',
-    },
-    module: {
-        rules: [
-            {
-                test: /\.(js|jsx)$/,
-                exclude: /node_modules/,
-                use: ["babel-loader", "source-map-loader"],
-                enforce: "pre"
-            }, {
-                test: /\.css$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader'],
-            },{
-                test: /\.(png|jpe?g|gif|woff|woff2|svg|ttf|eot)$/i,
-                use: [
-                  {
-                    loader: 'file-loader',
-                    options: {
-                        emitFile: false,
-                        name: '../[path][name].[ext]'
-                      },
-                  },
-                ],
-              },
-        ]
-    }
-}
 
-module.exports = [ideConfig, embeddedConfig, apiConfig];
+
+module.exports = [ideConfig, embeddedConfig];

@@ -72,6 +72,13 @@ body .monaco-editor-hover .monaco-tokenized-source {
     word-break: normal !important;
 }
 
+.monaco-editor .monaco-hover code {
+    color: #d4d4d4;
+    box-shadow: none;
+    font-size: 14px;
+    border: none;
+}
+
 .rename-input {
     color: var(--renameInput-color) !important;
 }
