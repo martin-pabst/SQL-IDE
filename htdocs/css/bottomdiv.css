@@ -169,7 +169,7 @@
 }
 
 .jo_result-header{
-    height: 20px;
+    height: 2em;
     position: relative;
     flex-shrink: 0;
     box-sizing: border-box;
