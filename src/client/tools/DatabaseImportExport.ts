@@ -14,6 +14,7 @@ export class DatabaseImportExport {
 
             //@ts-ignore
             if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
+            
             callback({binDump: db});
 
         };
@@ -22,14 +23,12 @@ export class DatabaseImportExport {
 
     saveToFile(dbTool: DatabaseTool){
         dbTool.export((db) => {
-            //@ts-ignore
-            db = pako.deflate(db);
             let filename: string = prompt("Bitte geben Sie den Dateinamen ein", "datenbank.dbDump");
             if (filename == null) {
                 alert("Der Dateiname ist leer, daher wird nichts gespeichert.");
                 return;
             }
-            if (!filename.endsWith(".dbDump")) filename = filename + ".dbDump";
+            if (!filename.endsWith(".sqLite")) filename = filename + ".sqLite";
             downloadFile(new Blob([db.buffer]), filename, true);
         }, () => {});
     }

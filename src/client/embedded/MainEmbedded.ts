@@ -521,7 +521,7 @@ export class MainEmbedded implements MainBase {
 
 
         let $buttonOpen = jQuery('<label type="file" class="img_open-file jo_button jo_active"' +
-            'style="margin-right: 8px;" title="Workspace aus Datei laden"><input type="file" style="display:none"></label>');
+            'style="margin-right: 8px;" title="Datenbank-Dump aus Datei laden"><input type="file" style="display:none"></label>');
 
         let that = this;
 
@@ -532,7 +532,7 @@ export class MainEmbedded implements MainBase {
         })
 
         let $buttonSave = jQuery('<div class="img_save-dark jo_button jo_active"' +
-            'style="margin-right: 8px;" title="Workspace in Datei speichern"></div>');
+            'style="margin-right: 8px;" title="Datenbank-Dump in Datei speichern"></div>');
 
 
         $buttonSave.on('click', () => { that.saveDatabaseToFile() });
