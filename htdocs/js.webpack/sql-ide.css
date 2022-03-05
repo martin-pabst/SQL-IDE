@@ -1080,6 +1080,26 @@ body .monaco-editor-hover .monaco-tokenized-source {
     color: lightblue;
     margin-top: 10px;
 }
+html, body {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--fontColorNormal);
+    font-family: 'Roboto', sans-serif;
+    /* font-weight: 500; */
+    overflow: hidden;
+    font-size: 10pt;
+}
+
+/**
+    BugFix for Monaco editor. Without this code editor pane of References-Widget is 5px wide and 5px high
+**/
+.inline {
+    height:100% !important;
+    width:100% !important;
+}
 :root {
     --bottomdiv-tabheading-hover: white;
     --bottomdiv-tabheading-active: rgb(97,97,255);
@@ -1420,6 +1440,150 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_runtimeerrorsTab {
     overflow: auto;
     height: calc(100% - 25px);
+}
+
+:root {
+    --helper-background-color:#383838;
+    --helper-border-color:#d4d4d4;
+    --arrowBoxButtonOuter-background: #59a15d;
+    --arrowBoxButtonOuter-border: #3d3d3d;
+    --arrowBoxButtonOuter-color: black;
+    --arrowBoxButtonOuter-button-hover: #63a867;
+    --arrowBox-after: rgba(136, 183, 213, 0);
+    --arrowBox-before: rgba(194, 225, 245, 0);
+}
+
+.jo_arrow_box {
+    position: absolute;
+    /* left: 50px;
+    top: 50%; */
+    width: 30%;
+    z-index: 1000;
+	background: var(--helper-background-color);
+    border: 4px solid var(--helper-border-color);
+    padding: 8px;
+    height: fit-content;
+}
+
+.jo_arrow_box>img {
+    float: left;
+    margin-right: 8px;
+}
+
+#arrowBoxButtonOuter {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+#arrowBoxButtonOuter>.jo_button {
+    line-height: 1.5em;
+    font-size: 16px;
+    background-color: var(--arrowBoxButtonOuter-background);
+    padding: 0 0.25em 0 0.25em;
+    user-select: none;
+    -ms-user-select: none;
+    border: 1px solid var(--arrowBoxButtonOuter-border);
+    color: var(--arrowBoxButtonOuter-color);
+    cursor: pointer;
+}
+
+#arrowBoxButtonOuter>.jo_button:hover {
+    background-color: var(--arrowBoxButtonOuter-button-hover);
+}
+
+#arrowBoxButtonOuter>.jo_button:active {
+    transform: scale(1.2);
+}
+
+.jo_arrow_box:after, .jo_arrow_box:before {
+	/* bottom: 100%;
+	left: 50%; */
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+    pointer-events: none;
+}
+
+.jo_arrow_box:after {
+	border-color: var(--arrowBox-after);
+	/* border-bottom-color: var(--helper-border-color); */
+	border-width: 20px;
+}
+.jo_arrow_box:before {
+	border-color: var(--arrowBox-before);
+	/* border-bottom-color: var(--helper-border-color); */
+	border-width: 26px;
+}
+
+.jo_arrow_box_top, .jo_arrow_box_bottom {
+    min-width: 100px;
+}
+
+.jo_arrow_box_top:after, .jo_arrow_box_top:before {
+	bottom: 100%;
+	left: 30px;
+}
+
+.jo_arrow_box_top:before {
+    border-bottom-color: var(--helper-border-color);
+    margin-left: -26px;
+}
+
+.jo_arrow_box_top:after {
+    border-bottom-color: var(--helper-background-color);
+    margin-left: -20px;
+}
+
+.jo_arrow_box_bottom:after, .jo_arrow_box_bottom:before {
+	top: 100%;
+	left: 30px;
+}
+
+.jo_arrow_box_bottom:before {
+    border-top-color: var(--helper-border-color);
+    margin-left: -26px;
+}
+
+.jo_arrow_box_bottom:after {
+    border-top-color: var(--helper-background-color);
+    margin-left: -20px;
+}
+
+.jo_arrow_box_left, .jo_arrow_box_right {
+    min-height: 60px;
+}
+
+.jo_arrow_box_left:after, .jo_arrow_box_left:before {
+	top: 30px;
+	right: 100%;
+}
+
+.jo_arrow_box_left:before {
+    border-right-color: var(--helper-border-color);
+    margin-top: -26px;
+}
+
+.jo_arrow_box_left:after {
+    border-right-color: var(--helper-background-color);
+    margin-top: -20px;
+}
+
+.jo_arrow_box_right:after, .jo_arrow_box_right:before {
+	top: 30px;
+	left: 100%;
+}
+
+.jo_arrow_box_right:before {
+    border-left-color: var(--helper-border-color);
+    margin-top: -26px;
+}
+
+.jo_arrow_box_right:after {
+    border-left-color: var(--helper-background-color);
+    margin-top: -20px;
 }
 
 .img_add-class-dark {
@@ -2059,6 +2223,238 @@ body .monaco-editor-hover .monaco-tokenized-source {
     right: 150px;
     top: 4px;
 }
+#dialog {
+    visibility: hidden;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+    background-color: var(--backgroundDark);
+    top: 0;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.dialog-main {
+    width: 80%;
+    border: 1px solid gray;
+    display: flex;
+    padding: 10px; 
+    flex-direction: column;
+}
+
+.dialog-main>div, .dialog-main>input {
+    margin-bottom: 10px;
+}
+
+.dialog-main .dialog-heading {
+    font-size: 200%;
+}
+
+.dialog-input {
+    width: 20em;
+}
+
+#dialog button {
+    width: fit-content;
+    padding: 8px;
+    border: 1px solid gray;
+    font-size: 150%;
+}
+
+#dialog button.jo_small_button {
+    font-size: 100%;
+    padding: 2px;
+}
+
+#dialog button:hover {
+    cursor: pointer;
+    filter: brightness(120%);
+}
+
+#dialog button:active {
+    cursor: pointer;
+    filter: brightness(200%) !important;
+}
+
+#dialog .dialog-buttonRow {
+    display: flex;
+    flex-direction: row;
+    margin-top: 20px;
+}
+
+.dialog-main .dialog-wait {
+    display: flex;
+    visibility: hidden;
+    flex-direction: row;
+}
+
+.dialog-main .dialog-wait>img {
+    margin-left: 20px;
+}
+
+/* Distribute to selected students dialog */
+
+.jo_ds_heading {
+    font-size: 200%;
+}
+
+.jo_ds_settings {
+    display: grid;
+    grid-template-columns: 15em 1fr;
+    width: 40em;
+    margin: 10px;
+}
+
+.jo_ds_settings_caption {
+    justify-self: start;
+    font-weight: bold;
+    line-height: 20px;
+    margin-right: 20px;
+}
+
+.jo_ds_workspacename {
+    justify-self: start;
+}
+
+.jo_ds_student_list {
+    background-color: var(--backgroundLight);
+    flex: 1;
+    width: 40em;
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+    overflow-y: auto;
+}
+
+.jo_ds_student_line {
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+    padding: 2px;
+    user-select: none;
+}
+
+.jo_ds_student_line:hover {
+    background-color: var(--file-hover);
+}
+
+.jo_ds_student_line.jo_active {
+    background-color: var(--file-active);
+}
+
+.jo_ds_student_line.jo_active:hover {
+    background-color: var(--file-active-hover);
+}
+
+.jo_ds_student_class {
+    margin-right: 5px;
+}
+
+.jo_ds_selected_message {
+    font-weight: bold;
+}
+
+#jo_ds_cancel_button {
+    background-color: rgba(126, 126, 126, 0.664);
+    margin-right: 50px;
+}
+
+#jo_ds_distribute_button {
+    background-color: rgb(36, 170, 36);
+}
+
+.jo_ds_buttonRow {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+#jo_ds_create_database_button {
+    background-color: green;
+}
+
+.jo_createDatabaseDescription {
+    margin-left: 5px;
+}
+
+.jo_cdtabheading {
+    border-top: 2px solid gray;
+    border-bottom: 2px solid gray;
+    margin-top: 20px;
+}
+
+.jo_templateListEntry {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 2px 0;
+    border-bottom: 1px solid gray;
+    user-select: none;
+}
+
+.jo_templateListEntry:hover {
+    background-color: var(--file-hover);
+    color: var(--fontColorLight);
+    cursor: pointer;
+}
+
+.jo_templateListEntry.jo_active {
+    background-color: var(--file-active);
+    color: var(--fontColorLight);
+}
+
+.jo_templateListEntry.jo_active:hover {
+    background-color: var(--file-active-hover);
+}
+
+.jo_templateList {
+    padding: 10px;
+}
+
+.jo_tle_secondline {
+    font-size: 60%;
+}
+
+#dialog .ds_databasedialog {
+    align-items: left;
+}
+
+.jo_ds_secret_table button {
+    margin-left: 10px;
+    background-color: rgb(85, 85, 236);
+}
+
+.jo_ds_secret {
+    font-family: 'Roboto Mono', sans-serif;
+    color: rgb(196, 170, 25);
+    margin-left: 10px;
+}
+
+#jo_ds_save_button{
+    background-color: green;
+}
+
+#jo_ds_publishedTo input, #jo_ds_publishedTo label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.jo_tle_ownername {
+    color:brown
+}
+
+.jo_tle_secondline {
+    font-size: 80%;
+    font-style: italic;
+    color:burlywood
+}
+
+.jo_ds_settings_description {
+    width:500px;
+    height: 100px;
+    margin-left: 10px;
+}
 /* roboto-regular - latin */
 @font-face {
     font-family: 'Roboto';
@@ -2221,365 +2617,5 @@ body .monaco-editor-hover .monaco-tokenized-source {
          url(../assets/fonts/roboto-mono-v7-latin-700italic.woff2) format('woff2'), 
          url(../assets/fonts/roboto-mono-v7-latin-700italic.woff) format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
   }
-.monaco-editor {
-    overflow: visible !important;
-}
 
-/**
-    BugFix for Monaco editor. Without this code editor pane of References-Widget is 5px wide and 5px high
-**/
-.inline {
-    height:100% !important;
-    width:100% !important;
-}
-
-/* fix for monaco to play well with dokuwiki (both habe class .code): */
-.hover-contents .code {
-    margin-top: 0;
-}
-
-.joe_javaOnlineDiv {
-    display: flex;
-    position: relative;
-    flex-direction: row;
-    background-color: var(--backgroundDark);
-    color: var(--fontColorNormal);
-    font-family: 'Roboto', sans-serif;
-    /* font-weight: 500; */
-    font-size: 10pt;
-    margin: 1em 0 2em 0;
-    background-image: url(../assets/projectexplorer/svg-loaders/grid.svg);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 5%;
-    border-radius: 3px;
-    border: 1px solid gray;
-    box-shadow: 5px 5px 20px 1px #9e9e9e;
-    outline: none; /* prevent chrome from setting border-color: white when div has focus */
-}
-
-.joe_topDiv {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-    height:20px;    /* dirty trick to enable scrolling inside child divs */
-}
-
-
-.joe_javaOnlineDiv  li {
-    color: var(--fontColorNormal) !important;
-}
-
-.joe_leftDiv {
-    /* flex-grow: 1; */
-    width: 20%;
-    background-color: antiquewhite;
-}
-
-.joe_centerDiv {
-    flex: 1 1 auto;
-    height: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.joe_controlPanel_top {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    border-bottom: 1px solid gray;
-    padding: 2px;
-}
-
-.joe_rightDiv {
-    flex: 0 1 auto;
-    position: relative;
-    width: 350px;
-    border-left: 1px solid gray;
-}
-
-.jo_alternativeText {
-    padding: 5px;
-    font-size: 12;
-    font-weight: normal;
-    overflow: auto;
-    height: calc(100% - 10px);
-}
-
-.jo_alternativeText li {
-    margin-bottom: 10px;
-}
-
-.jo_alternativeText ul {
-    margin-top: 5px;
-}
-
-.jo_run {
-    height: 100%;
-    overflow: hidden;
-}
-
-.joe_rightDivInner {
-    height: 100%;
-}
-
-.jo_variablesTab{
-    height: 100%;
-}
-
-.monaco-editor {
-    position: absolute;
-}
-
-.joe_editorDiv {
-    flex: 3;
-    overflow: visible;
-}
-
-.joe_monacoDiv {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.joe_codeResetButton {
-    z-index: 10;
-    position: absolute;
-    bottom: 16px;
-    right: 55px;
-    padding: 5px;
-    font-size: 10px;
-    border: 1px solid gray;
-    background-color: #464646c7;
-    user-select: none;
-}
-
-.joe_databaseResetButton {
-    z-index: 10;
-    position: absolute;
-    bottom: 16px;
-    right: 55px;
-    padding: 5px;
-    font-size: 10px;
-    border: 1px solid gray;
-    background-color: #464646c7;
-    user-select: none;
-}
-
-.joe_codeResetModalCancel,.joe_codeResetModalOK {
-    padding: 3px;
-    border: 1px solid gray;
-    user-select: none;
-}
-
-.joe_codeResetModalCancel {
-    background-color: rgb(15, 104, 15);
-    margin-left: 30px;
-}
-
-.joe_codeResetModalOK {
-    background-color: rgb(128, 33, 33);
-    margin-right: 30px;
-}
-
-.joe_codeResetModal {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 20;
-    background-color: rgba(46, 46, 46, 0.849);
-    display: flex;
-    flex-direction: column;
-}
-
-.joe_codeResetModalButtons {
-    display: flex;
-    justify-content: space-evenly;
-    padding-top: 20px;
-}
-
-
-.joe_databaseResetModalCancel,.joe_databaseResetModalOK {
-    padding: 3px;
-    border: 1px solid gray;
-    user-select: none;
-}
-
-.joe_databaseResetModalCancel {
-    background-color: rgb(15, 104, 15);
-    margin-left: 30px;
-}
-
-.joe_databaseResetModalOK {
-    background-color: rgb(128, 33, 33);
-    margin-right: 30px;
-}
-
-.joe_databaseResetModal {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 20;
-    background-color: rgba(46, 46, 46, 0.849);
-    display: flex;
-    flex-direction: column;
-}
-
-.joe_databaseResetModalButtons {
-    display: flex;
-    justify-content: space-evenly;
-    padding-top: 20px;
-}
-
-
-
-.joe_hintDiv {
-    width: calc(100% - 5px);
-    margin-left: 5px;
-    height: 100%;
-    /* padding: 2px 0 2px 5px; */
-    overflow: auto;
-}
-
-.joe_hintDiv code {
-    font-size: 14pt;
-    background-color: transparent;
-    box-shadow: none;
-}
-
-.joe_hintDiv pre {
-    overflow: visible;
-    word-wrap: normal;
-    border: none;
-    background-color: transparent;
-    font-size: 14pt;
-    line-height: 100%;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-.joe_hintDiv li {
-    line-height: 24px;
-}
-
-.joe_bottomDiv {
-    position: relative;
-    height: 75%;
-    display: flex;
-    flex-direction: row;
-    border-top: 1px solid gray;
-    overflow: hidden;
-}
-
-.joe_bottomDivFiles {
-    width: 15em;
-    height: 100%;
-    border-right: 1px solid gray;
-    font-size: 12px;
-    position: relative;
-}
-
-.jo_errorsTab {
-    font-size: 12px;
-    padding-left: 4px;
-    overflow: auto;
-    height: 100%;
-}
-
-.joe_filesHeader {
-    width: fit-content;
-    color: var(--bottomdiv-tabheading);
-    padding: 0 0 0 5px;
-    font-weight: bold;
-    margin-bottom: 2px;
-}
-
-.joe_addFileButton {
-    position: absolute;
-    top: 4px;
-    right: 2px;
-}
-
-.joe_filesList {
-    margin-left: 2px;
-    height: calc(100% - 30px);
-    overflow: auto;
-}
-
-.jo_file:hover>div>.jo_startButton {
-    right: 20px !important; 
-}
-
-.joe_delete {
-    position: absolute;
-    right: 3px;
-    top: 2px;
-}
-
-.joe_bottomDivInner {
-    height: 100%;
-    width: 100%;
-    flex-grow: 1;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.joe_bottomDivInner .jo_tabheadings {
-    flex-wrap: wrap-reverse;
-    height: fit-content;
-}
-
-.joe_bottomDivInner .jo_tabs {
-    height: auto;
-    flex: 1;
-    overflow: hidden;
-}
-
-.joe_tabheading-right {
-    display: flex;
-    flex-direction: row;
-    padding: 4px 3px;
-}
-
-.joe_controlsTabheading {
-    border-right: 1px solid gray;
-    border-bottom: 1px solid gray;
-}
-
-.joe_paginationHeading {
-    position: absolute;
-    right: 0px;
-}
-
-.joe_controlsDiv {
-    display: flex;
-}
-
-.joe_slider {
-    /* width: 4px;
-    height: 100%; */
-    background-color: transparent;
-    position: absolute;
-    /* top: 0px;
-    left: calc(100% - 2px); */
-    z-index: 1000;
-}
-
-.joe_slider:hover {
-    background-color: #6969697a;
-}
-
-.joe_slider:active {
-    background-color: rgba(255, 0, 0, 0.397) !important;
-}
-
-::-webkit-scrollbar-corner { background: var(--backgroundDark); }
-
-/*# sourceMappingURL=sql-ide-embedded.css.map*/
+/*# sourceMappingURL=sql-ide.css.map*/

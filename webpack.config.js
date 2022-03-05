@@ -8,13 +8,14 @@ const ideConfig = {
         home: [
             './js/main/IDEStarter.js',
             './css/editor.css',
+            './css/editorStatic.css',
             './css/bottomdiv.css',
             './css/helper.css',
             './css/icons.css',
             './css/databaseExplorer.css',
             './css/run.css',
             './css/dialog.css',
-            './css/databasedialog.css',
+            './css/databasedialogs.css',
             './assets/fonts/fonts.css',
         ],
         // style: [
@@ -27,7 +28,7 @@ const ideConfig = {
     },
     output: {
         path: path.resolve(__dirname, 'htdocs/js.webpack'),
-        filename: 'javaOnline.js',
+        filename: 'sql-ide.js',
     },
     module: {
         rules: [
@@ -57,7 +58,7 @@ const ideConfig = {
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
           // all options are optional
-          filename: 'javaOnline.css',
+          filename: 'sql-ide.css',
           chunkFilename: 'Chunkfile.css',
           ignoreOrder: false, // Enable to remove warnings about conflicting order
         }),
