@@ -317,8 +317,8 @@ export class ResultsetPresenter {
 
 
     showErrors(errors: RuntimeError[]) {
-        let $runtimeErrorsTab = this.$bottomDiv.find('.jo_runtimeerrorsTab');
-        let $runtimeErrorsTabHeading = this.$bottomDiv.find('.jo_runtimeerrorsTabheading');
+        let $runtimeErrorsTab = this.$bottomDiv.find('.jo_errorsTab');
+        let $runtimeErrorsTabHeading = this.$bottomDiv.find('.jo_errorsTabheading');
 
         $runtimeErrorsTab.empty();
         this.showErrorDecorations(errors);

@@ -22,7 +22,6 @@
 .jo_tableheaderlink {
     display: flex;
     flex-direction: row;
-    width: 100%;
 }
 
 .jo_tableheaderlink:hover {
@@ -35,7 +34,7 @@
 
 .jo_tablesize {
     color: var(--error-filename);
-    margin-right: 5px;
+    margin: 0px 5px;
 }
 
 .jo_references {
@@ -71,8 +70,10 @@
 .jo_column {
     display: flex;
     flex-direction: row;
+    width:max-content;
 }
 
 .jo_db_tree {
     overflow-y: auto;
 }
+

@@ -442,7 +442,8 @@ export class MainEmbedded implements MainBase {
         this.$codeResetButton = jQuery('<div class="joe_codeResetButton jo_button jo_active" title="Code auf Ausgangszustand zurücksetzen">Code Reset</div>');
         this.$databaseResetButton = jQuery('<div class="joe_databaseResetButton jo_button jo_active" title="Datenbank auf Ausgangszustand zurücksetzen">Datenbank Reset</div>');
 
-        $editorDiv.append(this.$monacoDiv, this.$hintDiv, this.$codeResetButton, this.$databaseResetButton);
+        $editorDiv.append(this.$monacoDiv, this.$hintDiv, this.$databaseResetButton);
+        this.$monacoDiv.append(this.$codeResetButton);
 
         let $bracketErrorDiv = this.makeBracketErrorDiv();
         $editorDiv.append($bracketErrorDiv);
@@ -502,7 +503,7 @@ export class MainEmbedded implements MainBase {
 
         new EmbeddedSlider($rightDiv, true, false, () => {
             this.editor.editor.layout();
-        });
+        }, $centerDiv);
 
         new EmbeddedSlider($bottomDiv, true, true, () => { this.editor.editor.layout(); });
 
@@ -520,7 +521,7 @@ export class MainEmbedded implements MainBase {
 
 
         let $buttonOpen = jQuery('<label type="file" class="img_open-file jo_button jo_active"' +
-            'style="margin-right: 8px;" title="Workspace aus Datei laden"><input type="file" style="display:none"></label>');
+            'style="margin-right: 8px;" title="Datenbank-Dump aus Datei laden"><input type="file" style="display:none"></label>');
 
         let that = this;
 
@@ -531,7 +532,7 @@ export class MainEmbedded implements MainBase {
         })
 
         let $buttonSave = jQuery('<div class="img_save-dark jo_button jo_active"' +
-            'style="margin-right: 8px;" title="Workspace in Datei speichern"></div>');
+            'style="margin-right: 8px;" title="Datenbank-Dump in Datei speichern"></div>');
 
 
         $buttonSave.on('click', () => { that.saveDatabaseToFile() });
@@ -580,12 +581,12 @@ export class MainEmbedded implements MainBase {
         let waitHtml = `
         <div class="bitteWarten">
         <div style="margin-bottom: 30px">
-            <div class="bitteWartenText"></div>
+            <div class="bitteWartenText" style="font-size: 20px"></div>
         </div>
         <div>
-            <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="">
+            <img src="assets/projectexplorer/svg-loaders/grid.svg" alt="" style="height: 40px">
         </div>
-        <div class="bitteWartenProgress"></div>
+        <div class="bitteWartenProgress" style="font-size: 20px"></div>
         </div>
         `;
         return jQuery(waitHtml);
@@ -773,8 +774,8 @@ export class MainEmbedded implements MainBase {
             $tabheadings.append($thPCode);
         }
 
-        let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">Fehler bei Ausführung</div>');
-        $tabheadings.append($thRuntimeError);
+        // let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">DB-Fehler</div>');
+        // $tabheadings.append($thRuntimeError);
 
         let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">Write History</div>');
         $tabheadings.append($thHistory);
@@ -802,8 +803,8 @@ export class MainEmbedded implements MainBase {
             $tabs.append($tabPCode);
         }
 
-        let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
-        $tabs.append($tabRtErrors);
+        // let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
+        // $tabs.append($tabRtErrors);
 
         let $tabHistory = jQuery('<div class="jo_scrollable jo_historyTab"></div>');
         $tabs.append($tabHistory);
@@ -823,16 +824,18 @@ export class MainEmbedded implements MainBase {
         let $tabheadings = jQuery('<div class="jo_tabheadings"></div>');
         $tabheadings.css('position', 'relative');
         let $thRun = jQuery('<div class="jo_tabheading jo_active" data-target="jo_db_tree" style="line-height: 24px">DB (Baum)</div>');
-        let $thVariables = jQuery('<div class="jo_tabheading jo_console-tab" data-target="jo_db_list" style="line-height: 24px">DB (Liste)</div>');
-        $tabheadings.append($thRun, $thVariables);
+        // let $thVariables = jQuery('<div class="jo_tabheading jo_console-tab" data-target="jo_db_list" style="line-height: 24px">DB (Liste)</div>');
+        $tabheadings.append($thRun, //$thVariables
+            );
         this.$rightDivInner.append($tabheadings);
 
         let $tabs = jQuery('<div class="jo_tabs jo_scrollable"></div>');
-        let $vd = jQuery('<div class="jo_tab jo_scrollable jo_editorFontSize jo_db_list">DB-Liste</div>');
+        // let $vd = jQuery('<div class="jo_tab jo_scrollable jo_editorFontSize jo_db_list">DB-Liste</div>');
 
         this.$dbTreeDiv = jQuery(`<div class="jo_tab jo_scrollable jo_editorFontSize jo_active jo_db_tree">DB-Baum</div>`);
 
-        $tabs.append(this.$dbTreeDiv, $vd);
+        $tabs.append(this.$dbTreeDiv //, $vd
+            );
         this.$rightDivInner.append($tabs);
 
         makeTabs($rightDiv);

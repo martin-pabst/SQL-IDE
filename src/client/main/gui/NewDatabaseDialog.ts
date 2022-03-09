@@ -221,7 +221,8 @@ export class NewDatabaseDialog {
         let that = this;
         new DatabaseImportExport().loadFromFile(files[0], (db: LoadableDatabase) => {
             let isDatabase: boolean = false;
-            if(DatabaseTool.getDumpType(db.binDump) == "binaryCompressed"){
+            let dumpFileType = DatabaseTool.getDumpType(db.binDump);
+            if(dumpFileType == "binaryCompressed"){
                 // @ts-ignore
                 let dbUncompressed = pako.inflate(db.binDump);
                 if(DatabaseTool.getDumpType(dbUncompressed) == "binaryUncompressed"){

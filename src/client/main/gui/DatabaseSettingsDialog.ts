@@ -44,7 +44,7 @@ export class DatabaseSettingsDialog {
                 Beschreibung:
                 </div>
                 <div>
-                <textarea class="jo_ds_settings_description" maxlength="1000"></textarea>
+                <textarea class="jo_ds_settings_description" maxlength="5000"></textarea>
                 </div>
 
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
