@@ -164,8 +164,8 @@ export class DatabaseTool {
         };
 
         this.worker.onerror = (e) => {
-            errors.push("Worker error: " + e);
-            console.log("Worker error: " + e);
+            errors.push("Worker error: " + e.error);
+            console.log("Worker error: " + e.error);
         }
 
         this.worker.postMessage({
@@ -327,6 +327,8 @@ export class DatabaseTool {
             for (let cs of ts.columns) {
                 if (cs.referencesRawData != null) {
                     let table = tableNameToStructureMap.get(cs.referencesRawData[2]);
+                    // SQlite doesn't remove foreign key references to columns of a dropped table
+                    if(table == null) continue;
                     let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[3].toLocaleLowerCase());
                     cs.references = column;
                 }

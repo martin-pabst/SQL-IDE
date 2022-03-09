@@ -609,7 +609,9 @@ export class Parser {
         node.endPosition = this.getCurrentPosition();
 
         this.addCompletionHintHere(false, false, ["where\n\t"], 1);
-        if (!this.expect(TokenType.keywordWhere)) return node;
+        if (this.tt != TokenType.keywordWhere) return node;
+
+        this.nextToken(); // skip "where"
 
         node.endPosition = this.getCurrentPosition();
 
