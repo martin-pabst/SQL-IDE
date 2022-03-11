@@ -574,7 +574,7 @@ export class MainEmbedded implements MainBase {
             }, () => {
                 this.databaseExplorer.refreshAfterRetrievingDBStructure()
             })
-        })
+        }, this)
     }
 
     makeWaitDiv(): JQuery<HTMLElement> {

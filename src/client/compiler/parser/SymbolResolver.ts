@@ -227,14 +227,15 @@ export class SymbolResolver {
             case "addColumn":
                 let columnNode = node.columnDef;
                 if (columnNode == null) break;
-                if (columnNode.referencesTable != null && columnNode.baseType != null) {
-                    let tables = this.getCurrentSymbolTable().findTables(columnNode.referencesTable);
+                if (columnNode.foreignKeyInfo != null && columnNode.baseType != null) {
+                    let fki = columnNode.foreignKeyInfo;
+                    let tables = this.getCurrentSymbolTable().findTables(fki.referencesTable);
                     if (tables.length == 1) {
                         let table = tables[0].table;
-                        let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
+                        let column = table.columns.find(c => c.identifier == fki.referencesColumn);
                         if (column != null && column.type != null) {
                             if (!column.isPrimaryKey) {
-                                this.pushError("Die referenzierte Spalte " + columnNode.referencesTable + "." + columnNode.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
+                                this.pushError("Die referenzierte Spalte " + fki.referencesTable + "." + fki.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
                             }
                             if (!column.type.canCastTo(columnNode.baseType)) {
                                 this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
@@ -333,14 +334,15 @@ export class SymbolResolver {
                 this.pushError("Der Spaltenbezeichner " + columnNode.identifier + " darf in einer Tabelle nur ein einziges Mal verwendet werden", "error", columnNode.position);
             }
 
-            if (columnNode.referencesTable != null && columnNode.baseType != null) {
-                let tables = this.getCurrentSymbolTable().findTables(columnNode.referencesTable);
+            if (columnNode.foreignKeyInfo != null && columnNode.baseType != null) {
+                let fki = columnNode.foreignKeyInfo;
+                let tables = this.getCurrentSymbolTable().findTables(fki.referencesTable);
                 if (tables.length == 1) {
                     let table = tables[0].table;
-                    let column = table.columns.find(c => c.identifier == columnNode.referencesColumn);
+                    let column = table.columns.find(c => c.identifier == fki.referencesColumn);
                     if (column != null && column.type != null) {
                         if (!column.isPrimaryKey) {
-                            this.pushError("Die referenzierte Spalte " + columnNode.referencesTable + "." + columnNode.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
+                            this.pushError("Die referenzierte Spalte " + fki.referencesTable + "." + fki.referencesColumn + " ist kein Primärschlüssel.", "warning", columnNode.referencesPosition);
                         }
                         if (!column.type.canCastTo(columnNode.baseType)) {
                             this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +

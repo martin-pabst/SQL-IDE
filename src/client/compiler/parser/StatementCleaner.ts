@@ -89,9 +89,10 @@ export class StatementCleaner {
         if(column.isAutoIncrement){
             st += " autoincrement";
         }
-        if(column.referencesColumn != null){
-            let c: string = column.referencesColumn;
-            if(column.referencesTable) c = column.referencesTable + "(" + c + ")";
+        if(column.foreignKeyInfo != null){
+            let fki = column.foreignKeyInfo;
+            let c: string = fki.referencesColumn;
+            if(fki.referencesTable) c = fki.referencesTable + "(" + c + ")";
             st += " references " + c;
         }
         if(column.collate != null){

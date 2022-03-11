@@ -81,7 +81,8 @@ export class ResultsetPresenter {
 
     executeSelectedStatements() {
 
-        let statements = this.fetchSelectedStatements();
+        let statements = this.fetchSelectedStatements().filter(st => st.ast.type != TokenType.omittedeStatement);
+        
         if (statements.length == 0) return;
 
         let hasDDLStatements: boolean = statements.some(st => this.isDDLStatement(st));

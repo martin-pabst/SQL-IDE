@@ -8,7 +8,7 @@ export type ASTNode =
     StatementNode | TermNode | ColumnNode | CreateTableColumnNode
     
     export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | 
-            DeleteNode | DropTableNode | AlterTableNode;
+            DeleteNode | DropTableNode | AlterTableNode | OmittedStatementNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
@@ -20,6 +20,13 @@ export type ColumnNode = {
     position: TextPosition,
     term: TermNode,
     alias?: string
+}
+
+export type OmittedStatementNode = {
+    type: TokenType.omittedeStatement,
+    position: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable
 }
 
 export type SelectNode = {
@@ -69,7 +76,8 @@ export type ForeignKeyInfo = {
     column: string,
     referencesTable: string,
     referencesColumn: string,
-    referencesPosition: TextPosition
+    referencesPosition: TextPosition,
+    onDelete?: string
 }
 
 export type CreateTableColumnNode = {
@@ -80,8 +88,7 @@ export type CreateTableColumnNode = {
     isAutoIncrement: boolean,
     baseType: SQLBaseType,
     parameters?: number[],
-    referencesTable?: string,
-    referencesColumn?: string,
+    foreignKeyInfo?: ForeignKeyInfo,
     defaultValue?: string,
     notNull: boolean,
     collate?: string,
@@ -112,7 +119,7 @@ export type OrderByNode = {
 }
 
 
-export type AlterTableKind = "renameTable" | "renameColumn" | "addColumn" | "dropColumn";
+export type AlterTableKind = "renameTable" | "renameColumn" | "addColumn" | "dropColumn" | "omittedKind";
 
 export type AlterTableNode = {
     type: TokenType.keywordAlter,
@@ -129,6 +136,12 @@ export type AlterTableNode = {
     newColumnName?: string, // case "renameColumn" | "addColumn"
     columnDef?: CreateTableColumnNode  // case "addColumn"
     columnDefBegin?: TextPosition;
+
+    primaryKeys?: string[];
+    indices?: {index_name: string, column: string}[];
+    foreignKeys?: ForeignKeyInfo[];
+    autoIncrementColumn?: string;
+    modifyColumnInfo?: CreateTableColumnNode[];
 }
 
 export type DropTableNode = {

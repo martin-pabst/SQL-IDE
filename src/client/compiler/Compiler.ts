@@ -44,7 +44,7 @@ export class Compiler {
 
         this.main.getSemicolonAngel().startRegistering();
 
-        let parser: Parser = new Parser(false);
+        let parser: Parser = new Parser();
 
         for (let m of moduleStore.getModules(false)) {
             parser.parse(m);

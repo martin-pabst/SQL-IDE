@@ -240,7 +240,7 @@ export class NewDatabaseDialog {
             } else {
                 alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
             }
-        });
+        }, this.main);
     }
 
     showMainWindow() {

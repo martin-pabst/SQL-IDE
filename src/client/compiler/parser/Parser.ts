@@ -1,17 +1,10 @@
 import { param, timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 import { SQLBaseType } from "./SQLTypes.js";
-
-type ASTNodes = ASTNode[];
-
-type TokenTreeNode = {
-    type: "sequence" | "alternatives",
-    children: (TokenTreeNode | TokenType)[]
-} | TokenType;
 
 export type SQLStatement = {
     ast: ASTNode,
@@ -56,7 +49,7 @@ export class Parser {
 
     beginStatementKeywords = ["select", "insert into", "update", "create table", "delete from", "alter table", "drop table"];
 
-    constructor(private isInConsoleMode: boolean) {
+    constructor() {
 
     }
 
@@ -72,7 +65,7 @@ export class Parser {
         if (this.tokenList.length == 0) {
             this.module.sqlStatements = [];
             this.module.errors[1] = this.errorList;
-            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20000, column: 100, length: 0 }, false, false, 
+            this.module.addCompletionHint({ line: 0, column: 0, length: 0 }, { line: 20000, column: 100, length: 0 }, false, false,
                 this.beginStatementKeywords);
             return;
         }
@@ -183,9 +176,9 @@ export class Parser {
         });
     }
 
-    skip(tt: TokenType | TokenType[]){
-        if(!Array.isArray(tt)) tt = [tt];
-        if(tt.indexOf(this.tt) >= 0) this.nextToken();
+    skip(tt: TokenType | TokenType[]) {
+        if (!Array.isArray(tt)) tt = [tt];
+        if (tt.indexOf(this.tt) >= 0) this.nextToken();
     }
 
     expect(tt: TokenType | TokenType[], skip: boolean = true, invokeSemicolonAngel: boolean = false): boolean {
@@ -330,8 +323,8 @@ export class Parser {
 
             let oldPos = this.pos;
 
-            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false, 
-             this.beginStatementKeywords);
+            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false,
+                this.beginStatementKeywords);
 
             let errorsBeforeStatement: number = this.errorList.length;
 
@@ -353,13 +346,15 @@ export class Parser {
                 this.nextToken();
             }
 
-            mainProgram.push({
-                ast: st,
-                from: startPosition,
-                to: this.getEndOfPosition(this.lastToken.position),
-                hasErrors: this.errorList.length > errorsBeforeStatement,
-                acceptedBySQLite: false
-            });
+            if(st != null){
+                mainProgram.push({
+                    ast: st,
+                    from: startPosition,
+                    to: this.getEndOfPosition(this.lastToken.position),
+                    hasErrors: this.errorList.length > errorsBeforeStatement,
+                    acceptedBySQLite: false
+                });
+            }
             // console.log(mainProgram[mainProgram.length - 1]);
 
             mainProgramEnd = this.getCurrentPosition();
@@ -384,7 +379,7 @@ export class Parser {
 
         }
 
-        this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false, 
+        this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false,
             this.beginStatementKeywords);
 
         return mainProgram;
@@ -403,7 +398,7 @@ export class Parser {
             case TokenType.keywordInsert:
                 return this.parseInsert();
             case TokenType.keywordCreate:
-                return this.parseCreateTable();
+                return this.parseCreateTableOrDatabase();
             case TokenType.keywordUpdate:
                 return this.parseUpdate();
             case TokenType.keywordDelete:
@@ -412,6 +407,16 @@ export class Parser {
                 return this.parseDropTable();
             case TokenType.keywordAlter:
                 return this.parseAlterTable();
+            case TokenType.keywordCommit:
+                this.pushError("Die Aweisung commit ist unnötig, da jede Anweisung automatisch commited wird.", "info");
+                this.nextToken();
+                return null;
+            // Omitted statements:
+            case TokenType.keywordSet:
+                return this.parseSet();
+            case TokenType.keywordUse:
+                return this.parseUse();
+
             default:
                 let s = TokenTypeReadable[this.tt];
                 if (s == null) s = "";
@@ -427,6 +432,45 @@ export class Parser {
 
     }
 
+    parseSet(): OmittedStatementNode {
+
+        this.pushError("Das SET-Statement wird von SQLite nicht unterstützt. Diese Anweisung wird daher einfach überlesen.", "info");
+
+        let node: OmittedStatementNode = {
+            type: TokenType.omittedeStatement,
+            position: this.getCurrentPosition(),
+            endPosition: null,
+            symbolTable: null
+        }
+
+        this.nextToken(); // skip 'set'
+        this.expect(TokenType.identifier, true);
+        this.expect(TokenType.equal, true);
+        this.expect([TokenType.stringConstant, TokenType.integerConstant, TokenType.charConstant, TokenType.booleanConstant, TokenType.floatingPointConstant], true);
+
+        node.endPosition = this.getCurrentPosition();
+
+        return node;
+    }
+
+    parseUse(): OmittedStatementNode {
+
+        this.pushError("Das USE-Statement wird von SQLite nicht unterstützt. Diese Anweisung wird daher einfach überlesen. Sie können eine andere Datenbank auswählen indem Sie in der Datenbankliste links darauf klicken.", "info");
+
+        let node: OmittedStatementNode = {
+            type: TokenType.omittedeStatement,
+            position: this.getCurrentPosition(),
+            endPosition: null,
+            symbolTable: null
+        }
+
+        this.nextToken(); // skip 'use'
+        this.expect(TokenType.identifier, true);
+
+        node.endPosition = this.getCurrentPosition();
+
+        return node;
+    }
 
     parseAlterTable(): AlterTableNode {
 
@@ -459,7 +503,7 @@ export class Parser {
 
         switch (this.tt) {
             case TokenType.keywordRename: this.parseRenameTableOrColumn(node); break;
-            case TokenType.keywordAdd: this.parseAddColumn(node); break;
+            case TokenType.keywordAdd: this.parseAlterTableAdd(node); break;
             case TokenType.keywordDrop: this.parseDropColumn(node); break;
             default:
                 this.pushError("Erwartet wird rename to, rename column, add column oder drop column");
@@ -541,8 +585,190 @@ export class Parser {
 
     }
 
+    parseAlterTableAdd(node: AlterTableNode) {
+        do {
+            this.nextToken(); // skip "add" or ","
+            switch (this.tt) {
+                case TokenType.keywordColumn:
+                    this.parseAddColumn(node);
+                    break;
+                case TokenType.keywordPrimary:
+                    this.parseAddPrimaryKey(node);
+                    break;
+                case TokenType.keywordKey:
+                case TokenType.keywordIndex:
+                    this.parseAddIndex(node);
+                    break;
+                case TokenType.keywordModify:
+                    this.parseModifyColumn(node);
+                    break;
+                case TokenType.keywordConstraint:
+                    this.parseAddConstraint(node);
+                    break;
+            }
+        } while (this.tt == TokenType.comma);
+    }
+
+    parseAddConstraint(node: AlterTableNode) {
+        this.nextToken(); // skip "constraint"
+        if (!this.expect(TokenType.identifier)) return;
+
+        if (this.comesToken(TokenType.keywordForeign)) {
+            let fki = this.parseForeignKeyDefinition();
+            if (fki != null) {
+                if (node.foreignKeys == null) node.foreignKeys = [];
+                node.foreignKeys.push(fki);
+            }
+        }
+
+    }
+
+    parseForeignKeyDefinition(): ForeignKeyInfo {
+        let fki: ForeignKeyInfo = { column: "", referencesTable: "", referencesColumn: "", referencesPosition: this.getCurrentPosition() };
+        if (!this.expect(TokenType.keywordForeign)) return;
+        if (!this.expect(TokenType.keywordKey)) return;
+        if (!this.expect(TokenType.leftBracket)) return;
+
+        if (!this.comesToken(TokenType.identifier)) {
+            this.pushError("Der Bezeichner der Fremdschlüsselspalte wird erwartet.");
+            return;
+        }
+
+        fki.column = <string>this.cct.value;
+        this.nextToken();
+
+        if (!this.expect(TokenType.rightBracket)) return;
+        this.parseReferences(fki);
+    }
+
+    parseReferences(fki: ForeignKeyInfo) {
+
+        if (!this.expect(TokenType.keywordReferences)) return;
+
+        this.addCompletionHintHere(false, true, []);
+
+        if (!this.comesToken(TokenType.identifier)) {
+            this.pushError("Der Bezeichner der referenzierten Tabelle wird erwartet.");
+            return;
+        }
+
+        fki.referencesTable = <string>this.cct.value;
+        this.nextToken();
+
+        let pos0 = this.lastToken.position;
+        let pos1 = this.getCurrentPosition();
+        this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, fki.referencesTable, false, []);
+
+
+        if (!this.expect(TokenType.leftBracket)) return;
+        if (!this.comesToken(TokenType.identifier)) {
+            this.pushError("Der Bezeichner der referenzierten Spalte wird erwartet.");
+            return;
+        }
+
+        fki.referencesColumn = <string>this.cct.value;
+        this.nextToken();
+
+        if (!this.expect(TokenType.rightBracket)) return;
+
+        if (this.tt == TokenType.keywordOn) {
+            this.nextToken();
+            if (this.expect(TokenType.keywordDelete, true)) {
+                switch (this.tt) {
+                    //@ts-ignore
+                    case TokenType.keywordCascade:
+                    //@ts-ignore
+                    case TokenType.keywordRestrict:
+                        fki.onDelete = <string>this.cct.value;
+                        this.nextToken();
+                        return;
+                    //@ts-ignore
+                    case TokenType.keywordSet:
+                        fki.onDelete = "set ";
+                        this.nextToken();
+                        if ([TokenType.keywordNull, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
+                            this.nextToken();
+                            fki.onDelete += this.cct.value;
+                        } else {
+                            this.pushError("Nach 'on delete set' wird 'null' oder 'default' erwartet.");
+                        }
+                        return;
+                    //@ts-ignore
+                    case TokenType.keywordNo:
+                        this.nextToken();
+                        if (this.expect(TokenType.keywordAction), true) {
+                            fki.onDelete = "no action";
+                        }
+                        return;
+                    default:
+                        this.pushError("Nach 'on delete' wird 'cascade', 'set null', 'set default' oder 'no action' erwartet.");
+                        return;
+
+                }
+            }
+        }
+
+
+    }
+
+    parseModifyColumn(node: AlterTableNode) {
+        this.nextToken();
+        let modifyColumnInfo = this.parseColumnDefinition(false);
+        if (modifyColumnInfo != null) {
+            if (node.modifyColumnInfo == null) node.modifyColumnInfo = [];
+            node.modifyColumnInfo.push(modifyColumnInfo);
+        }
+    }
+
+    parseAddPrimaryKey(node: AlterTableNode) {
+        this.nextToken(); // skip "primary"
+        node.primaryKeys = [];
+        if (this.expect(TokenType.keywordKey, true) && this.expect(TokenType.leftBracket, false)) {
+            do {
+                if (this.tt == TokenType.identifier) {
+                    node.primaryKeys.push(<string>this.cct.value);
+                    this.nextToken();
+                }
+            } while (this.tt == TokenType.comma)
+        }
+        if (this.expect(TokenType.rightBracket, true)) {
+            node.kind = "omittedKind";
+            return node;
+        }
+
+        return null;
+    }
+
+    parseAddIndex(node: AlterTableNode) {
+        this.nextToken(); // skip "key" | "index"
+
+        let index = { index_name: "", column: "" }
+        if (this.tt == TokenType.identifier) {
+            index.index_name = <string>this.cct.value;
+            this.nextToken();
+        } else {
+            this.pushError("Erwartet wird der Bezeichner des Index.");
+            return null;
+        }
+
+        if (!this.expect(TokenType.leftBracket, true)) return null;
+        if (this.tt == TokenType.identifier) {
+            index.column = <string>this.cct.value;
+            this.nextToken();
+            if (node.indices == null) node.indices = [];
+            node.indices.push(index);
+        } else {
+            this.pushError("Erwartet wird der Bezeichner der Spalte, für die ein Index erstellt werden soll.");
+            return null;
+        }
+
+        node.kind = "omittedKind";
+        this.expect(TokenType.rightBracket, true);
+
+        return null;
+    }
+
     parseAddColumn(node: AlterTableNode) {
-        this.nextToken(); // skip 'add'
         node.kind = "addColumn";
         this.comesToken(TokenType.keywordColumn, true);
         node.columnDefBegin = this.getCurrentPosition();
@@ -699,12 +925,44 @@ export class Parser {
 
     }
 
+    parseCreateTableOrDatabase(): CreateTableNode | OmittedStatementNode {
+        switch (this.tt[1]) {
+            case TokenType.keywordDatabase:
+                return this.parseCreateDatabase();
+            case TokenType.keywordTable:
+                return this.parseCreateTable();
+            default:
+                this.nextToken();
+                this.pushError("Nach 'create' wird 'table' erwartet.");
+                this.nextToken();
+                return null;
+        }
+    }
+
+    parseCreateDatabase(): OmittedStatementNode {
+        let node: OmittedStatementNode = {
+            type: TokenType.omittedeStatement,
+            position: this.getCurrentPosition(),
+            endPosition: null,
+            symbolTable: null
+        }
+
+        this.nextToken();
+        this.pushError("Die CREATE-DATABASE-Anweisung wird von der SQLite-Engine nicht unterstützt. Sie können eine neue Datenbank anlegen, indem Sie auf den entsprechenden Button oberhalb der Liste der Datenbanken (linke Seite des Fensters) klicken. Diese Anweisung wird überlesen.", "info");
+        while (this.beginStatementKeywords.indexOf(this.cct[0].value) < 0 && this.cct[0] != TokenType.endofSourcecode) {
+            node.endPosition = this.getEndOfCurrentToken();
+            this.nextToken();
+        }
+
+        return node;
+    }
+
     parseCreateTable(): CreateTableNode {
 
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "create"
 
-        if(!this.expect(TokenType.keywordTable, true)){
+        if (!this.expect(TokenType.keywordTable, true)) {
             this.module.addCompletionHint(startPosition, this.getCurrentPositionPlus(3), false, false, ["table"]);
         }
 
@@ -741,7 +999,10 @@ export class Parser {
                     primaryKeyAlreadyDefined = true;
                     break;
                 case TokenType.keywordForeign:
-                    this.parseForeignKeyTerm(node);
+                    let fki = this.parseForeignKeyDefinition();
+                    if(fki != null){
+                        node.foreignKeyInfoList.push(fki);
+                    }
                     break;
                 case TokenType.identifier:
                     let columnNode = this.parseColumnDefinition(primaryKeyAlreadyDefined);
@@ -759,7 +1020,7 @@ export class Parser {
 
         this.expect(TokenType.rightBracket, true);
 
-        while([TokenType.keywordEngine, TokenType.keywordDefault, TokenType.keywordCollate].indexOf(this.tt) >= 0){
+        while ([TokenType.keywordEngine, TokenType.keywordDefault, TokenType.keywordCollate].indexOf(this.tt) >= 0) {
             switch (this.tt) {
                 case TokenType.keywordCollate:
                     this.nextToken();
@@ -786,50 +1047,6 @@ export class Parser {
         return node;
     }
 
-    parseForeignKeyTerm(node: CreateTableNode) {
-        let referencesPos = this.getCurrentPosition();
-        this.nextToken();
-        this.expect(TokenType.keywordKey);
-
-        if (this.comesToken(TokenType.identifier)) {
-            let fki: ForeignKeyInfo = {
-                column: <string>this.cct.value,
-                referencesColumn: null,
-                referencesTable: null,
-                referencesPosition: referencesPos
-            }
-            this.nextToken();
-            this.expect(TokenType.keywordReferences, false);
-            this.nextToken(); // skip "references"
-            this.addCompletionHintHere(false, true, []);
-            if (this.expect(TokenType.identifier, false)) {
-                fki.referencesTable = <string>this.cct.value;
-                this.nextToken();
-                let pos0 = this.lastToken.position;
-                let pos1 = this.getCurrentPosition();
-                this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, fki.referencesTable, false, []);
-
-                if (this.expect(TokenType.leftBracket, true)) {
-
-                    if (this.expect(TokenType.identifier, false)) {
-                        fki.referencesColumn = <string>this.cct.value;
-                        this.nextToken();
-                        node.foreignKeyInfoList.push(fki);
-                    } else {
-                        this.pushError("Erwartet wird der Bezeichner einer Spalte. Gefunden wurde: " + this.cct.value);
-                    }
-
-                    this.expect(TokenType.rightBracket, true);
-                }
-            } else {
-                this.pushError("Erwartet wird der Bezeichner einer Tabelle. Gefunden wurde: " + this.cct.value);
-            }
-
-        } else {
-            this.pushError("Erwartet wird der Bezeichner ein Spalte");
-        }
-
-    }
 
     parsePrimaryKeyTerm(primaryKeyAlreadyDefined: boolean, node: CreateTableNode) {
         if (primaryKeyAlreadyDefined) {
@@ -949,7 +1166,7 @@ export class Parser {
         let alreadySeenKeywords: TokenType[] = [];
 
         while ([TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
-            if(alreadySeenKeywords.indexOf(this.tt)>=0){
+            if (alreadySeenKeywords.indexOf(this.tt) >= 0) {
                 this.pushError('Das Schlüsselwort ' + TokenTypeReadable[this.tt] + " darf bei der Definition einer Spalte nicht öfters als ein Mal vorkommen.");
             }
 
@@ -959,7 +1176,17 @@ export class Parser {
                 case TokenType.keywordAutoincrement:
                     this.nextToken();
                     node.isAutoIncrement = true;
-                break;
+                    //@ts-ignore
+                    if(this.tt == TokenType.equal){
+                        this.nextToken();
+                        this.expect(TokenType.integerConstant);
+                    } else {
+                        //@ts-ignore
+                        if(this.tt == TokenType.comma && this.tt[1] == TokenType.keywordAutoincrement){
+                            this.nextToken();
+                        }
+                    }
+                    break;
                 case TokenType.keywordPrimary:
                     if (primaryKeyAlreadyDefined) this.pushError("In einer Tabelle darf es nur einen einzigen primary key geben.");
                     this.nextToken(); // skip "primary"
@@ -971,30 +1198,9 @@ export class Parser {
                     node.isPrimary = true;
                     break;
                 case TokenType.keywordReferences:
-                    node.referencesPosition = this.getCurrentPosition();
-                    this.nextToken(); // skip "references"
-                    this.addCompletionHintHere(false, true, []);
-                    if (this.expect(TokenType.identifier, false)) {
-                        node.referencesTable = <string>this.cct.value;
-                        this.nextToken();
-                        let pos0 = this.lastToken.position;
-                        let pos1 = this.getCurrentPosition();
-                        this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, node.referencesTable, false, []);
-
-                        if (this.expect(TokenType.leftBracket, true)) {
-
-                            if (this.expect(TokenType.identifier, false)) {
-                                node.referencesColumn = <string>this.cct.value;
-                                this.nextToken();
-                            } else {
-                                this.pushError("Erwartet wird der Bezeichner einer Spalte. Gefunden wurde: " + this.cct.value);
-                            }
-
-                            this.expect(TokenType.rightBracket, true);
-                        }
-                    } else {
-                        this.pushError("Erwartet wird der Bezeichner einer Tabelle. Gefunden wurde: " + this.cct.value);
-                    }
+                    let fki: ForeignKeyInfo = {column: node.identifier, referencesColumn: "", referencesTable: "", referencesPosition: this.getCurrentPosition()};
+                    node.foreignKeyInfo = fki;
+                    this.parseReferences(fki);
                     break;
                 case TokenType.keywordNot:
                     this.nextToken();
@@ -1014,21 +1220,21 @@ export class Parser {
                     this.nextToken();
                     node.defaultValue = <string>this.cct.value;
                     //@ts-ignore
-                    if(this.tt == TokenType.keywordNull){
+                    if (this.tt == TokenType.keywordNull) {
                         this.nextToken();
                         break;
-                    } else if([TokenType.identifier, TokenType.integerConstant, TokenType.floatingPointConstant, TokenType.stringConstant].indexOf(this.tt) >= 0){
+                    } else if ([TokenType.identifier, TokenType.integerConstant, TokenType.floatingPointConstant, TokenType.stringConstant].indexOf(this.tt) >= 0) {
                         let constantType = SQLBaseType.fromConstantType(this.tt);
-                        if(!constantType.canCastTo(type)){
+                        if (!constantType.canCastTo(type)) {
                             this.pushError("Die Konstante hinter 'default' passt nicht zum Datentyp der Spalte.");
                         }
-                        this.nextToken();                        
+                        this.nextToken();
                     }
                     break;
             }
         }
 
-        if(node.isAutoIncrement && !node.isPrimary){
+        if (node.isAutoIncrement && !node.isPrimary) {
             this.pushError("autoincrement gibt es nur bei Primärschlüsseln, d.h. es fehlt wahrscheinlich 'primary key'.", "error", node.position);
         }
 
@@ -1177,9 +1383,9 @@ export class Parser {
         }
 
         node.columnList = this.parseColumnList([TokenType.keywordFrom], true);
-        
+
         let columnListKeywordArray = ["distinct", "as", "*"];
-        if(node.columnList.findIndex(c => c.type == TokenType.allColumns) >= 0){
+        if (node.columnList.findIndex(c => c.type == TokenType.allColumns) >= 0) {
             columnListKeywordArray.pop();
         }
 
