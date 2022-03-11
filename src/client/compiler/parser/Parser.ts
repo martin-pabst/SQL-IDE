@@ -588,6 +588,7 @@ export class Parser {
     parseAlterTableAdd(node: AlterTableNode) {
         do {
             this.nextToken(); // skip "add" or ","
+            let unique: boolean = false;
             switch (this.tt) {
                 case TokenType.keywordColumn:
                     this.parseAddColumn(node);
@@ -595,9 +596,13 @@ export class Parser {
                 case TokenType.keywordPrimary:
                     this.parseAddPrimaryKey(node);
                     break;
+                case TokenType.keywordUnique:
+                    this.nextToken();
+                    unique = true;
+                    this.expect([TokenType.keywordIndex, TokenType.keywordKey], false);
                 case TokenType.keywordKey:
                 case TokenType.keywordIndex:
-                    this.parseAddIndex(node);
+                    this.parseAddIndex(node, unique);
                     break;
                 case TokenType.keywordModify:
                     this.parseModifyColumn(node);
@@ -739,10 +744,10 @@ export class Parser {
         return null;
     }
 
-    parseAddIndex(node: AlterTableNode) {
+    parseAddIndex(node: AlterTableNode, unique: boolean) {
         this.nextToken(); // skip "key" | "index"
 
-        let index = { index_name: "", column: "" }
+        let index = { index_name: "", column: "", unique: unique }
         if (this.tt == TokenType.identifier) {
             index.index_name = <string>this.cct.value;
             this.nextToken();

@@ -1,24 +1,35 @@
 import { Lexer } from "../compiler/lexer/Lexer.js";
+import { TokenType } from "../compiler/lexer/Token.js";
+import { AlterTableNode, CreateTableNode, InsertNode } from "../compiler/parser/AST.js";
 import { Module } from "../compiler/parser/Module.js";
-import { Parser } from "../compiler/parser/Parser.js";
+import { Parser, SQLStatement } from "../compiler/parser/Parser.js";
+import { StatementCleaner } from "../compiler/parser/StatementCleaner.js";
 import { MainBase } from "../main/MainBase.js";
 import { LoadableDatabase } from "./DatabaseLoader.js";
+import { DatabaseTool } from "./DatabaseTools.js";
 
 export class MySqlImporter {
 
+    private createTableNodes: CreateTableNode[];
+    private insertNodes: InsertNode[];
+    private tableModifyingNodes: AlterTableNode[];
 
-    loadFromFile(file: globalThis.File, callback: (db: LoadableDatabase) => void, main: MainBase) {
+    constructor(private main: MainBase){
+
+    }
+
+    async loadFromFile(file: globalThis.File): Promise<LoadableDatabase> {
         if (file == null) return;
 
         if (file.name.endsWith(".zip")) {
             this.unzip(file).then(text => {
-                this.importFromText(text, callback, main);
+                return this.importFromText(text);
             })
         } else {
             var reader = new FileReader();
             reader.onload = (event) => {
                 let text = <string>event.target.result;
-                this.importFromText(text, callback, main);
+                return this.importFromText(text);
             };
             reader.readAsText(file);
 
@@ -56,7 +67,7 @@ export class MySqlImporter {
         return text;
     }
 
-    private importFromText(text: string, callback: (db: LoadableDatabase) => void, main: MainBase) {
+    private async importFromText(text: string):Promise<LoadableDatabase> {
         let lexer: Lexer = new Lexer();
         let lexOutput = lexer.lex(text);
 
@@ -70,15 +81,98 @@ export class MySqlImporter {
             text: text,
             text_before_revision: null,
             version: 0
-        }, main);
+        }, this.main);
         m.tokenList = lexOutput.tokens;
 
         parser.parse(m);
 
+        this.createTableNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordCreate).map(st => <CreateTableNode>st.ast);
+        this.insertNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordInsert).map(st => <InsertNode>st.ast);
+        this.tableModifyingNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordAlter && 
+            (<AlterTableNode>st.ast).kind == "omittedKind").map(st => <AlterTableNode>st.ast);
+
+        for(let tmn of this.tableModifyingNodes){
+            let createTableNode = this.findCreateTableNode(tmn.tableIdentifier);
+            if(createTableNode == null) continue;
+
+            if(tmn.primaryKeys != null){
+                createTableNode.combinedPrimaryKeyColumns = tmn.primaryKeys;
+                createTableNode.columnList.forEach(c => c.isPrimary = false);
+            }
+            
+            if(tmn.autoIncrementColumn != null){
+                let pcn = this.findCreateTableColumnNode(createTableNode, tmn.autoIncrementColumn);
+                if(pcn != null) pcn.isPrimary = true;
+            }
+
+            if(tmn.modifyColumnInfo != null){
+                for(let mci of tmn.modifyColumnInfo){
+                    let mcn = this.findCreateTableColumnNode(createTableNode, mci.identifier);
+                    let index = createTableNode.columnList.indexOf(mcn);
+                    createTableNode.columnList.splice(index, 1, mci);
+                }
+            }
+
+            if(tmn.foreignKeys != null){
+                for(let fk of tmn.foreignKeys){
+                    createTableNode.foreignKeyInfoList.push(fk);
+                }
+            }
+
+            if(tmn.indices != null){
+                for(let index of tmn.indices){
+                    m.sqlStatements.push({
+                        acceptedBySQLite: true,
+                        from: null, to: null, hasErrors: false,
+                        ast: {
+                            type: TokenType.keywordIndex,
+                            columnIdentifier: index.column,
+                            indexIdentifier: index.index_name,
+                            tableIdentifier: tmn.tableIdentifier,
+                            unique: index.unique,
+                            position: null, endPosition: null, symbolTable: null
+                        },
+                        sql: `create ${index.unique?'unique ':''} index ${index.index_name} on ${tmn.tableIdentifier}(${index.column});`
+                    })
+                }
+            }
+        }
+
+        return this.makeDatabase(m.sqlStatements);
+    }
+
+    private findCreateTableNode(tableIdentifier: string): CreateTableNode{
+        tableIdentifier = tableIdentifier.toLocaleLowerCase();
+        return this.createTableNodes.find(node => node.identifier == tableIdentifier);
+    }
+
+    private findCreateTableColumnNode(tableNode: CreateTableNode, columnIdentifier: string){
+        columnIdentifier = columnIdentifier.toLocaleLowerCase();
+        return tableNode.columnList.find(columnNode => columnNode.identifier.toLocaleLowerCase() == columnIdentifier)
+    }
+
+    private async makeDatabase(statements: SQLStatement[]): Promise<LoadableDatabase> {
+
+        let statementCleaner: StatementCleaner = new StatementCleaner();
+
+        let sqlStatements: string[] = statements.map(st => statementCleaner.clean(st));
+
+        let dbTool = new DatabaseTool(this.main);
         
+        let promise = new Promise<LoadableDatabase>((resolve, reject) => {
+            dbTool.initializeWorker(null, sqlStatements, () => {
+                dbTool.export((buffer) => {
+                    resolve({
+                        binDump: buffer
+                    })
+                }, (error) => {
+                    reject(error);
+                })                
+            });
 
-
-
+        })
+        
+        return promise;
 
     }
 

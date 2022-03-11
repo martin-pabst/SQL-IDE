@@ -219,7 +219,7 @@ export class NewDatabaseDialog {
 
     importFile(files: FileList) {
         let that = this;
-        new DatabaseImportExport().loadFromFile(files[0], (db: LoadableDatabase) => {
+        new DatabaseImportExport().loadFromFile(files[0], this.main).then((db: LoadableDatabase) => {
             let isDatabase: boolean = false;
             let dumpFileType = DatabaseTool.getDumpType(db.binDump);
             if(dumpFileType == "binaryCompressed"){
@@ -240,7 +240,7 @@ export class NewDatabaseDialog {
             } else {
                 alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
             }
-        }, this.main);
+        });
     }
 
     showMainWindow() {

@@ -6,12 +6,12 @@ import { MySqlImporter } from "./MySqlImporter.js";
 
 export class DatabaseImportExport {
 
-    loadFromFile(file: globalThis.File, callback: (db: LoadableDatabase) => void, main: MainBase){
+    async loadFromFile(file: globalThis.File, main: MainBase): Promise<LoadableDatabase>{
         let that = this;
         if (file == null) return;
 
         if(file.name.endsWith(".sql") || file.name.endsWith(".zip")){
-            new MySqlImporter().loadFromFile(file, callback, main);
+            return new MySqlImporter(main).loadFromFile(file);
         } else {
             var reader = new FileReader();
             reader.onload = (event) => {
@@ -21,7 +21,7 @@ export class DatabaseImportExport {
                 //@ts-ignore
                 if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
                 
-                callback({binDump: db});
+                return {binDump: db};
     
             };
             reader.readAsArrayBuffer(file);

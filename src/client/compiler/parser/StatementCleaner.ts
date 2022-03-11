@@ -4,6 +4,8 @@ import { SQLStatement } from "./Parser.js";
 
 export class StatementCleaner {
 
+    MaxRowsPerInsert: number = 300;
+
     clean(statement: SQLStatement): string {
         switch(statement.ast.type){
             case TokenType.keywordCreate:   // Create Table statement
@@ -19,22 +21,31 @@ export class StatementCleaner {
     }
 
     cleanInsertStatement(ast: InsertNode): string {
-        let st: string = `insert into ${ast.table.identifier}`;
+        let statementHeader: string = `insert into ${ast.table.identifier}`;
 
         if(ast.columnList != null && ast.columnList.length > 0){
-            st += `(${ast.columnList.map(c => c.identifier).join(", ")})`;
+            statementHeader += `(${ast.columnList.map(c => c.identifier).join(", ")})`;
         }
 
+        statementHeader += '\nvalues\n';
+
+        let st = "";
+        
+        let lines: string[] = [];
         if(ast.values != null && ast.values.length > 0){
-            st += '\nvalues';
-            let lines: string[] = [];
             for(let vline of ast.values){
                 lines.push(`\n(${vline.map(v => this.cleanValue(v)).join(", ")})`);
             }
-            st += lines.join(", ");
+            //st += lines.join(",\n");
         }
 
-        return st + ";";
+        while(lines.length > 0){
+            st += statementHeader;
+            st += lines.splice(0, Math.max(this.MaxRowsPerInsert, lines.length)).join(",\n");
+            st += ";\n";
+        }
+
+        return st;
     }
 
     cleanValue(v: ConstantNode){

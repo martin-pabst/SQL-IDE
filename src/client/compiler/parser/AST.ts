@@ -8,7 +8,7 @@ export type ASTNode =
     StatementNode | TermNode | ColumnNode | CreateTableColumnNode
     
     export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | 
-            DeleteNode | DropTableNode | AlterTableNode | OmittedStatementNode;
+            DeleteNode | DropTableNode | AlterTableNode | CreateIndexNode | OmittedStatementNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
@@ -119,6 +119,17 @@ export type OrderByNode = {
 }
 
 
+export type CreateIndexNode = {
+    type: TokenType.keywordIndex,
+    position: TextPosition,
+    endPosition: TextPosition,
+    symbolTable: SymbolTable,
+    indexIdentifier: string,
+    tableIdentifier: string,
+    columnIdentifier: string,
+    unique: boolean
+}
+
 export type AlterTableKind = "renameTable" | "renameColumn" | "addColumn" | "dropColumn" | "omittedKind";
 
 export type AlterTableNode = {
@@ -138,7 +149,7 @@ export type AlterTableNode = {
     columnDefBegin?: TextPosition;
 
     primaryKeys?: string[];
-    indices?: {index_name: string, column: string}[];
+    indices?: {index_name: string, column: string, unique: boolean}[];
     foreignKeys?: ForeignKeyInfo[];
     autoIncrementColumn?: string;
     modifyColumnInfo?: CreateTableColumnNode[];

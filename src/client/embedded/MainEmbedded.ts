@@ -561,7 +561,7 @@ export class MainEmbedded implements MainBase {
     }
 
     loadDatabaseFromFile(file: globalThis.File) {
-        new DatabaseImportExport().loadFromFile(file, (db) => {
+        new DatabaseImportExport().loadFromFile(file, this).then((db) => {
             if (db == null) {
                 alert('Es ist ein Fehler beim Import aufgetreten.');
                 return;
@@ -574,7 +574,7 @@ export class MainEmbedded implements MainBase {
             }, () => {
                 this.databaseExplorer.refreshAfterRetrievingDBStructure()
             })
-        }, this)
+        })
     }
 
     makeWaitDiv(): JQuery<HTMLElement> {
