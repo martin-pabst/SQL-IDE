@@ -61,7 +61,7 @@ export class DatabaseExplorer {
             </div>
         </div>`);
 
-        $table.find('.jo_tableheader').on('pointerdown', () => {
+        $table.find('.jo_tableheader').on('pointerup', () => {
             this.main.getResultsetPresenter().showTable(table.identifier);
 
         })
@@ -99,17 +99,19 @@ export class DatabaseExplorer {
 
         let $treeSwitch = $table.find('.jo_treeswitch');
         let that = this;
-        $treeSwitch.on('click', () => {
+        $treeSwitch.on('pointerup', (e) => {
+            e.stopPropagation();
+            let $columnList = $treeSwitch.parents('.jo_table').find('.jo_columnlist');
             let collapsed = $treeSwitch.hasClass('img_tree-collapsed-dark');
             if (collapsed) {
                 $treeSwitch.removeClass('img_tree-collapsed-dark');
                 $treeSwitch.addClass('img_tree-expanded-dark');
-                $columns.slideDown(300);
+                $columnList.slideDown(300);
                 that.collapsedTables.delete(table.identifier);
             } else {
                 $treeSwitch.removeClass('img_tree-expanded-dark');
                 $treeSwitch.addClass('img_tree-collapsed-dark');
-                $columns.slideUp(300);
+                $columnList.slideUp(300);
                 that.collapsedTables.set(table.identifier, true);
             }
         });

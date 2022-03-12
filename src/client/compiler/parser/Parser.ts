@@ -292,7 +292,7 @@ export class Parser {
 
         if(this.tt == TokenType.endofSourcecode){
             return {
-                line: 100000,
+                line: this.endToken.position.line,
                 column: 100,
                 length: 1
             }
@@ -343,12 +343,14 @@ export class Parser {
             length: 0
         }
 
+        let semicolonAfterLastStatement: boolean = true;
+
+        this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(8), false, false,
+                    this.beginStatementKeywords);
+
         while (!this.isEnd()) {
 
             let oldPos = this.pos;
-
-            this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(5), false, false,
-                this.beginStatementKeywords);
 
             let errorsBeforeStatement: number = this.errorList.length;
 
@@ -366,6 +368,7 @@ export class Parser {
                 length: 0
             }
 
+            semicolonAfterLastStatement = this.tt == TokenType.semicolon;
             while (this.tt == TokenType.semicolon) {
                 this.nextToken();
             }
@@ -401,9 +404,14 @@ export class Parser {
                 }
             }
 
+            if(semicolonAfterLastStatement || this.cct.position.line - afterLastStatement.line > 0){
+                this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(8), false, false,
+                    this.beginStatementKeywords);
+            }
+
         }
 
-        this.module.addCompletionHint(afterLastStatement, { line: mainProgramEnd.line + 10, column: 0, length: 0 }, false, false,
+        this.module.addCompletionHint(afterLastStatement, { line: this.endToken.position.line + 1, column: 0, length: 0 }, false, false,
             this.beginStatementKeywords);
 
         return mainProgram;
@@ -1453,7 +1461,13 @@ export class Parser {
 
         let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
         fromListKeywordArray.splice(fromListKeywordArray.indexOf(this.lastToken.value + ""), 1);
-        this.module.addCompletionHint(node.fromStartPosition, this.getCurrentPositionPlus(2), false, true, fromListKeywordArray, dontHint)
+        
+        let hintEndPosition = this.getCurrentPositionPlus(2);
+        if(this.comesToken(TokenType.semicolon)){
+            hintEndPosition = this.getCurrentPosition();
+        }
+        
+        this.module.addCompletionHint(node.fromStartPosition, hintEndPosition,false, true, fromListKeywordArray, dontHint)
         node.fromEndPosition = this.getCurrentPosition();
 
         // parse where...
