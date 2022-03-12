@@ -14,37 +14,64 @@ export class MySqlImporter {
     private insertNodes: InsertNode[];
     private tableModifyingNodes: AlterTableNode[];
 
-    constructor(private main: MainBase){
+    constructor(private main: MainBase) {
 
+    }
+
+    async loadFromUrl(url: string): Promise<LoadableDatabase> {
+        if (url == null) return;
+
+        let text = null;
+        if (url.endsWith(".zip")) {
+            text = await this.unzipURL(url);
+        } else {
+            text = await (await fetch(url)).text();
+        }
+
+        return this.importFromText(text);
     }
 
     async loadFromFile(file: globalThis.File): Promise<LoadableDatabase> {
         if (file == null) return;
 
         if (file.name.endsWith(".zip")) {
-            this.unzip(file).then(text => {
-                return this.importFromText(text);
-            })
+            let text = await this.unzipFile(file);
+            return this.importFromText(text);
         } else {
-            var reader = new FileReader();
-            reader.onload = (event) => {
-                let text = <string>event.target.result;
-                return this.importFromText(text);
-            };
-            reader.readAsText(file);
+
+            return new Promise<LoadableDatabase>(
+                (resolve, reject) => {
+                    var reader = new FileReader();
+                    reader.onload = (event) => {
+                        let text = <string>event.target.result;
+                        resolve(this.importFromText(text));
+                    };
+                    reader.readAsText(file);
+                }
+            )
+
 
         }
     }
 
-    async unzip(blob: globalThis.File): Promise<string> {
+    async unzipURL(url: string): Promise<string> {
+        //@ts-ignore
+        const reader = new zip.ZipReader(new zip.HttpReader(url));
+        return this.unzipIntern(reader);
+    }
+
+    async unzipFile(file: globalThis.File): Promise<string> {
         // create a BlobReader to read with a ZipReader the zip from a Blob object
         //@ts-ignore
-        const reader = new zip.ZipReader(new zip.BlobReader(blob));
+        const reader = new zip.ZipReader(new zip.BlobReader(file));
+        return this.unzipIntern(reader);
+    }
 
+    async unzipIntern(reader: any): Promise<string> {
         // get all entries from the zip
         let entries = await reader.getEntries();
         entries = entries.filter(entry => entry.filename.endsWith(".sql"))
-        let text: string = "";
+        let text: string = null;
         if (entries.length) {
 
             // get first entry content as text by using a TextWriter
@@ -67,7 +94,9 @@ export class MySqlImporter {
         return text;
     }
 
-    private async importFromText(text: string):Promise<LoadableDatabase> {
+    private async importFromText(text: string): Promise<LoadableDatabase> {
+        if (text == null) return null;
+
         let lexer: Lexer = new Lexer();
         let lexOutput = lexer.lex(text);
 
@@ -88,39 +117,39 @@ export class MySqlImporter {
 
         this.createTableNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordCreate).map(st => <CreateTableNode>st.ast);
         this.insertNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordInsert).map(st => <InsertNode>st.ast);
-        this.tableModifyingNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordAlter && 
+        this.tableModifyingNodes = m.sqlStatements.filter(st => st.ast.type == TokenType.keywordAlter &&
             (<AlterTableNode>st.ast).kind == "omittedKind").map(st => <AlterTableNode>st.ast);
 
-        for(let tmn of this.tableModifyingNodes){
+        for (let tmn of this.tableModifyingNodes) {
             let createTableNode = this.findCreateTableNode(tmn.tableIdentifier);
-            if(createTableNode == null) continue;
+            if (createTableNode == null) continue;
 
-            if(tmn.primaryKeys != null){
+            if (tmn.primaryKeys != null) {
                 createTableNode.combinedPrimaryKeyColumns = tmn.primaryKeys;
                 createTableNode.columnList.forEach(c => c.isPrimary = false);
             }
-            
-            if(tmn.autoIncrementColumn != null){
+
+            if (tmn.autoIncrementColumn != null) {
                 let pcn = this.findCreateTableColumnNode(createTableNode, tmn.autoIncrementColumn);
-                if(pcn != null) pcn.isPrimary = true;
+                if (pcn != null) pcn.isPrimary = true;
             }
 
-            if(tmn.modifyColumnInfo != null){
-                for(let mci of tmn.modifyColumnInfo){
+            if (tmn.modifyColumnInfo != null) {
+                for (let mci of tmn.modifyColumnInfo) {
                     let mcn = this.findCreateTableColumnNode(createTableNode, mci.identifier);
                     let index = createTableNode.columnList.indexOf(mcn);
                     createTableNode.columnList.splice(index, 1, mci);
                 }
             }
 
-            if(tmn.foreignKeys != null){
-                for(let fk of tmn.foreignKeys){
+            if (tmn.foreignKeys != null) {
+                for (let fk of tmn.foreignKeys) {
                     createTableNode.foreignKeyInfoList.push(fk);
                 }
             }
 
-            if(tmn.indices != null){
-                for(let index of tmn.indices){
+            if (tmn.indices != null) {
+                for (let index of tmn.indices) {
                     m.sqlStatements.push({
                         acceptedBySQLite: true,
                         from: null, to: null, hasErrors: false,
@@ -132,7 +161,7 @@ export class MySqlImporter {
                             unique: index.unique,
                             position: null, endPosition: null, symbolTable: null
                         },
-                        sql: `create ${index.unique?'unique ':''} index ${index.index_name} on ${tmn.tableIdentifier}(${index.column});`
+                        sql: `create ${index.unique ? 'unique ' : ''} index ${index.index_name} on ${tmn.tableIdentifier}(${index.column});`
                     })
                 }
             }
@@ -141,12 +170,12 @@ export class MySqlImporter {
         return this.makeDatabase(m.sqlStatements);
     }
 
-    private findCreateTableNode(tableIdentifier: string): CreateTableNode{
+    private findCreateTableNode(tableIdentifier: string): CreateTableNode {
         tableIdentifier = tableIdentifier.toLocaleLowerCase();
-        return this.createTableNodes.find(node => node.identifier == tableIdentifier);
+        return this.createTableNodes.find(node => node.identifier.toLocaleLowerCase() == tableIdentifier);
     }
 
-    private findCreateTableColumnNode(tableNode: CreateTableNode, columnIdentifier: string){
+    private findCreateTableColumnNode(tableNode: CreateTableNode, columnIdentifier: string) {
         columnIdentifier = columnIdentifier.toLocaleLowerCase();
         return tableNode.columnList.find(columnNode => columnNode.identifier.toLocaleLowerCase() == columnIdentifier)
     }
@@ -155,10 +184,13 @@ export class MySqlImporter {
 
         let statementCleaner: StatementCleaner = new StatementCleaner();
 
-        let sqlStatements: string[] = statements.map(st => statementCleaner.clean(st));
+        let sqlStatements: string[] = statements.filter(st => st.ast.type != TokenType.omittedeStatement)
+            .map(st => statementCleaner.clean(st));
+        sqlStatements.unshift("PRAGMA foreign_keys = OFF;");
+        sqlStatements.push("PRAGMA foreign_keys = ON;")
 
         let dbTool = new DatabaseTool(this.main);
-        
+
         let promise = new Promise<LoadableDatabase>((resolve, reject) => {
             dbTool.initializeWorker(null, sqlStatements, () => {
                 dbTool.export((buffer) => {
@@ -167,11 +199,11 @@ export class MySqlImporter {
                     })
                 }, (error) => {
                     reject(error);
-                })                
+                })
             });
 
         })
-        
+
         return promise;
 
     }

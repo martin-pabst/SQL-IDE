@@ -14,17 +14,20 @@ export class DatabaseImportExport {
             return new MySqlImporter(main).loadFromFile(file);
         } else {
             var reader = new FileReader();
-            reader.onload = (event) => {
-                let ab: ArrayBuffer = <ArrayBuffer>event.target.result;
-                let db: Uint8Array = new Uint8Array(ab);
+            return new Promise<LoadableDatabase>((resolve, reject) => {
+                reader.onload = (event) => {
+                    let ab: ArrayBuffer = <ArrayBuffer>event.target.result;
+                    let db: Uint8Array = new Uint8Array(ab);
+        
+                    //@ts-ignore
+                    if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
+                    
+                    resolve({binDump: db});
+        
+                };
+                reader.readAsArrayBuffer(file);
     
-                //@ts-ignore
-                if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
-                
-                return {binDump: db};
-    
-            };
-            reader.readAsArrayBuffer(file);
+            })
         }
 
 
@@ -32,7 +35,7 @@ export class DatabaseImportExport {
 
     saveToFile(dbTool: DatabaseTool){
         dbTool.export((db) => {
-            let filename: string = prompt("Bitte geben Sie den Dateinamen ein", "datenbank.dbDump");
+            let filename: string = prompt("Bitte geben Sie den Dateinamen ein", "datenbank.sqLite");
             if (filename == null) {
                 alert("Der Dateiname ist leer, daher wird nichts gespeichert.");
                 return;

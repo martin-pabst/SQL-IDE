@@ -1,39 +1,54 @@
+import { MainBase } from "../main/MainBase.js";
 import { DatabaseTool } from "./DatabaseTools.js";
+import { MySqlImporter } from "./MySqlImporter.js";
 
 export type LoadableDatabase = {
     binDump?: Uint8Array,
     statements?: string[]
 }
 
-export class Databaseloader {
+export class DatabaseFetcher {
 
-    public load(url: string, callback: (db: LoadableDatabase) => void) {
-        let urlWithoutProtocol = url.replace("https://", "")
-            .replace("http://", "").toLocaleLowerCase();
-
-        let isBinary = urlWithoutProtocol.endsWith(".dbdump");
-
-        if (isBinary) {
-            this.loadBinary(url, urlWithoutProtocol, callback);
-        } else {
-            this.loadSql(url, urlWithoutProtocol, callback);
-        }
+    constructor(private main: MainBase){
 
     }
 
+    public async load(url: string): Promise<LoadableDatabase> {
+        let urlWithoutProtocol = url.replace("https://", "")
+            .replace("http://", "").toLocaleLowerCase();
 
-    loadBinary(url: string, urlWithoutProtocol: string, callback: (db: LoadableDatabase) => void) {
+        let urlLowerCase = urlWithoutProtocol.toLocaleLowerCase();
 
-        this.fetchTemplateFromCache(urlWithoutProtocol, true, (templateDump: Uint8Array) => {
-
-            if (templateDump != null) {
+        let templateDump: Uint8Array = await this.fetchTemplateFromCache(urlWithoutProtocol);
+        if (templateDump != null) {
+            if (DatabaseTool.getDumpType(templateDump) == "binaryCompressed") {
                 // @ts-ignore
-                if (DatabaseTool.getDumpType(templateDump) == "binaryCompressed") templateDump = pako.inflate(templateDump);
-                callback({ binDump: templateDump })
+                templateDump = pako.inflate(templateDump);
             }
+            return { binDump: templateDump }
+        }
 
-            let that = this;
+        let db: LoadableDatabase;
+        if (urlLowerCase.endsWith(".sqlite")) {
+            db = await this.loadSqLiteDump(url, urlWithoutProtocol);
+        } else if (urlLowerCase.endsWith(".zip") || urlLowerCase.endsWith(".sql")) {
+            db = await this.loadMySql(url, urlWithoutProtocol);
+        }
 
+        this.saveDatabaseToCache(urlWithoutProtocol, db.binDump);
+
+        return db;
+
+    }
+
+    loadMySql(url: string, urlWithoutProtocol: string): LoadableDatabase | PromiseLike<LoadableDatabase> {
+        let mySqlImporter = new MySqlImporter(this.main);
+        return mySqlImporter.loadFromUrl(url);
+    }
+
+    async loadSqLiteDump(url: string, urlWithoutProtocol: string): Promise<LoadableDatabase> {
+
+        return new Promise((resolve, reject) => {
             jQuery.ajax({
                 type: 'GET',
                 async: true,
@@ -43,30 +58,14 @@ export class Databaseloader {
                     let db = new Uint8Array(response);
                     // @ts-ignore
                     if (DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
-                    that.saveDatabaseToCache(urlWithoutProtocol, db);
-                    callback({ binDump: db });
+                    resolve({ binDump: db });
                 },
                 error: function (jqXHR, message) {
-                    callback(null);
+                    reject(message);
                 }
             });
 
-
         })
-
-    }
-
-    loadSql(url: string, urlWithoutProtocol: string, callback: (db: LoadableDatabase) => void) {
-
-        this.fetchTemplateFromCache(urlWithoutProtocol, false, (sql: string) => {
-            let that = this;
-            if (sql != null) callback({ statements: that.cutSqlToStatements(sql) })
-
-            jQuery.get(url, (sql: string) => {
-                that.saveDatabaseToCache(urlWithoutProtocol, sql);
-                callback({ statements: that.cutSqlToStatements(sql) });
-            }, "text")
-        });
 
     }
 
@@ -83,41 +82,33 @@ export class Databaseloader {
     }
 
 
-    fetchTemplateFromCache(databaseIdentifier: string, isBinary: boolean, callback: (templateDump: Uint8Array | string) => void) {
-        if (databaseIdentifier == null) { callback(null); return; }
-        let that = this;
-        if (!this.cacheAvailable()) callback(null);
-        this.getCache((cache) => {
-            cache.match(databaseIdentifier).then(
-                (value) => {
-                    if (isBinary) {
-                        value.arrayBuffer().then((buffer) => callback(new Uint8Array(buffer)));
-                    } else {
-                        value.text().then((text) => callback(text));
-                    }
-                })
-                .catch(() => callback(null));
-        })
+    async fetchTemplateFromCache(databaseIdentifier: string): Promise<Uint8Array> {
+        if (databaseIdentifier == null) { return null; }
+
+        if (!this.cacheAvailable()) return (null);
+
+        let cache = await caches.open('my-cache');
+
+        let value = await cache.match(databaseIdentifier);
+
+        if(value == null) return null;
+
+        let buffer = await value.arrayBuffer();
+
+        return new Uint8Array(buffer);
+
     }
 
-    saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array | string) {
+    async saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array | string) {
         if (!this.cacheAvailable()) return;
-        let that = this;
-        this.getCache((cache) => {
-            cache.put(databaseIdentifier, new Response(templateDump));
-        })
+
+        let cache = await caches.open('my-cache');
+
+        cache.put(databaseIdentifier, new Response(templateDump));
     }
 
     cacheAvailable(): boolean {
         return 'caches' in self;
     }
-
-    getCache(callback: (cache: Cache) => void) {
-        caches.open('my-cache').then(callback);
-    }
-
-
-
-
 
 }

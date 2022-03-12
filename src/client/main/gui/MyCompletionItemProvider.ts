@@ -380,7 +380,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                 detail: "Select-Anweisung",
                 filterText: 'select',
                 // insertText: "while(${1:Bedingung}){\n\t$0\n}",
-                insertText: `select $2 from $1\nwhere $0\n`,
+                insertText: `select * from $1\nwhere $0\n`,
                 command: {
                     id: "editor.action.triggerSuggest",
                     title: '123',

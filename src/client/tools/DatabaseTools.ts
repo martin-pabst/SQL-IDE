@@ -317,7 +317,7 @@ export class DatabaseTool {
                 */
 
                 if (foreignKeyList != null) {
-                    let fkInfo: any[] = foreignKeyList.find(foreignKeyInfo => foreignKeyInfo[4].toLocaleLowerCase() == name.toLocaleLowerCase());
+                    let fkInfo: any[] = foreignKeyList.find(foreignKeyInfo => foreignKeyInfo[3].toLocaleLowerCase() == name.toLocaleLowerCase());
                     if (fkInfo != null) {
                         columnStructure.referencesRawData = fkInfo;
                     }
@@ -335,7 +335,7 @@ export class DatabaseTool {
                     let table = tableNameToStructureMap.get(cs.referencesRawData[2]);
                     // SQlite doesn't remove foreign key references to columns of a dropped table
                     if(table == null) continue;
-                    let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[3].toLocaleLowerCase());
+                    let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[4].toLocaleLowerCase());
                     cs.references = column;
                 }
             }

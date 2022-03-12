@@ -19,7 +19,7 @@ import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
 import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
-import { Databaseloader } from "../tools/DatabaseLoader.js";
+import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 import { HistoryViewer } from "../main/gui/HistoryViewer.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -30,7 +30,7 @@ type JavaOnlineConfig = {
     withErrorList?: boolean,
     withBottomPanel?: boolean,
     id?: string,
-    databaseFilename?: string
+    databaseURL?: string
 }
 
 export class MainEmbedded implements MainBase {
@@ -146,15 +146,15 @@ export class MainEmbedded implements MainBase {
 
         this.readConfig($div);
 
-        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseFilename);
+        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseURL);
 
         this.initGUI($div);
 
 
         this.databaseExplorer = new DatabaseExplorer(this, this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
-        if (this.config.databaseFilename != null) {
-            new Databaseloader().load(this.config.databaseFilename, (loadableDb) => {
+        if (this.config.databaseURL != null) {
+            new DatabaseFetcher(this).load(this.config.databaseURL).then((loadableDb) => {
                 this.initialTemplateDump = loadableDb.binDump;
                 this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
                 this.resetDatabase(() => {
@@ -525,10 +525,14 @@ export class MainEmbedded implements MainBase {
 
         let that = this;
 
-        $buttonOpen.find('input').on('change', (event) => {
+        let $openInputButton = $buttonOpen.find('input');
+
+        $openInputButton.on('change', (event) => {
             //@ts-ignore
             var files: FileList = event.originalEvent.target.files;
-            that.loadDatabaseFromFile(files[0]);
+            that.loadDatabaseFromFile(files[0]).then(() => {
+                $openInputButton.val(null)
+            })
         })
 
         let $buttonSave = jQuery('<div class="img_save-dark jo_button jo_active"' +
@@ -560,12 +564,13 @@ export class MainEmbedded implements MainBase {
         new DatabaseImportExport().saveToFile(this.databaseTool);
     }
 
-    loadDatabaseFromFile(file: globalThis.File) {
-        new DatabaseImportExport().loadFromFile(file, this).then((db) => {
-            if (db == null) {
-                alert('Es ist ein Fehler beim Import aufgetreten.');
-                return;
-            }
+    async loadDatabaseFromFile(file: globalThis.File) {
+        let dbImportExport = new DatabaseImportExport();
+        let db = await dbImportExport.loadFromFile(file, this);
+        if (db == null) {
+            alert('Es ist ein Fehler beim Import aufgetreten.');
+            return;
+        } else {
             this.databaseTool.initializeWorker(db.binDump, [], (errors) => {
                 if (errors.length > 0) {
                     alert('Es sind Fehler beim Import aufgetreten. Ausführliche Fehlermeldungen sehen Sie in der Konsole (F12).')
@@ -574,7 +579,8 @@ export class MainEmbedded implements MainBase {
             }, () => {
                 this.databaseExplorer.refreshAfterRetrievingDBStructure()
             })
-        })
+        }
+        return;
     }
 
     makeWaitDiv(): JQuery<HTMLElement> {
@@ -826,7 +832,7 @@ export class MainEmbedded implements MainBase {
         let $thRun = jQuery('<div class="jo_tabheading jo_active" data-target="jo_db_tree" style="line-height: 24px">DB (Baum)</div>');
         // let $thVariables = jQuery('<div class="jo_tabheading jo_console-tab" data-target="jo_db_list" style="line-height: 24px">DB (Liste)</div>');
         $tabheadings.append($thRun, //$thVariables
-            );
+        );
         this.$rightDivInner.append($tabheadings);
 
         let $tabs = jQuery('<div class="jo_tabs jo_scrollable"></div>');
@@ -835,7 +841,7 @@ export class MainEmbedded implements MainBase {
         this.$dbTreeDiv = jQuery(`<div class="jo_tab jo_scrollable jo_editorFontSize jo_active jo_db_tree">DB-Baum</div>`);
 
         $tabs.append(this.$dbTreeDiv //, $vd
-            );
+        );
         this.$rightDivInner.append($tabs);
 
         makeTabs($rightDiv);

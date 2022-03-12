@@ -289,8 +289,32 @@ export class Parser {
     }
 
     getCurrentPositionPlus(deltaColumns: number): TextPosition {
-        let pos = this.getCurrentPosition();
-        pos.column += deltaColumns;
+
+        if(this.tt == TokenType.endofSourcecode){
+            return {
+                line: 100000,
+                column: 100,
+                length: 1
+            }
+        }
+
+        // get Token in which new position falls:
+        let tpos = 0;
+        let deltaInsideToken = deltaColumns;
+        let length = 0;
+        while(tpos < this.lookahead - 1 && (length = this.ct[tpos].position.length) < deltaInsideToken ){
+            deltaInsideToken -= length;
+            tpos++;
+        }
+        let tokenPos = this.ct[tpos].position;
+        if(tokenPos == null) tokenPos = this.getCurrentPosition();
+
+        let pos: TextPosition = {
+            line: tokenPos.line,
+            column: tokenPos.column + deltaInsideToken,
+            length: 1
+        }
+
         return pos;
     }
 
@@ -446,7 +470,7 @@ export class Parser {
         this.nextToken(); // skip 'set'
         this.expect(TokenType.identifier, true);
         this.expect(TokenType.equal, true);
-        this.expect([TokenType.stringConstant, TokenType.integerConstant, TokenType.charConstant, TokenType.booleanConstant, TokenType.floatingPointConstant], true);
+        this.expect([TokenType.identifier, TokenType.stringConstant, TokenType.integerConstant, TokenType.charConstant, TokenType.booleanConstant, TokenType.floatingPointConstant], true);
 
         node.endPosition = this.getCurrentPosition();
 
@@ -730,6 +754,7 @@ export class Parser {
         node.primaryKeys = [];
         if (this.expect(TokenType.keywordKey, true) && this.expect(TokenType.leftBracket, false)) {
             do {
+                this.nextToken();
                 if (this.tt == TokenType.identifier) {
                     node.primaryKeys.push(<string>this.cct.value);
                     this.nextToken();
@@ -931,7 +956,7 @@ export class Parser {
     }
 
     parseCreateTableOrDatabase(): CreateTableNode | OmittedStatementNode {
-        switch (this.tt[1]) {
+        switch (this.ct[1].tt) {
             case TokenType.keywordDatabase:
                 return this.parseCreateDatabase();
             case TokenType.keywordTable:
@@ -954,7 +979,7 @@ export class Parser {
 
         this.nextToken();
         this.pushError("Die CREATE-DATABASE-Anweisung wird von der SQLite-Engine nicht unterstützt. Sie können eine neue Datenbank anlegen, indem Sie auf den entsprechenden Button oberhalb der Liste der Datenbanken (linke Seite des Fensters) klicken. Diese Anweisung wird überlesen.", "info");
-        while (this.beginStatementKeywords.indexOf(this.cct[0].value) < 0 && this.cct[0] != TokenType.endofSourcecode) {
+        while (this.tt != TokenType.semicolon && this.tt != TokenType.endofSourcecode) {
             node.endPosition = this.getEndOfCurrentToken();
             this.nextToken();
         }
@@ -1170,7 +1195,7 @@ export class Parser {
 
         let alreadySeenKeywords: TokenType[] = [];
 
-        while ([TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
+        while ([TokenType.keywordComment, TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
             if (alreadySeenKeywords.indexOf(this.tt) >= 0) {
                 this.pushError('Das Schlüsselwort ' + TokenTypeReadable[this.tt] + " darf bei der Definition einer Spalte nicht öfters als ein Mal vorkommen.");
             }
@@ -1187,7 +1212,7 @@ export class Parser {
                         this.expect(TokenType.integerConstant);
                     } else {
                         //@ts-ignore
-                        if(this.tt == TokenType.comma && this.tt[1] == TokenType.keywordAutoincrement){
+                        if(this.tt == TokenType.comma && this.ct[1].tt == TokenType.keywordAutoincrement){
                             this.nextToken();
                         }
                     }
@@ -1223,7 +1248,11 @@ export class Parser {
                     break;
                 case TokenType.keywordDefault:
                     this.nextToken();
+                    
                     node.defaultValue = <string>this.cct.value;
+                    if(typeof this.cct.value == "string"){
+                        node.defaultValue = "'" + node.defaultValue + "'";
+                    }
                     //@ts-ignore
                     if (this.tt == TokenType.keywordNull) {
                         this.nextToken();
@@ -1236,6 +1265,9 @@ export class Parser {
                         this.nextToken();
                     }
                     break;
+                case TokenType.keywordComment:
+                    this.nextToken(); // Skip "comment"
+                    this.expect(TokenType.stringConstant, true);
             }
         }
 
@@ -1366,6 +1398,18 @@ export class Parser {
 
     }
 
+    parseConstant(): ConstantNode {
+        let constantNode: ConstantNode = {
+            constantType: this.tt,
+            position: this.getCurrentPosition(),
+            constant: this.cct.value,
+            type: TokenType.constantNode
+        }
+        this.nextToken();
+
+        return constantNode;
+    }
+
     parseSelect(): SelectNode {
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
@@ -1420,7 +1464,7 @@ export class Parser {
             let whereStart = this.getCurrentPosition();
             this.nextToken();
             node.whereNode = this.parseTerm();
-            this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(2), true, true, whereKeywordArray)
+            this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(4), true, true, whereKeywordArray)
             // if (node.whereNode != null) node.whereNode.position = position;
         } else {
             fromListKeywordArray.push("where");

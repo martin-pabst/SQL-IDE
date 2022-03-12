@@ -73,6 +73,7 @@ export enum TokenType {
     keywordLike,
     keywordCollate,
     keywordDefault,
+    keywordComment,
     keywordEngine,
     keywordCharset,
 
@@ -227,6 +228,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordLike]: "like",
     [TokenType.keywordCollate]: "collate",
     [TokenType.keywordDefault]: "default",
+    [TokenType.keywordComment]: "comment",
     [TokenType.keywordEngine]: "engine",
     [TokenType.keywordCharset]: "charset",
 
@@ -395,6 +397,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "like": TokenType.keywordLike,
     "collate": TokenType.keywordCollate,
     "default": TokenType.keywordDefault,
+    "comment": TokenType.keywordComment,
     "engine": TokenType.keywordEngine,
     "charset": TokenType.keywordCharset
 

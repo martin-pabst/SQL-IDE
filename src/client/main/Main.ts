@@ -294,23 +294,25 @@ export class Main implements MainBase {
         // this.monaco.setModel(monaco.editor.createModel("Keine Datei vorhanden." , "text"));
         this.getMonacoEditor().updateOptions({ readOnly: true });
 
+        let currentWorkspace: Workspace = null;
+
         for (let ws of workspaces.workspaces) {
 
             let workspace: Workspace = Workspace.restoreFromData(ws, this);
             this.workspaceList.push(workspace);
             if (ws.id == this.user.currentWorkspace_id) {
-                this.currentWorkspace = workspace;
+                currentWorkspace = workspace;
             }
         }
 
         this.projectExplorer.renderWorkspaces(this.workspaceList);
 
-        if (this.currentWorkspace == null && this.workspaceList.length > 0) {
-            this.currentWorkspace = this.workspaceList[0];
+        if (currentWorkspace == null && this.workspaceList.length > 0) {
+            currentWorkspace = this.workspaceList[0];
         }
 
-        if (this.currentWorkspace != null) {
-            this.projectExplorer.setWorkspaceActive(this.currentWorkspace);
+        if (currentWorkspace != null) {
+            this.projectExplorer.setWorkspaceActive(currentWorkspace);
         }
 
         if (this.workspaceList.length == 0) {

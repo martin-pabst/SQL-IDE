@@ -34,7 +34,7 @@ export class NewDatabaseDialog {
              <div class="jo_tabheading" data-target="jo_createEmptyDatabaseTab">Leere Datenbank</div>
              <div class="jo_tabheading jo_active" data-target="jo_createDatabaseFromTemplateTab">Von Vorlage kopieren</div>
              <div class="jo_tabheading" data-target="jo_createDatabaseUseExistingTab">Bestehende Datenbank mitnutzen</div>
-             <div class="jo_tabheading" data-target="jo_createDatabaseUseDumpFile">Import aus Binärdump (.dbDump-File)</div>
+             <div class="jo_tabheading" data-target="jo_createDatabaseUseDumpFile">Import aus Dumpfile (SQLite- oder MySQL-Format)</div>
              </div>
              <div class="jo_tabs" style="width: 100%; margin-top: 10px">
                  <div class="jo_createEmptyDatabaseTab">
@@ -56,7 +56,7 @@ export class NewDatabaseDialog {
                     </div>
                  </div>
                 <div class="jo_createDatabaseUseDumpFile">
-                    <div class="jo_createDatabaseDescription">Wähle hier die Datei mit dem Datenbank-Dump aus (Endung .dbDump):</div>
+                    <div class="jo_createDatabaseDescription">Wähle hier die Datei mit dem Datenbank-Dump aus (Endung .sqLite (SQLite-Datenbankdatei) oder .zip (gepackter MySql-Dump) oder .sql (MySql-Dump)):</div>
                     <input type="file" class="jo_dumpfile" name="dumpfile" style="padding: 10px"/>
                     <div class="jo_databaseimport_dropzone" style="width: 70vw; margin-left: 10px">Alternativ: Datei in dieses Feld ziehen</div>
                     <div class="jo_databaseimport_ok"></div>
@@ -117,12 +117,15 @@ export class NewDatabaseDialog {
             this.importFile(files);
         })
 
-        jQuery('.jo_dumpfile').on('change', (event) => {
+        let $dumpFileInput = jQuery('.jo_dumpfile');
+        $dumpFileInput.on('change', (event) => {
             //@ts-ignore
             var files: FileList = event.originalEvent.target.files;
-            this.importFile(files);
-        })
+            this.importFile(files).then(() => {
+                $dumpFileInput.val(null);
+            });
 
+        })
 
         this.$dialog.css('visibility', 'visible');
 
@@ -167,7 +170,7 @@ export class NewDatabaseDialog {
                     this.createWorkspace(workspaceData);
                     break;
                 case "useDumpFile":
-                    if(this.database != null){
+                    if (this.database != null) {
                         new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump, (response) => {
                             workspaceData.template_database_id = response.newTemplateId;
                             this.createWorkspace(workspaceData);
@@ -217,30 +220,29 @@ export class NewDatabaseDialog {
         });
     }
 
-    importFile(files: FileList) {
+    async importFile(files: FileList) {
         let that = this;
-        new DatabaseImportExport().loadFromFile(files[0], this.main).then((db: LoadableDatabase) => {
-            let isDatabase: boolean = false;
-            let dumpFileType = DatabaseTool.getDumpType(db.binDump);
-            if(dumpFileType == "binaryCompressed"){
-                // @ts-ignore
-                let dbUncompressed = pako.inflate(db.binDump);
-                if(DatabaseTool.getDumpType(dbUncompressed) == "binaryUncompressed"){
-                    isDatabase = true;
-                }
-            } else if(DatabaseTool.getDumpType(db.binDump) == "binaryUncompressed"){
-                //@ts-ignore
-                db.binDump = pako.deflate(db.binDump);
+        let db: LoadableDatabase = await new DatabaseImportExport().loadFromFile(files[0], this.main)
+        let isDatabase: boolean = false;
+        let dumpFileType = DatabaseTool.getDumpType(db.binDump);
+        if (dumpFileType == "binaryCompressed") {
+            // @ts-ignore
+            let dbUncompressed = pako.inflate(db.binDump);
+            if (DatabaseTool.getDumpType(dbUncompressed) == "binaryUncompressed") {
                 isDatabase = true;
             }
+        } else if (DatabaseTool.getDumpType(db.binDump) == "binaryUncompressed") {
+            //@ts-ignore
+            db.binDump = pako.deflate(db.binDump);
+            isDatabase = true;
+        }
 
-            if(isDatabase){
-                that.database = db;
-                jQuery('.jo_databaseimport_ok').html("Die Datenbankdatei wurde erfolgreich von Datei eingelesen. Sie können die Datenbank jetzt durch Klick auf den Button unten erstellen.");
-            } else {
-                alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
-            }
-        });
+        if (isDatabase) {
+            that.database = db;
+            jQuery('.jo_databaseimport_ok').html("Die Datenbankdatei wurde erfolgreich von Datei eingelesen. Sie können die Datenbank jetzt durch Klick auf den Button unten erstellen.");
+        } else {
+            alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
+        }
     }
 
     showMainWindow() {
