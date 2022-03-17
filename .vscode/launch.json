@@ -15,7 +15,7 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch embedded Java-Online",
+            "name": "Launch embedded SQL-IDE",
             "url": "http://localhost:5501/htdocs/embedded.html",
             "webRoot": "${workspaceFolder}"
         },

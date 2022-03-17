@@ -37,7 +37,8 @@ export class AccordionPanel {
     static currentlyDraggedElement: AccordionElement;
     static currentlyDraggedElementKind: string;
 
-    newElementCallback: (ae: AccordionElement, callbackIfSuccessful: (externalElement: any) => void) => void;
+    newFilesElementCallback: (ae: AccordionElement, callbackIfSuccessful: (externalElement: any) => void) => void;
+    newDatabaseElementCallback: (path: string[]) => void;
     newFolderCallback: (ae: AccordionElement, callbackIfSuccessful: (externalElement: any) => void) => void;
     renameCallback: (externalElement: any, newName: string) => string;
     deleteCallback: (externalElement: any, callbackIfSuccessful: () => void) => void;
@@ -286,7 +287,7 @@ export class AccordionPanel {
 
                 that.renameElement(ae, () => {
 
-                    that.newElementCallback(ae, (externalElement: any) => {
+                    that.newFilesElementCallback(ae, (externalElement: any) => {
 
                         ae.externalElement = externalElement;
 
@@ -599,7 +600,9 @@ export class AccordionPanel {
                         caption: "Neue Datenbank...",
                         callback: () => {
                             that.select(element.externalElement);
-                            that.$buttonNew.trigger(mousePointer + 'down');
+
+                            that.newDatabaseElementCallback(element.path.concat(element.name));
+
                         }
                     }
                 ])

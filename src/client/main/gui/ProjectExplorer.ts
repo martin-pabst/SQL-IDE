@@ -44,7 +44,7 @@ export class ProjectExplorer {
         this.fileListPanel = new AccordionPanel(this.accordion, "Kein Workspace gewählt", "1",
             "img_add-file-dark", "Neue Datei...", "java", true, false, "file", true, []);
 
-        this.fileListPanel.newElementCallback =
+        this.fileListPanel.newFilesElementCallback =
 
             (accordionElement, successfulNetworkCommunicationCallback) => {
 
@@ -193,10 +193,10 @@ export class ProjectExplorer {
         let that = this;
 
         this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "3",
-            "img_add-database-dark", "Neue Datenbank...", "workspace", true, true, "workspace", false, ["file"]);
+            null, "Neue Datenbank...", "workspace", true, true, "workspace", false, ["file"]);
 
         let $newWorkspaceAction = jQuery('<div class="img_add-database-dark jo_button jo_active" style="margin-right: 4px"' +
-            ' title="Neue Datenbank anlegen">');
+            ' title="Neue Datenbank auf oberster Ordnerebene anlegen">');
 
         let mousePointer = window.PointerEvent ? "pointer" : "mouse";
 
@@ -208,12 +208,24 @@ export class ProjectExplorer {
                 owner_id = that.main.workspacesOwnerId;
             }
 
-            new NewDatabaseDialog(that.main, owner_id);
+            new NewDatabaseDialog(that.main, owner_id, this.workspaceListPanel.getCurrentlySelectedPath());
 
         })
 
         this.workspaceListPanel.addAction($newWorkspaceAction);
-        this.workspaceListPanel.$buttonNew.hide();
+        if(this.workspaceListPanel.$buttonNew != null){
+            this.workspaceListPanel.$buttonNew.hide();
+        }
+
+        this.workspaceListPanel.newDatabaseElementCallback = (path: string[]) => {
+            let owner_id: number = that.main.user.id;
+            if (that.main.workspacesOwnerId != null) {
+                owner_id = that.main.workspacesOwnerId;
+            }
+
+            new NewDatabaseDialog(that.main, owner_id, path);
+
+        }
 
 
         this.workspaceListPanel.renameCallback =
@@ -244,6 +256,7 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.selectCallback =
             (workspace: Workspace) => {
+                if(workspace.isFolder) return;
                 if (workspace != this.main.currentWorkspace) {
                     that.main.networkManager.sendUpdates(() => {
                         that.setWorkspaceActive(workspace);

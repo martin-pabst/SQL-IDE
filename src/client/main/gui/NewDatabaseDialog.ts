@@ -15,7 +15,7 @@ export class NewDatabaseDialog {
     $dialog: JQuery<HTMLElement>;
     database: LoadableDatabase;
 
-    constructor(private main: Main, private owner_id: number) {
+    constructor(private main: Main, private owner_id: number, private path: string[]) {
         this.init();
     }
 
@@ -203,7 +203,7 @@ export class NewDatabaseDialog {
                 externalElement: w,
                 iconClass: "workspace",
                 isFolder: false,
-                path: []
+                path: this.path
             };
 
             projectExplorer.workspaceListPanel.addElement(accordionElement, true);
