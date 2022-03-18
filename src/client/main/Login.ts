@@ -125,6 +125,8 @@ export class Login {
                         that.main.viewModeController.initViewMode();
                         that.main.bottomDiv.hideHomeworkTab();
 
+                        that.main.networkManager.initializeNotifierClient();
+
                     }
 
                     if (this.main.startupComplete == 0) {
@@ -136,6 +138,7 @@ export class Login {
 
             }, (errorMessage: string) => {
                 jQuery('#login-message').html('Login gescheitert: ' + errorMessage);
+                jQuery('#login-spinner>img').hide();
             }
             );
 
