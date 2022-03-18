@@ -9,12 +9,14 @@ export class DatabaseImportExport {
     async loadFromFile(file: globalThis.File, main: MainBase): Promise<LoadableDatabase>{
         let that = this;
         if (file == null) return;
-
+        main.getWaitOverlay().show("Lese Datei ein...");
         if(file.name.endsWith(".sql") || file.name.endsWith(".zip")){
-            return new MySqlImporter(main).loadFromFile(file);
+            let ld = await new MySqlImporter(main).loadFromFile(file);
+            main.getWaitOverlay().hide();
+            return ld;
         } else {
             var reader = new FileReader();
-            return new Promise<LoadableDatabase>((resolve, reject) => {
+            new Promise<LoadableDatabase>((resolve, reject) => {
                 reader.onload = (event) => {
                     let ab: ArrayBuffer = <ArrayBuffer>event.target.result;
                     let db: Uint8Array = new Uint8Array(ab);
@@ -22,6 +24,7 @@ export class DatabaseImportExport {
                     //@ts-ignore
                     if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
                     
+                    main.getWaitOverlay().hide();
                     resolve({binDump: db});
         
                 };

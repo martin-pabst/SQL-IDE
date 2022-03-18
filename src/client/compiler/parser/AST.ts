@@ -66,6 +66,7 @@ export type CreateTableNode = {
     endPosition: TextPosition,
     identifier: string,
     symbolTable: SymbolTable,
+    ifNotExists: boolean,
 
     columnList: CreateTableColumnNode[],
     combinedPrimaryKeyColumns: string[],

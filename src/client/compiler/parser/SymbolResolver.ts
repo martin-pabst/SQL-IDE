@@ -707,7 +707,7 @@ export class SymbolResolver {
                             let error: string = "Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.";
 
                             if(destType == "date") error += "<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.";
-                            if(destType == "datetime") error += "<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.";
+                            if(destType == "datetime" || destType == "timestamp") error += "<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.";
 
                             this.pushError(error, "error", value.position);
                         } else if(destType == "date"){
@@ -715,9 +715,9 @@ export class SymbolResolver {
                                 let error: string = `'${value.constant}' ist kein date-Wert.<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.`;
                                 this.pushError(error, "error", value.position);
                             }
-                        } else if(destType == "datetime"){
+                        } else if(destType == "datetime" || destType == "timestamp"){
                             if(!isDateTime(value.constant)){
-                                let error: string = `'${value.constant}' ist kein datetime-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
+                                let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
                                 this.pushError(error, "error", value.position);
                             }
                         }

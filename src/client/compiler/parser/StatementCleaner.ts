@@ -59,14 +59,23 @@ export class StatementCleaner {
     }
 
     cleanCreateTableStatement(ast: CreateTableNode): string {
-        let st: string = `create table ${ast.identifier}(\n   `;
+        let st: string = `create table ${ast.ifNotExists?" if not exists":""} ${ast.identifier}(\n   `;
 
         st += ast.columnList.map( column => this.cleanColumnDef(column)).join(",\n   ");
         if(ast.foreignKeyInfoList != null && ast.foreignKeyInfoList.length > 0){
             st += ",\n" + ast.foreignKeyInfoList.map(fki => this.cleanForeignKeyInfo(fki)).join(",\n   ");
         }
-        if(ast.combinedPrimaryKeyColumns!= null && ast.combinedPrimaryKeyColumns.length > 0){
-            st += `,\nprimary key(${ast.combinedPrimaryKeyColumns.join(", ")})`;
+
+        let pkc = ast.combinedPrimaryKeyColumns.slice().map(s => s.toLocaleLowerCase());
+        for(let column of ast.columnList){
+            let c = column.identifier.toLocaleLowerCase();
+            if(pkc.indexOf(c) >= 0){
+                pkc.splice(pkc.indexOf(c), 1);
+            }
+        }
+
+        if(pkc.length > 0){
+            st += `,\nprimary key(${pkc.join(", ")})`;
         }
         st += '\n);';
 
@@ -94,7 +103,7 @@ export class StatementCleaner {
         if(column.defaultValue != null){
             st += " default " + column.defaultValue;
         }
-        if(column.isPrimary){
+        if(column.isPrimary || column.isAutoIncrement){
             st += " primary key";
         }
         if(column.isAutoIncrement){

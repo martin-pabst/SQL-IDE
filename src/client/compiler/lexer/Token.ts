@@ -76,6 +76,12 @@ export enum TokenType {
     keywordComment,
     keywordEngine,
     keywordCharset,
+    keywordCharacter,
+    
+    keywordStart,
+    keywordTransaction,
+    keywordIf,
+    keywordExists,
 
     // brackets
     leftBracket, // ()
@@ -231,6 +237,11 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordComment]: "comment",
     [TokenType.keywordEngine]: "engine",
     [TokenType.keywordCharset]: "charset",
+    [TokenType.keywordCharacter]: "character",
+    [TokenType.keywordStart]: "start",
+    [TokenType.keywordTransaction]: "transaction",
+    [TokenType.keywordIf]: "if",
+    [TokenType.keywordExists]: "exists",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -361,6 +372,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "restrict": TokenType.keywordRestrict,
     "action": TokenType.keywordAction,
     "autoincrement": TokenType.keywordAutoincrement,
+    "auto_increment": TokenType.keywordAutoincrement,
     "from": TokenType.keywordFrom,
     "where": TokenType.keywordWhere,
     "true": TokenType.true,
@@ -399,7 +411,12 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "default": TokenType.keywordDefault,
     "comment": TokenType.keywordComment,
     "engine": TokenType.keywordEngine,
-    "charset": TokenType.keywordCharset
+    "charset": TokenType.keywordCharset,
+    "character": TokenType.keywordCharacter,
+    "start": TokenType.keywordStart,
+    "transaction": TokenType.keywordTransaction,
+    "if": TokenType.keywordIf,
+    "exists": TokenType.keywordExists
 
 
 };

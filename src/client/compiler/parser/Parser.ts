@@ -290,7 +290,7 @@ export class Parser {
 
     getCurrentPositionPlus(deltaColumns: number): TextPosition {
 
-        if(this.tt == TokenType.endofSourcecode){
+        if (this.tt == TokenType.endofSourcecode) {
             return {
                 line: this.endToken.position.line,
                 column: 100,
@@ -302,12 +302,12 @@ export class Parser {
         let tpos = 0;
         let deltaInsideToken = deltaColumns;
         let length = 0;
-        while(tpos < this.lookahead - 1 && (length = this.ct[tpos].position.length) < deltaInsideToken ){
+        while (tpos < this.lookahead - 1 && (length = this.ct[tpos].position.length) < deltaInsideToken) {
             deltaInsideToken -= length;
             tpos++;
         }
         let tokenPos = this.ct[tpos].position;
-        if(tokenPos == null) tokenPos = this.getCurrentPosition();
+        if (tokenPos == null) tokenPos = this.getCurrentPosition();
 
         let pos: TextPosition = {
             line: tokenPos.line,
@@ -346,7 +346,7 @@ export class Parser {
         let semicolonAfterLastStatement: boolean = true;
 
         this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(8), false, false,
-                    this.beginStatementKeywords);
+            this.beginStatementKeywords);
 
         while (!this.isEnd()) {
 
@@ -373,12 +373,17 @@ export class Parser {
                 this.nextToken();
             }
 
-            if(st != null){
+            let hasErrors: boolean = false;
+            for (let i = errorsBeforeStatement; i < this.errorList.length; i++) {
+                if (this.errorList[i].level == "error") hasErrors = true;
+            }
+
+            if (st != null) {
                 mainProgram.push({
                     ast: st,
                     from: startPosition,
                     to: this.getEndOfPosition(this.lastToken.position),
-                    hasErrors: this.errorList.length > errorsBeforeStatement,
+                    hasErrors: hasErrors,
                     acceptedBySQLite: false
                 });
             }
@@ -404,7 +409,7 @@ export class Parser {
                 }
             }
 
-            if(semicolonAfterLastStatement || this.cct.position.line - afterLastStatement.line > 0){
+            if (semicolonAfterLastStatement || this.cct.position.line - afterLastStatement.line > 0) {
                 this.module.addCompletionHint(afterLastStatement, this.getCurrentPositionPlus(8), false, false,
                     this.beginStatementKeywords);
             }
@@ -448,6 +453,10 @@ export class Parser {
                 return this.parseSet();
             case TokenType.keywordUse:
                 return this.parseUse();
+            case TokenType.keywordStart:
+                this.nextToken();
+                this.expect(TokenType.keywordTransaction, true);
+                return null;
 
             default:
                 let s = TokenTypeReadable[this.tt];
@@ -1004,6 +1013,14 @@ export class Parser {
             this.module.addCompletionHint(startPosition, this.getCurrentPositionPlus(3), false, false, ["table"]);
         }
 
+        let ifNotExists: boolean = false;
+        if (this.comesToken(TokenType.keywordIf)) {
+            this.nextToken();
+            this.expect(TokenType.keywordNot, true);
+            this.expect(TokenType.keywordExists, true);
+            ifNotExists = true;
+        }
+
         let identifier = "";
         if (this.expect(TokenType.identifier, false)) {
             identifier = <string>this.cct.value;
@@ -1019,7 +1036,8 @@ export class Parser {
             columnList: [],
             symbolTable: null,
             combinedPrimaryKeyColumns: [],
-            foreignKeyInfoList: []
+            foreignKeyInfoList: [],
+            ifNotExists: ifNotExists
         }
 
         if (!this.expect(TokenType.leftBracket, true)) return node;
@@ -1038,7 +1056,7 @@ export class Parser {
                     break;
                 case TokenType.keywordForeign:
                     let fki = this.parseForeignKeyDefinition();
-                    if(fki != null){
+                    if (fki != null) {
                         node.foreignKeyInfoList.push(fki);
                     }
                     break;
@@ -1076,9 +1094,17 @@ export class Parser {
                     this.skip(TokenType.equal);
                     this.expect(TokenType.identifier, true);
                     break;
+
             }
 
         }
+
+        for (let column of node.columnList) {
+            if (column.isAutoIncrement && !(column.isPrimary || node.combinedPrimaryKeyColumns.indexOf(column.identifier) >= 0)) {
+                this.pushError("autoincrement gibt es nur bei Primärschlüsseln, d.h. es fehlt wahrscheinlich 'primary key'.", "warning", node.position);
+            }
+        }
+
 
         node.endPosition = this.getCurrentPosition();
 
@@ -1203,7 +1229,7 @@ export class Parser {
 
         let alreadySeenKeywords: TokenType[] = [];
 
-        while ([TokenType.keywordComment, TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
+        while ([TokenType.keywordOn, TokenType.keywordCharacter, TokenType.keywordComment, TokenType.keywordAutoincrement, TokenType.keywordKey, TokenType.keywordPrimary, TokenType.keywordNot, TokenType.keywordReferences, TokenType.keywordCollate, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
             if (alreadySeenKeywords.indexOf(this.tt) >= 0) {
                 this.pushError('Das Schlüsselwort ' + TokenTypeReadable[this.tt] + " darf bei der Definition einer Spalte nicht öfters als ein Mal vorkommen.");
             }
@@ -1215,12 +1241,12 @@ export class Parser {
                     this.nextToken();
                     node.isAutoIncrement = true;
                     //@ts-ignore
-                    if(this.tt == TokenType.equal){
+                    if (this.tt == TokenType.equal) {
                         this.nextToken();
                         this.expect(TokenType.integerConstant);
                     } else {
                         //@ts-ignore
-                        if(this.tt == TokenType.comma && this.ct[1].tt == TokenType.keywordAutoincrement){
+                        if (this.tt == TokenType.comma && this.ct[1].tt == TokenType.keywordAutoincrement) {
                             this.nextToken();
                         }
                     }
@@ -1236,7 +1262,7 @@ export class Parser {
                     node.isPrimary = true;
                     break;
                 case TokenType.keywordReferences:
-                    let fki: ForeignKeyInfo = {column: node.identifier, referencesColumn: "", referencesTable: "", referencesPosition: this.getCurrentPosition()};
+                    let fki: ForeignKeyInfo = { column: node.identifier, referencesColumn: "", referencesTable: "", referencesPosition: this.getCurrentPosition() };
                     node.foreignKeyInfo = fki;
                     this.parseReferences(fki);
                     break;
@@ -1254,11 +1280,23 @@ export class Parser {
                     node.collate = <string>this.cct.value;
                     this.expect(TokenType.identifier, true);
                     break;
+                case TokenType.keywordCharacter:
+                    this.nextToken();
+                    this.expect(TokenType.keywordSet, true);
+                    this.expect(TokenType.identifier, true);
+                    break;
                 case TokenType.keywordDefault:
                     this.nextToken();
-                    
+
+                    if(this.ct[1].tt == TokenType.leftBracket && this.ct[2].tt == TokenType.rightBracket){
+                        this.nextToken();
+                        this.nextToken();
+                        this.nextToken();
+                        break;
+                    }
+
                     node.defaultValue = <string>this.cct.value;
-                    if(typeof this.cct.value == "string"){
+                    if (typeof this.cct.value == "string") {
                         node.defaultValue = "'" + node.defaultValue + "'";
                     }
                     //@ts-ignore
@@ -1276,11 +1314,15 @@ export class Parser {
                 case TokenType.keywordComment:
                     this.nextToken(); // Skip "comment"
                     this.expect(TokenType.stringConstant, true);
+                    break;
+                case TokenType.keywordOn:
+                    this.nextToken();
+                    this.expect([TokenType.keywordUpdate], true);
+                    while(!this.comesToken([TokenType.comma, TokenType.endofSourcecode, TokenType.rightBracket])) this.nextToken();
+                    //@ts-ignore
+                    if(this.lastToken.tt == TokenType.leftBracket && this.tt == TokenType.rightBracket) this.nextToken();
+                    break;
             }
-        }
-
-        if (node.isAutoIncrement && !node.isPrimary) {
-            this.pushError("autoincrement gibt es nur bei Primärschlüsseln, d.h. es fehlt wahrscheinlich 'primary key'.", "error", node.position);
         }
 
     }
@@ -1461,13 +1503,13 @@ export class Parser {
 
         let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
         fromListKeywordArray.splice(fromListKeywordArray.indexOf(this.lastToken.value + ""), 1);
-        
+
         let hintEndPosition = this.getCurrentPositionPlus(2);
-        if(this.comesToken(TokenType.semicolon)){
+        if (this.comesToken(TokenType.semicolon)) {
             hintEndPosition = this.getCurrentPosition();
         }
-        
-        this.module.addCompletionHint(node.fromStartPosition, hintEndPosition,false, true, fromListKeywordArray, dontHint)
+
+        this.module.addCompletionHint(node.fromStartPosition, hintEndPosition, false, true, fromListKeywordArray, dontHint)
         node.fromEndPosition = this.getCurrentPosition();
 
         // parse where...
