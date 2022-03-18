@@ -140,7 +140,7 @@ export class NewDatabaseDialog {
                 id: null,
                 isFolder: false,
                 name: <string>jQuery('.dialog-input.jo_databasename').val(),
-                path: "",
+                path: this.path.join("/"),
             }
 
             switch (createMode) {
@@ -192,6 +192,7 @@ export class NewDatabaseDialog {
             if (error != null) { alert(error); return; }
 
             let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
+            w.path = workspaceData.path;
             w.id = workspaceData.id;
             w.sql_history = "";
 
