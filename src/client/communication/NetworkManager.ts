@@ -6,6 +6,7 @@ import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
+import { NotifierClient } from "./NotifierClient.js";
 
 export class NetworkManager {
 
@@ -15,11 +16,14 @@ export class NetworkManager {
     teacherUpdateFrequencyInSeconds: number = 5;
 
     updateFrequencyInSeconds: number = 20;
-    forcedUpdateEvery: number = 2;
+    forcedUpdateEvery: number = 4;
+    counterTillForcedUpdate: number = 2;
     secondsTillNextUpdate: number = this.updateFrequencyInSeconds;
     errorHappened: boolean = false;
 
     interval: any;
+
+    notifierClient: NotifierClient;
 
     constructor(private main: Main, private $updateTimerDiv: JQuery<HTMLElement>) {
 
@@ -32,8 +36,6 @@ export class NetworkManager {
 
         if (this.interval != null) clearInterval(this.interval);
 
-        let counterTillForcedUpdate: number = this.forcedUpdateEvery;
-
         this.interval = setInterval(() => {
 
             if (that.main.user == null) return; // don't call server if no user is logged in
@@ -42,9 +44,9 @@ export class NetworkManager {
 
             if (that.secondsTillNextUpdate < 0) {
                 that.secondsTillNextUpdate = that.updateFrequencyInSeconds;
-                counterTillForcedUpdate--;
-                let forceUpdate = counterTillForcedUpdate == 0;
-                if (forceUpdate) counterTillForcedUpdate = this.forcedUpdateEvery;
+                this.counterTillForcedUpdate--;
+                let forceUpdate = this.counterTillForcedUpdate == 0;
+                if (forceUpdate) this.counterTillForcedUpdate = this.forcedUpdateEvery;
                 that.sendUpdates(() => { }, forceUpdate);
             }
 
@@ -62,6 +64,10 @@ export class NetworkManager {
 
         }, 1000);
 
+    }
+
+    initializeNotifierClient(){
+        this.notifierClient = new NotifierClient(this.main, this);
     }
 
     sendUpdates(callback?: () => void, sendIfNothingIsDirty: boolean = false) {

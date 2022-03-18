@@ -77,7 +77,7 @@ export class DistributeToStudentsDialog {
         this.$dialogMain = this.$dialog.find('.dialog-main');
         this.$dialog.css('visibility', 'visible');
 
-        jQuery('#jo_ds_cancel_button').on('click', () => { window.history.back(); });
+        jQuery('#jo_ds_cancel_button').on('click', () => { that.close() });
         jQuery('#jo_ds_distribute_button').on('click', () => {that.distributeWorkspace();});
 
     }
@@ -93,7 +93,7 @@ export class DistributeToStudentsDialog {
             }
         });
 
-        window.history.back();
+        this.close();
 
         this.main.networkManager.sendDistributeWorkspace(this.workspace, null, student_ids, (error: string) => {
             if (error == null) {
@@ -114,5 +114,6 @@ export class DistributeToStudentsDialog {
         jQuery('#main').css('visibility', 'visible');
     }
 
+    
 
 }
