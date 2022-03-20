@@ -109,7 +109,7 @@ export class DatabaseSettingsDialog {
             <string>jQuery('.jo_databasename').val(), published_to, <string>jQuery('.jo_ds_settings_description').val(),
              () => {
                  if($('#jo_upload_db').prop('checked')){
-                    new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main);                    
+                    new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");                    
                  }
                  this.showMainWindow(); 
                 })

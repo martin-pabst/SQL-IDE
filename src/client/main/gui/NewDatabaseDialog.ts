@@ -171,8 +171,10 @@ export class NewDatabaseDialog {
                     break;
                 case "useDumpFile":
                     if (this.database != null) {
-                        new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump, (response) => {
-                            workspaceData.template_database_id = response.newTemplateId;
+                        new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump,
+                            "uploadBaseTemplateForWorkspace",
+                            (response) => {
+                            workspaceData.template_id = response.newTemplateId;
                             this.createWorkspace(workspaceData);
                         });
 

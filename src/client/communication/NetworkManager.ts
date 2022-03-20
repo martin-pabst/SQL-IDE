@@ -318,8 +318,8 @@ export class NetworkManager {
         ajax("getDatabase", request, (response: getDatabaseResponse) => {
             if (response.success) {
 
-                workspace.database = WDatabase.fromDatabaseData(response.database)
-                cacheManager.fetchTemplateFromCache(workspace.database.templateId, (templateDump: Uint8Array) => {
+                workspace.database = WDatabase.fromDatabaseData(response.database, response.version)
+                cacheManager.fetchTemplateFromCache(workspace.database.based_on_template_id, (templateDump: Uint8Array) => {
 
                     if (templateDump != null) {
                         // @ts-ignore
@@ -327,13 +327,13 @@ export class NetworkManager {
                         callback(null);
                         return;
                     } else {
-                        if (workspace.database.templateId == null) {
+                        if (workspace.database.based_on_template_id == null) {
                             callback(null);
                             return
                         }
                         this.fetchTemplate(workspace.id, (template) => {
                             if (template != null) {
-                                cacheManager.saveTemplateToCache(workspace.database.templateId, template);
+                                cacheManager.saveTemplateToCache(workspace.database.based_on_template_id, template);
                                 // @ts-ignore
                                 workspace.database.templateDump = pako.inflate(template);
                                 callback(null);

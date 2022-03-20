@@ -4,34 +4,39 @@ import { Workspace } from "../workspace/Workspace.js";
 
 export class TemplateUploader {
 
-    uploadCurrentDatabase(workspace_id: number, main: Main, dump?: Uint8Array, callback: (response: UploadTemplateResponse) => void = () => {}){
+    uploadCurrentDatabase(workspace_id: number, main: Main, dump: Uint8Array | null, 
+        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace",
+        callback: (response: UploadTemplateResponse) => void = () => { }) {
+            
         main.waitOverlay.show('Bitte warten, lade Vorlage auf den Server hoch ...');
-        if(workspace_id >= 0){
+        if (workspace_id >= 0) {
             let dbTool = main.getDatabaseTool();
             dbTool.export((buffer) => {
                 // @ts-ignore
                 buffer = pako.deflate(buffer);
-                this.uploadIntern(buffer, workspace_id, main, callback);        
-            }, (error)=>{
+                this.uploadIntern(buffer, workspace_id, reason, main, callback);
+            }, (error) => {
                 alert("Fehler beim Exportieren der Datenbank: " + error)
                 main.waitOverlay.hide();
             })
         } else {
-            this.uploadIntern(dump, -1, main, callback);
+            this.uploadIntern(dump, -1, reason, main, callback);
         }
 
     }
 
 
-    private uploadIntern(buffer: Uint8Array, workspace_id: number, main: Main, callback: (response: UploadTemplateResponse) => void) {
-        
+    private uploadIntern(buffer: Uint8Array, workspace_id: number,
+        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace",
+        main: Main, callback: (response: UploadTemplateResponse) => void) {
+
         $.ajax({
             type: 'POST',
             async: true,
             contentType: 'application/octet-stream',
             data: buffer,
             processData: false,
-            headers: { 'x-workspaceid': "" + workspace_id },
+            headers: { 'x-workspaceid': "" + workspace_id, "x-reason": reason },
             url: "servlet/uploadTemplate",
             success: function (response: UploadTemplateResponse) {
                 main.waitOverlay.hide();

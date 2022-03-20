@@ -57,6 +57,7 @@ export type CreateWorkspaceData = {
     isFolder: boolean,
 
     template_database_id?: number,
+    template_id?: number,
     secret?: string,
     otherDatabaseId?: number
 }
@@ -559,11 +560,10 @@ export type DatabaseData = {
     name: string,
     owner_id: number,
     schule_id: number,
-    template_id: number,
+    based_on_template_id: number,
     template: DatabaseData,
     statements: string[],
     published_to: number,
-    version: number,
     description: string,
     id_old_version_of_id: number
 }
@@ -575,6 +575,7 @@ export type GetDatabaseRequest = {
 export type getDatabaseResponse = {
     success: boolean,
     database: DatabaseData,
+    version: number,
     error: string
 }
 

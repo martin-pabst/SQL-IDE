@@ -6,7 +6,7 @@ export class WDatabase {
     name: string;
 
     templateDump: Uint8Array;
-    templateId: number;
+    based_on_template_id: number;
     templateName: string;
 
     statements: string[];
@@ -15,7 +15,7 @@ export class WDatabase {
     description: string;
     owner_id: number;
 
-    static fromDatabaseData(data: DatabaseData): WDatabase {
+    static fromDatabaseData(data: DatabaseData, version: number): WDatabase {
 
         let db = new WDatabase();
 
@@ -23,10 +23,10 @@ export class WDatabase {
         db.name = data.name;
         db.statements = data.statements;
         db.published_to = data.published_to;
-        db.version = data.version;
+        db.version = version;
         db.description = data.description;
         db.templateDump = null;
-        db.templateId = data.template_id;
+        db.based_on_template_id = data.based_on_template_id;
         db.owner_id = data.owner_id;
         return db;
     }
