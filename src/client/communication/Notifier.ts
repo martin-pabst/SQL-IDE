@@ -4,7 +4,7 @@ import { Main } from "../main/Main.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ajax } from "./AjaxHelper.js";
-import { GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
+import { GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, LongPollingListenerResponse, RegisterLongPollingListenerRequest, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
 
 export class Notifier {
 
@@ -14,11 +14,10 @@ export class Notifier {
     database: WDatabase;
 
     constructor(public main: Main) {
-            // Let's hope that websocket connection can be established.
-            // We setup http-polling as fallback solution
+        // Polling is not used. 
+        // We try long polling (see below!)
 
-            this.startPolling();
-
+        // this.startPolling();
     }
 
     connect(workspace: Workspace) {
@@ -27,7 +26,7 @@ export class Notifier {
         this.workspace = workspace;
         this.database = workspace.database;
 
-        if(this.isOpen){
+        if (this.isOpen) {
             this.connection.close();
         }
 
@@ -55,6 +54,9 @@ export class Notifier {
 
             }
 
+            setTimeout(() => {
+                that.startLongPolling()
+            }, 2000);
 
         });
 
@@ -109,15 +111,15 @@ export class Notifier {
             case 4: // keep alive
                 break;
             case 5: // rollback
-                if(this.database.version > response.new_version){
+                if (this.database.version > response.new_version) {
                     this.main.getHistoryViewer().rollbackLocal();
                 }
                 break;
         }
     }
 
-    executeNewStatements(newStatements: string[], firstNewStatementIndex: number, callbackIfTooFewStatements: () => void, callbackIfDone: () => void = () => {}, doRefreshDatabaseExplorer: boolean = true) {
-        if(this.database == null) return;
+    executeNewStatements(newStatements: string[], firstNewStatementIndex: number, callbackIfTooFewStatements: () => void, callbackIfDone: () => void = () => { }, doRefreshDatabaseExplorer: boolean = true) {
+        if (this.database == null) return;
         let that = this;
         let delta = firstNewStatementIndex - (this.database.version + 1);
         if (delta > 0) {
@@ -130,12 +132,12 @@ export class Notifier {
                 firstNewStatementIndex -= delta;
             }
             let statements = newStatements;
-            if(statements.length > 0){
+            if (statements.length > 0) {
                 this.main.resultsetPresenter.executeStatementsString(statements, 0, () => {
                     that.main.getHistoryViewer().appendStatements(statements);
                     that.database.statements = that.database.statements.concat(statements)
                     that.database.version = firstNewStatementIndex + newStatements.length - 1;
-                    if(doRefreshDatabaseExplorer){
+                    if (doRefreshDatabaseExplorer) {
                         that.main.databaseExplorer.refresh();
                     }
                     callbackIfDone();
@@ -159,6 +161,11 @@ export class Notifier {
         }
     }
 
+    /**
+     * Polling is not used. 
+     * We try long polling!
+     * (see below)
+     */
     isPolling: boolean = false;
     startPolling() {
         if (this.isPolling) return;
@@ -168,6 +175,11 @@ export class Notifier {
 
     }
 
+    /**
+     * Polling is not used.
+     * We try long polling!
+     * (see below)
+     */
     counter: number = 0;
     poll() {
         let that = this;
@@ -177,10 +189,10 @@ export class Notifier {
 
         if (!that.isOpen && that.workspace != null) {
             this.getNewStatementsHttp();
-            
+
             // retry connecting:
             that.counter++;
-            if(that.counter == 10){
+            if (that.counter == 10) {
                 that.counter = 0;
                 that.connect(that.workspace);
             }
@@ -204,6 +216,68 @@ export class Notifier {
             })
 
         });
+
+    }
+
+    isLongPolling: boolean = false;
+    startLongPolling() {
+        if (this.isLongPolling) return;
+        this.isLongPolling = true;
+
+        this.longPoll();
+
+    }
+
+    longPollCounter: number = 0;
+    longPoll() {
+        let that = this;
+
+        if (!that.isOpen && that.workspace != null) {
+            let request: RegisterLongPollingListenerRequest = {
+                workspaceId: that.workspace.id
+            }
+
+            $.ajax({
+                type: 'POST',
+                async: true,
+                data: JSON.stringify(request),
+                contentType: 'application/json',
+                url: "servlet/registerLongPollingListener",
+                success: function (resp: string) {
+                    let response: LongPollingListenerResponse = JSON.parse(resp);
+                    if (!that.isOpen && that.workspace?.id == request.workspaceId && response.success) {
+                        that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
+                            that.getNewStatementsHttp();
+                        })
+
+                        let timeout: number = 1000;
+                        // retry connecting:
+                        that.longPollCounter++;
+                        if (that.longPollCounter == 10) {
+                            that.longPollCounter = 0;
+                            that.connect(that.workspace);
+                            timeout = 2000;
+                        }
+
+                        setTimeout(() => {
+                            that.longPoll();
+                        }, 2000);
+                    }
+                },
+                error: function (jqXHR, message) {
+                    if (!that.isOpen && that.workspace?.id == request.workspaceId) {
+                        setTimeout(() => {
+                            that.longPoll();
+                        }, 2000);
+                    }
+                }
+            });
+
+        } else {
+            setTimeout(() => {
+                that.longPoll();
+            }, 5000);
+        }
 
     }
 

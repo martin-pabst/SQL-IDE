@@ -681,3 +681,15 @@ export type UploadTemplateResponse = {
     success: boolean, 
     newTemplateId?: number
 }
+
+export type RegisterLongPollingListenerRequest = {
+    workspaceId: number
+}
+
+export type LongPollingListenerResponse = {
+    success: boolean,
+    message: string,
+    firstNewStatementIndex?: number,
+    newStatements?: string[]
+}
+
