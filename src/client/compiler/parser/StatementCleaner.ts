@@ -69,7 +69,7 @@ export class StatementCleaner {
         let pkc = ast.combinedPrimaryKeyColumns.slice().map(s => s.toLocaleLowerCase());
         for(let column of ast.columnList){
             let c = column.identifier.toLocaleLowerCase();
-            if(pkc.indexOf(c) >= 0){
+            if(column.isAutoIncrement && pkc.indexOf(c) >= 0){
                 pkc.splice(pkc.indexOf(c), 1);
             }
         }

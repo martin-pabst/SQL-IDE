@@ -14,6 +14,10 @@ export class Notifier {
     database: WDatabase;
 
     constructor(public main: Main) {
+            // Let's hope that websocket connection can be established.
+            // We setup http-polling as fallback solution
+
+            this.startPolling();
 
     }
 
@@ -51,10 +55,6 @@ export class Notifier {
 
             }
 
-            // Now let's hope that websocket connection can be established.
-            // We setup http-polling as fallback solution
-
-            this.startPolling();
 
         });
 
@@ -85,6 +85,7 @@ export class Notifier {
         };
         this.sendIntern(JSON.stringify(message));
         this.connection.close();
+        this.workspace = null;
     }
 
     onMessage(event: MessageEvent) {
@@ -167,14 +168,22 @@ export class Notifier {
 
     }
 
+    counter: number = 0;
     poll() {
         let that = this;
         setTimeout(() => {
             that.poll();
-        }, 5000);
+        }, 6000);
 
-        if (!that.isOpen) {
+        if (!that.isOpen && that.workspace != null) {
             this.getNewStatementsHttp();
+            
+            // retry connecting:
+            that.counter++;
+            if(that.counter == 10){
+                that.counter = 0;
+                that.connect(that.workspace);
+            }
         }
 
     }
