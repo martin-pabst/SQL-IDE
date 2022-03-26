@@ -1,5 +1,5 @@
 import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
-import { makeTabs } from "../../tools/HtmlTools.js";
+import { copyTextToClipboard, makeTabs } from "../../tools/HtmlTools.js";
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
@@ -30,12 +30,12 @@ export class DatabaseSettingsDialog {
                 <div>
                     <table class="jo_ds_secret_table">
                     <tr>
-                        <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read"></td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
+                        <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read"></td><td id="copySecretTdread"></td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
                     <tr>
-                        <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write"></td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
+                        <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write"></td><td id="copySecretTdwrite"></td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
                     </tr>
                     <tr>
-                        <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
+                        <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td id="copySecretTdddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
                     </tr>
                     </table>
                 </div>
@@ -88,6 +88,11 @@ export class DatabaseSettingsDialog {
                 that.main.networkManager.setNewSecret(that.workspace.id, kind, (secret) => {
                     jQuery('.jo_ds_secret_'+kind).text(secret);
                 })
+            })
+            let $copyButton = jQuery('<button class="jo_small_button jo_copy_secret_button jo_active">Kopieren</button>')
+            jQuery('#copySecretTd' + kind).append($copyButton);
+            $copyButton.on('pointerdown', () => {
+                copyTextToClipboard(jQuery('.jo_ds_secret_'+kind).text());
             })
         })
 

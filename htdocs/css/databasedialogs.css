@@ -83,3 +83,11 @@
     height: 100px;
     margin-left: 10px;
 }
+
+.jo_copy_secret_button {
+    font-size: 100%;
+    padding: 2px;
+    background-color: #59ca85 !important;
+    border: none;
+    margin: 5px 20px;    
+}
