@@ -54,7 +54,7 @@
 }
 
 .jo_ds_secret {
-    font-family: 'Roboto Mono', sans-serif;
+    font-family: 'Consolas', 'Roboto Mono', sans-serif;
     color: rgb(196, 170, 25);
     margin-left: 10px;
 }

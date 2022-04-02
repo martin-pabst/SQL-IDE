@@ -639,8 +639,29 @@ body .monaco-editor-hover .monaco-tokenized-source {
     left: -3px;    
 }
 
+.jo_file.jo_folder.jo_collapsed>.jo_fileimage:before {
+    content: url('data:image/svg+xml,%3Csvg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M10.0719 7.99999L5.71461 12.3573L6.33333 12.976L11 8.30935V7.69064L6.33333 3.02397L5.71461 3.64269L10.0719 7.99999Z" fill="%23C5C5C5"/%3E%3C/svg%3E%0A');
+    position: relative;
+    top: 2px;
+    left: -3px;    
+}
+
+.jo_file.jo_folder.jo_expanded>.jo_fileimage:before {
+    content: url('data:image/svg+xml,%3Csvg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M7.97602 10.0719L12.3333 5.71461L12.952 6.33333L8.28538 11L7.66666 11L3 6.33333L3.61872 5.71461L7.97602 10.0719Z" fill="%23C5C5C5"/%3E%3C/svg%3E%0A');
+    position: relative;
+    top: 2px;
+    left: -3px;    
+}
+
+
 .jo_file>.jo_filename {
-    flex-grow: 1
+    flex-grow: 1;
+    user-select: none;
+    cursor: pointer !important;
+    -webkit-user-select: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .jo_file.jo_java.jo_startable>.jo_fileimage:before {
@@ -2228,7 +2249,7 @@ html, body {
     display: flex;
     align-items: center;
     flex-direction: column;
-    z-index: 1000;
+    z-index: 900;
     background-color: var(--backgroundDark);
     top: 0;
     left: 0;
@@ -2388,7 +2409,7 @@ html, body {
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding: 2px 0;
+    padding: 2px 5px;
     border-bottom: 1px solid gray;
     user-select: none;
 }
@@ -2426,7 +2447,7 @@ html, body {
 }
 
 .jo_ds_secret {
-    font-family: 'Roboto Mono', sans-serif;
+    font-family: 'Consolas', 'Roboto Mono', sans-serif;
     color: rgb(196, 170, 25);
     margin-left: 10px;
 }
@@ -2455,6 +2476,15 @@ html, body {
     height: 100px;
     margin-left: 10px;
 }
+
+.jo_copy_secret_button {
+    font-size: 100%;
+    padding: 2px;
+    background-color: #59ca85 !important;
+    border: none;
+    margin: 5px 20px;    
+}
+
 /* roboto-regular - latin */
 @font-face {
     font-family: 'Roboto';
