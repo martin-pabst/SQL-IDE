@@ -171,7 +171,11 @@ export class MainEmbedded implements MainBase {
                     });
 
                 });
+            }).catch((error: string)=>{
+                alert('Fehler beim Landen der Datenbank: ' + error)
             })
+        } else {
+            alert('Es wurde kein Parameter databaseURL angegeben.');
         }
 
 
@@ -227,6 +231,13 @@ export class MainEmbedded implements MainBase {
             this.config.withErrorList = false;
         }
 
+        if(this.config.databaseURL != null){
+            ['http:', 'https:'].forEach(protocol => {
+                if(this.config.databaseURL.startsWith(protocol) && !this.config.databaseURL.startsWith(protocol + "://")){
+                    this.config.databaseURL = this.config.databaseURL.replace(protocol, protocol + "//");
+                }
+            })
+        }
 
     }
 

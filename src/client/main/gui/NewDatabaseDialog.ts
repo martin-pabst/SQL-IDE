@@ -225,7 +225,8 @@ export class NewDatabaseDialog {
 
     async importFile(files: FileList) {
         let that = this;
-        let db: LoadableDatabase = await new DatabaseImportExport().loadFromFile(files[0], this.main)
+        let importer = new DatabaseImportExport();
+        let db: LoadableDatabase = await importer.loadFromFile(files[0], this.main)
         let isDatabase: boolean = false;
         let dumpFileType = DatabaseTool.getDumpType(db.binDump);
         if (dumpFileType == "binaryCompressed") {

@@ -112,32 +112,32 @@ export class ProjectExplorer {
                 let module: Module = <Module>accordionElement.externalElement;
                 let file = module.file;
 
-                if (file.submitted_date == null) {
-                    cmiList.push({
-                        caption: "Als Hausaufgabe markieren",
-                        callback: (element: AccordionElement) => {
+                // if (file.submitted_date == null) {
+                //     cmiList.push({
+                //         caption: "Als Hausaufgabe markieren",
+                //         callback: (element: AccordionElement) => {
 
-                            let file = (<Module>element.externalElement).file;
-                            file.submitted_date = dateToString(new Date());
-                            file.saved = false;
-                            that.main.networkManager.sendUpdates(null, true);
-                            that.renderHomeworkButton(file);
-                        }
-                    });
-                } else {
-                    cmiList.push({
-                        caption: "Hausaufgabenmarkierung entfernen",
-                        callback: (element: AccordionElement) => {
+                //             let file = (<Module>element.externalElement).file;
+                //             file.submitted_date = dateToString(new Date());
+                //             file.saved = false;
+                //             that.main.networkManager.sendUpdates(null, true);
+                //             that.renderHomeworkButton(file);
+                //         }
+                //     });
+                // } else {
+                //     cmiList.push({
+                //         caption: "Hausaufgabenmarkierung entfernen",
+                //         callback: (element: AccordionElement) => {
 
-                            let file = (<Module>element.externalElement).file;
-                            file.submitted_date = null;
-                            file.saved = false;
-                            that.main.networkManager.sendUpdates(null, true);
-                            that.renderHomeworkButton(file);
+                //             let file = (<Module>element.externalElement).file;
+                //             file.submitted_date = null;
+                //             file.saved = false;
+                //             that.main.networkManager.sendUpdates(null, true);
+                //             that.renderHomeworkButton(file);
 
-                        }
-                    });
-                }
+                //         }
+                //     });
+                // }
 
             }
 

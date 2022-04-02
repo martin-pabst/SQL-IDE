@@ -16,7 +16,7 @@ export class DatabaseImportExport {
             return ld;
         } else {
             var reader = new FileReader();
-            new Promise<LoadableDatabase>((resolve, reject) => {
+            return new Promise<LoadableDatabase>((resolve, reject) => {
                 reader.onload = (event) => {
                     let ab: ArrayBuffer = <ArrayBuffer>event.target.result;
                     let db: Uint8Array = new Uint8Array(ab);
@@ -26,7 +26,6 @@ export class DatabaseImportExport {
                     
                     main.getWaitOverlay().hide();
                     resolve({binDump: db});
-        
                 };
                 reader.readAsArrayBuffer(file);
     

@@ -3,6 +3,7 @@ import { UserData } from "../../communication/Data.js";
 import { PasswordChanger } from "./UserMenu.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
+import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 
 export type Action = (identifier: string) => void;
 
@@ -123,7 +124,7 @@ export class MainMenu {
 
                             { identifier: "-" },
                             { identifier: "Zoom out (Strg + Mausrad)", action: () => { this.main.editor.changeEditorFontSize(-4); } },
-                            { identifier: "Zoom normal", action: () => { this.main.editor.setFontSize(14); }},
+                            { identifier: "Zoom normal", action: () => { this.main.editor.setFontSize(14); } },
                             { identifier: "Zoom in (Strg + Mausrad)", action: () => { this.main.editor.changeEditorFontSize(4); } },
 
                         ]
@@ -133,9 +134,22 @@ export class MainMenu {
                     identifier: "Datenbank", subMenu:
                     {
                         items: [
+                            {
+                                identifier: "Neue Datenbank anlegen...", action: () => {
+                                    let owner_id: number = that.main.user.id;
+                                    if (that.main.workspacesOwnerId != null) {
+                                        owner_id = that.main.workspacesOwnerId;
+                                    }
+
+                                    new NewDatabaseDialog(that.main, owner_id, []);
+                                }
+                            },
                             { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },
-                            { identifier: "Export als Binärdump (.dbDump-File)...", action: () => {  new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());
-                            } },
+                            {
+                                identifier: "Export als Binärdump (.dbDump-File)...", action: () => {
+                                    new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());
+                                }
+                            },
 
                         ]
                     }
