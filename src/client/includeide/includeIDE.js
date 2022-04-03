@@ -1,32 +1,44 @@
-
 let base = "https://embed.learn-sql.de/include/";
 
-includeCss(base + 'js.webpack/sql-ide-embedded.css');
-includeJs(base + "lib/jquery/jquery-3.3.1.js");
-includeJs(base + "lib/pako/pako.js");
-includeJs(base + "lib/zip.js/zip.min.js");
-includeJs(base + "lib/sql.js/sql-wasm.js");
-includeJs(base + "js/sqljs-worker/sqljsWorkerTools.js");
-includeJs(base + "lib/monaco-editor/dev/vs/loader.js");
+// includeCss(base + 'js.webpack/sql-ide-embedded.css');
+// includeJs(base + "lib/jquery/jquery-3.3.1.js");
+// includeJs(base + "lib/pako/pako.js");
+// includeJs(base + "lib/zip.js/zip.min.js");
+// includeJs(base + "lib/sql.js/sql-wasm.js");
+// includeJs(base + "js/sqljs-worker/sqljsWorkerTools.js");
+// includeJs(base + "lib/monaco-editor/dev/vs/loader.js");
 
-window.onload = function () {
-    if(window.jo_doc.startsWith("http")){
-        $.ajax({
-            url: window.jo_doc,
-             type:"get",
-             dataType:'text',  
-             success: function(data){
-               initScripts(data);
-             },
-             error:function() {
-               alert("Fehler beim Laden von " + jo_doc);
-             }
-         });
-    } else {
-        initScripts(window.jo_doc);
-    }
-    
-};
+let scripts = [
+    base + 'js.webpack/sql-ide-embedded.css',
+    base + "lib/jquery/jquery-3.3.1.js",
+    base + "lib/pako/pako.js",
+    base + "lib/zip.js/zip.min.js",
+    base + "lib/sql.js/sql-wasm.js",
+    base + "js/sqljs-worker/sqljsWorkerTools.js",
+    base + "lib/monaco-editor/dev/vs/loader.js"    
+];
+
+includeJsAndCss(scripts, () => {
+    window.onload = function () {
+        if(window.jo_doc.startsWith("http")){
+            $.ajax({
+                url: window.jo_doc,
+                 type:"get",
+                 dataType:'text',  
+                 success: function(data){
+                   initScripts(data);
+                 },
+                 error:function() {
+                   alert("Fehler beim Laden von " + jo_doc);
+                 }
+             });
+        } else {
+            initScripts(window.jo_doc);
+        }
+        
+    };    
+})
+
 
 function initScripts(jo_doc){
     let scriptPosition = jo_doc.indexOf('<script');
@@ -62,7 +74,7 @@ function includeJs(src, callback, type) {
     var script = document.createElement('script');
     if (callback) {
         script.onload = function () {
-            //do stuff with the script
+           callback();
         };
     }
 
@@ -83,4 +95,23 @@ function includeCss(src) {
     link.href = src;
     link.media = 'all';
     head.appendChild(link);
+}
+
+function includeJsAndCss(urlList, callback){
+
+    if(urlList.length > 0){
+        let url = urlList.shift();
+        if(url.endsWith('.js')){
+            includeJs(url, () => {
+                includeJsAndCss(urlList, callback);
+            })
+        } else {
+            includeCss(url);
+            includeJsAndCss(urlList, callback);
+        }
+    } else {
+        callback();
+    }
+
+
 }
