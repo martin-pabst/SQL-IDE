@@ -1,12 +1,5 @@
 let base = "https://embed.learn-sql.de/include/";
 
-// includeCss(base + 'js.webpack/sql-ide-embedded.css');
-// includeJs(base + "lib/jquery/jquery-3.3.1.js");
-// includeJs(base + "lib/pako/pako.js");
-// includeJs(base + "lib/zip.js/zip.min.js");
-// includeJs(base + "lib/sql.js/sql-wasm.js");
-// includeJs(base + "js/sqljs-worker/sqljsWorkerTools.js");
-// includeJs(base + "lib/monaco-editor/dev/vs/loader.js");
 
 let scripts = [
     base + 'js.webpack/sql-ide-embedded.css',
@@ -37,7 +30,7 @@ includeJsAndCss(scripts, () => {
         }
         
     };    
-})
+});
 
 
 function initScripts(jo_doc){
@@ -112,6 +105,5 @@ function includeJsAndCss(urlList, callback){
     } else {
         callback();
     }
-
 
 }

@@ -47,8 +47,9 @@
     <div id="login">
         <div id="jo_login_animations"></div>
         <div id="login-heading">SQL-IDE</div>
+        <div id="login-alpha">(Vorsicht: Alpha-Version!)</div>
         <div style="flex-grow: 1"></div>
-        <div>
+        <div id="loginformdiv">
             <div id="login-center">
                 <form>
                 <input id="login-username" type="text" placeholder="Benutzername" spellcheck="false" tabindex="1">
@@ -61,10 +62,65 @@
         <div id="login-spinner">
             <img src="assets/projectexplorer/svg-loaders/ball-triangle.svg">
         </div>
-    <div style="flex-grow: 2">
+        <div class="jo_infodiv">
+
+            <div class="jo_infodiv_line">
+                <a href="https://www.learn-sql.de/doku.php?id=sqlide:videotutorials:start" target="_blank">
+                    <div class="jo_infodiv_box" id="jo_video_button">
+                        <img src="assets/graphics/film.png" class="jo_infobox_leftimage" alt="">
+                        <div>Video-Tutorials zur SQL-IDE</div>
+                    </div>
+                </a>
+                <!-- <div class="jo_infodiv_box" id="jo_testuser-login-button">
+                    <img src="assets/graphics/test.png" class="jo_infobox_leftimage" alt="">
+                    <div>Login als Testuser (*)</div>
+                </div> -->
+                <a href="https://www.learnj.de/doku.php?id=ide:testlogins:start" target="_blank">
+                    <div class="jo_infodiv_box" id="jo_testlogins">
+                        <img src="assets/graphics/rocket.png" class="jo_infobox_leftimage" alt="">
+                        <div>Interesse?<br>(Test-)logins für Schulen</div>
+                    </div>
+                </a>
+
+                <a href="https://www.online-ide.de" target="_blank" >
+                    <div class="jo_infodiv_box" id="jo_java">
+                        <img src="assets/graphics/learnj.png" class="jo_infobox_leftimage" alt="">
+                        <div>Hier geht's zur Java-IDE</div>
+                    </div>
+                </a>
+
+            </div>
+            <div class="jo_infodiv_line">
+                <a href="https://www.learn-sql.de" target="_blank">
+                    <div class="jo_infodiv_box" id="jo_learnj">
+                        <img src="assets/graphics/learnsql.png" class="jo_infobox_leftimage" alt="">
+                        <div>Interaktives SQL-Tutorial</div>
+                    </div>
+                </a>
+                <a href="https://github.com/martin-pabst/SQL-Online" target="_blank">
+                    <div class="jo_infodiv_box" id="jo_embedded_ide">
+                        <img src="assets/graphics/forkme_left_green_007200.png" class="jo_infobox_forkme" alt="">
+                        <div style="font-size: 16pt;">Embedded<br> SQL-IDE - auch für deine Homepage!</div>
+                    </div>
+                </a>
+                <a href="https://www.embed.learn-sql.de/createwrapper.html" target="_blank">
+                    <div class="jo_infodiv_box" id="jo_moodle_mebis">
+                        <img src="assets/graphics/moodle_mebis.png" class="jo_infobox_leftimage" alt="">
+                        <div style="font-size: 12pt;">SQL üben innerhalb von Moodle-/Mebis-Kursen</div>
+                    </div>
+                </a>
+            </div>
         </div>
-        <div id="login-footer">Falls Sie die Online-IDE an Ihrer Schule testen möchten, schreiben Sie mir bitte einfach kurz: &nbsp;
-            <a href="mailto:asv.pabst@gmail.com" style="color: lightBlue">martin.pabst@gmail.com</a>
+        <div style="flex-grow: 4" class="jo_login_div">
+        </div>
+        <div id="login-footer">
+            <!-- <div>
+                (*) Ohne Repository und Lehrkraft-Funktionen
+            </div> -->
+            <div id="login-datenschutz">
+                <a href="https://www.learnj.de/doku.php?id=ide:datenschutzerklaerung" target="_blank">Datenschutzerklärung</a>  - 
+                <a href="https://www.learnj.de/doku.php?id=ide:impressum" target="_blank">Impressum</a>
+            </div>
         </div>
     </div>
 

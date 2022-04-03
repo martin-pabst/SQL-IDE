@@ -146,7 +146,7 @@ export class MainMenu {
                             },
                             { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },
                             {
-                                identifier: "Export als Binärdump (.dbDump-File)...", action: () => {
+                                identifier: "Export als Binärdump (.sqLite-File)...", action: () => {
                                     new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());
                                 }
                             },
