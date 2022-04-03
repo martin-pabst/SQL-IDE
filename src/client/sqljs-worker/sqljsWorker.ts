@@ -1,7 +1,9 @@
 importScripts('../../lib/sql.js/sql-wasm.js', 'sqljsWorkerTools.js');
 
 //@ts-ignore
-var initsql = initSqlJs();
+var initsql = initSqlJs({
+    locateFile: name => (self.location + "").replace("js/sqljs-worker/sqljsWorker.js", "") + 'lib/sql.js/' + name
+   });
 var db;
 var SQL;
 
@@ -88,9 +90,6 @@ function worker(event) {
             error: err["message"]
         });
     }
-
-
-
 
 }
 

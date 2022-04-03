@@ -1,4 +1,5 @@
 import { MainBase } from "../main/MainBase.js";
+import { WorkerSim } from "../sqljs-worker/sqljsWorkerSim.js";
 
 export type DatabaseDumpType = "binaryUncompressed" | "binaryCompressed" | "other";
 
@@ -83,8 +84,13 @@ export class DatabaseTool {
             url = window.javaOnlineDir + url;
         }
 
-        this.worker = new Worker(url);
-        // this.worker = new Worker("lib/sql.js/worker.sql-wasm.js");
+        //@ts-ignore
+        if(window.jo_doc){
+            //@ts-ignore
+            this.worker = new WorkerSim();
+        } else {
+            this.worker = new Worker(url);
+        }
         let that = this;
 
         let errors: string[] = [];

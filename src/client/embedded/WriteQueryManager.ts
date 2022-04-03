@@ -67,8 +67,8 @@ export class WriteQueryManager implements WriteQueryListener {
             }
             this.main.waitOverlay.setProgress(Math.round(100 * (1 - this.statementsToExecute.length / this.count)) + " %")
             let statement = this.statementsToExecute.shift();
-            this.databaseTool.executeQuery(statement, () => { this.executeStatements() }, () => { this.executeStatements() });
             this.atLeastOneExecuted = true;
+            this.databaseTool.executeQuery(statement, () => { this.executeStatements() }, () => { this.executeStatements() });
         } else {
             if (this.atLeastOneExecuted) {
                 this.main.databaseExplorer.refresh();
