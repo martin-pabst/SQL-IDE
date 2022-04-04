@@ -204,13 +204,22 @@ export class Lexer {
                         this.lexNumber();
                         return;
                     } else if (this.nextChar == '-') {
-                        this.lexEndofLineComment();
+                        this.lexEndofLineComment("--");
                         return;
                     } else {
                         this.pushToken(TokenType.minus, '-');
                         this.next();
                         return;
                     }
+                case TokenType.hash:
+                    if(this.nonSpaceLastToken == null || this.nonSpaceLastToken.position.line < this.line){
+                        this.lexEndofLineComment('#');
+                        return;
+                    } else {
+                        this.pushToken(TokenType.hash, "#");
+                        this.next();
+                    }
+                    break;
                 case TokenType.singleQuote:
                     this.lexStringConstant("'");
                     return;
@@ -236,6 +245,7 @@ export class Lexer {
                 case TokenType.identifierQuote:
                     this.lexQuotedIdentifier();
                     return;
+                
             }
 
             this.pushToken(specialCharToken, char);
@@ -449,13 +459,14 @@ export class Lexer {
 
     }
 
-    lexEndofLineComment() {
+    lexEndofLineComment(commentStart: string) {
         let line = this.line;
         let column = this.column;
 
-        let text = "--";
-        this.next();
-        this.next();
+        let text = commentStart;
+        for(let i = 0; i < commentStart.length; i++){
+            this.next();
+        }
 
         while (true) {
             let char = this.currentChar;

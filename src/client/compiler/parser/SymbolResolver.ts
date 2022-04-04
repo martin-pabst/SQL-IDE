@@ -166,8 +166,10 @@ export class SymbolResolver {
 
         if (node.tableIdentifier == null) return;
 
-        let table = node.symbolTable.findTable(node.tableIdentifier);
-        if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        if(!node.ifExists){
+            let table = node.symbolTable.findTable(node.tableIdentifier);
+            if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        }
 
     }
 

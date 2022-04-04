@@ -232,9 +232,12 @@ export class SQLDerivedType extends SQLType {
     }
 }
 
-let textTypes = ["varchar", "text" ,"tinytext", "mediumtext", "longtext"];
+let textTypes = ["varchar", "char", "text" ,"tinytext", "mediumtext", "longtext"];
 
 var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
+    (v: string, pv) => v.substring(0, pv[0]), textTypes);
+    
+var charType = new SQLBaseType("char", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
     (v: string, pv) => v.substring(0, pv[0]), textTypes);
 
 var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes.concat(["date", "datetime", "timestamp"]));
@@ -274,16 +277,25 @@ var nullType = new SQLBaseType("null", [], (ci, pv) => "", (v, pv) => v,
 
 let numericTypes = [decimalType, numericType, doubleType, realType, floatType, intType, integerType, tinyIntType, smallIntType, mediumIntType, bigIntType];
 
-let baseTypes = [varcharType, textType, tinyTextType, mediumTextType, longTextType,
+let baseTypes = [varcharType, charType, textType, tinyTextType, mediumTextType, longTextType,
     dateType, dateTimeType, timestampType, booleanType, nullType].concat(numericTypes);
 
 SQLBaseType.addBaseTypes(baseTypes);
 
 varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
+varcharType.addBinaryOperation(TokenType.concatenation, charType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, textType, textType);
 textType.addBinaryOperation(TokenType.concatenation, textType, textType);
 varcharType.addBinaryOperation(TokenType.keywordLike, varcharType, booleanType);
 varcharType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
+textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
+
+charType.addBinaryOperation(TokenType.concatenation, charType, charType);
+charType.addBinaryOperation(TokenType.concatenation, varcharType, charType);
+charType.addBinaryOperation(TokenType.concatenation, textType, textType);
+textType.addBinaryOperation(TokenType.concatenation, textType, textType);
+charType.addBinaryOperation(TokenType.keywordLike, charType, booleanType);
+charType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 
 let numericBinaryOperators: TokenType[] = [TokenType.plus, TokenType.minus, TokenType.multiplication, TokenType.division, TokenType.modulo];
@@ -306,7 +318,6 @@ for (let i = 0; i < characterTypes.length; i++) {
         characterTypes[i].addBinaryOperation(comparisonOperators, characterTypes[j], booleanType);
     }
 }
-varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
 
 let booleanOperations = [TokenType.keywordAnd, TokenType.keywordOr];
 booleanType.addBinaryOperation(booleanOperations, booleanType, booleanType);

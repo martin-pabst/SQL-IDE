@@ -114,11 +114,14 @@ export enum TokenType {
     // backslash
     backslash,
 
-    // @
+    // |
     pipe,
 
     // @
     at,
+
+    // #
+    hash,
 
     // whitespace
     space,
@@ -281,6 +284,9 @@ export var TokenTypeReadable: {[tt: number]: string} = {
 
     // at
     [TokenType.at]: "@",
+
+    // hash
+    [TokenType.hash]: "#",
     
     // pipe
     [TokenType.pipe]: "|",
@@ -320,6 +326,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     '/': TokenType.division,
     '\\': TokenType.backslash,
     '@': TokenType.at,
+    '#': TokenType.hash,
     '|': TokenType.pipe,
     '\'': TokenType.singleQuote, 
     '"': TokenType.doubleQuote, // ', "

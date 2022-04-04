@@ -70,6 +70,7 @@ export type CreateTableNode = {
 
     columnList: CreateTableColumnNode[],
     combinedPrimaryKeyColumns: string[],
+    uniqueConstraints: string[][],
     foreignKeyInfoList: ForeignKeyInfo[]
 }
 
@@ -79,6 +80,7 @@ export type ForeignKeyInfo = {
     referencesColumn: string,
     referencesPosition: TextPosition,
     onDelete?: string
+    onUpdate?: string
 }
 
 export type CreateTableColumnNode = {
@@ -163,6 +165,7 @@ export type DropTableNode = {
     symbolTable: SymbolTable,
     tableIdentifier: string,
     tableIdentifierPosition: TextPosition, 
+    ifExists: boolean
 }
 
 export type DeleteNode = {
