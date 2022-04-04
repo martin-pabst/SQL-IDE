@@ -685,6 +685,7 @@ export class Parser {
 
         if (!this.expect(TokenType.rightBracket)) return;
         this.parseReferences(fki);
+        return fki;
     }
 
     parseReferences(fki: ForeignKeyInfo) {
@@ -755,8 +756,8 @@ export class Parser {
                     fki[kind] = "set ";
                     this.nextToken();
                     if ([TokenType.keywordNull, TokenType.keywordDefault].indexOf(this.tt) >= 0) {
-                        this.nextToken();
                         fki[kind] += this.cct.value;
+                        this.nextToken();
                     } else {
                         this.pushError("Nach 'on delete/update set' wird 'null' oder 'default' erwartet.");
                     }
