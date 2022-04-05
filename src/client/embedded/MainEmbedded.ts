@@ -146,7 +146,7 @@ export class MainEmbedded implements MainBase {
 
         this.readConfig($div);
 
-        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseURL);
+        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseURL == null ? "Empty database" : this.config.databaseURL);
 
         this.initGUI($div);
 
@@ -157,30 +157,33 @@ export class MainEmbedded implements MainBase {
             new DatabaseFetcher(this).load(this.config.databaseURL).then((loadableDb) => {
                 this.initialTemplateDump = loadableDb.binDump;
                 this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
-                this.resetDatabase(() => {
-                    this.initScripts();
-
-                    this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
-                    this.indexedDB.open(() => {
-
-                        if (this.config.id != null) {
-                            this.writeQueryManager.indexedDBReady(this.indexedDB);
-                            this.readScripts();
-                        }
-
-                    });
-
-                });
+                this.initDatabase();
             }).catch((error: string)=>{
                 alert('Fehler beim Landen der Datenbank: ' + error)
             })
         } else {
-            alert('Es wurde kein Parameter databaseURL angegeben.');
+            this.initDatabase();
         }
-
 
         this.semicolonAngel = new SemicolonAngel(this);
 
+    }
+
+    initDatabase(){
+        this.resetDatabase(() => {
+            this.initScripts();
+
+            this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
+            this.indexedDB.open(() => {
+
+                if (this.config.id != null) {
+                    this.writeQueryManager.indexedDBReady(this.indexedDB);
+                    this.readScripts();
+                }
+
+            });
+
+        });
     }
 
     resetDatabase(callback: () => void) {
