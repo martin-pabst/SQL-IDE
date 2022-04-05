@@ -23,6 +23,7 @@ import { ResultsetPresenter } from "./ResultsetPresenter.js";
 export class ProgramControlButtons {
 
     $buttonStart: JQuery<HTMLElement>;
+    $buttonRollback: JQuery<HTMLElement>;
     // $buttonPause: JQuery<HTMLElement>;
     // $buttonStop: JQuery<HTMLElement>;
     // $buttonStepOver: JQuery<HTMLElement>;
@@ -36,6 +37,8 @@ export class ProgramControlButtons {
     constructor(private main: MainBase, private $buttonsContainer: JQuery<HTMLElement>) {
 
         this.$buttonStart = jQuery('<div title="Start" class="img_start-dark jo_button"></div>');
+        this.$buttonRollback = jQuery('<div title="Rollback" class="img_undo jo_button"></div>');
+
         let am = this.main.getActionManager();
 
         am.registerAction("execute", ['Strg + Enter'],
@@ -50,6 +53,18 @@ export class ProgramControlButtons {
 
         am.setActive('execute',false);
 
+        am.registerAction("rollback", ['Strg + LeftArrow'],
+            () => {
+                if (am.isActive("rollback")) {
+
+                    this.main.getHistoryViewer().rollback();
+                }
+
+            }, "Letztes schreibendes SQL-Statement rückgängig machen", this.$buttonRollback
+        );
+
+        am.setActive('rollback',false);
+
         // this.$buttonPause = jQuery('<div title="Pause" class="img_pause-dark jo_button"></div>');
         // this.$buttonStop = jQuery('<div title="Stop" class="img_stop-dark jo_button"></div>');
         // this.$buttonStepOver = jQuery('<div title="Step over" class="img_step-over-dark jo_button"></div>');
@@ -60,7 +75,7 @@ export class ProgramControlButtons {
         // this.$buttonEdit = jQuery('<div class="jo_editButton" title="Programm anhalten damit der Programmtext bearbeitbar wird"></div>')
         // $editorContainer.append(this.$buttonEdit);
 
-        $buttonsContainer.append(this.$buttonStart
+        $buttonsContainer.append(this.$buttonStart, this.$buttonRollback
             // , this.$buttonPause, this.$buttonStop,
             // this.$buttonStepOver, this.$buttonStepInto, this.$buttonStepOut, this.$buttonRestart
         );

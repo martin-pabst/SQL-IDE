@@ -20,12 +20,14 @@ export class HistoryViewer {
 
     clear() {
         this.$historyPanel.empty();
+        this.main.getActionManager().setActive("rollback", false);
         this.panelEntries = [];
     }
 
     clearAndShowStatements(statements: string[]) {
         this.clear();
         this.appendStatements(statements);
+        this.main.getActionManager().setActive("rollback", statements.length > 0);
     }
 
     appendStatements(statements: string[]) {
@@ -34,6 +36,10 @@ export class HistoryViewer {
             this.$historyPanel.prepend(panelEntry.$div);
             this.panelEntries.unshift(panelEntry);
         })
+
+        if(statements.length > 0){
+            this.main.getActionManager().setActive("rollback", true);
+        }
 
         this.makeLastButtonActive();
     }
@@ -102,6 +108,9 @@ export class HistoryViewer {
                 }
             });
         }
+
+        this.main.getActionManager().setActive("rollback", this.panelEntries.length > 0);
+
     }
 
     rollbackLocal() {
