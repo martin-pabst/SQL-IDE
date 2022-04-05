@@ -100,6 +100,7 @@ export class HistoryViewer {
 
         if (this.main.isEmbedded()) {
             this.rollbackEmbedded();
+            this.main.getActionManager().setActive("rollback", this.panelEntries.length > 0);
         } else {
             let main: Main = <Main>this.main;
             main.networkManager.rollback((error: string, rollbackLocalNeeded: boolean) => {
@@ -109,7 +110,6 @@ export class HistoryViewer {
             });
         }
 
-        this.main.getActionManager().setActive("rollback", this.panelEntries.length > 0);
 
     }
 
@@ -124,6 +124,7 @@ export class HistoryViewer {
             let lastPanelEntry = this.panelEntries.shift();
             lastPanelEntry.$div.remove();
             this.makeLastButtonActive();
+            this.main.getActionManager().setActive("rollback", this.panelEntries.length > 0);
         })
     }
 
