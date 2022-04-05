@@ -63,7 +63,7 @@ export class StatementCleaner {
 
         st += ast.columnList.map( column => this.cleanColumnDef(column)).join(",\n   ");
         if(ast.foreignKeyInfoList != null && ast.foreignKeyInfoList.length > 0){
-            st += ",\n" + ast.foreignKeyInfoList.map(fki => this.cleanForeignKeyInfo(fki)).join(",\n   ");
+            st += ",\n   " + ast.foreignKeyInfoList.map(fki => this.cleanForeignKeyInfo(fki)).join(",\n   ");
         }
 
         let pkc = ast.combinedPrimaryKeyColumns.slice().map(s => s.toLocaleLowerCase());
@@ -75,15 +75,27 @@ export class StatementCleaner {
         }
 
         if(pkc.length > 0){
-            st += `,\nprimary key(${pkc.join(", ")})`;
+            st += `,\n   primary key(${pkc.join(", ")})`;
         }
+
+        if(ast.uniqueConstraints.length > 0){
+            st += ",\n   " + ast.uniqueConstraints.map(uk => 'unique(' + uk.join(", ") + ")").join(",\n   ");
+        }
+
         st += '\n);';
 
         return st;
     }
 
     cleanForeignKeyInfo(fki: ForeignKeyInfo): string {
-        return `${fki.column} references ${fki.referencesTable}(${fki.referencesColumn})`;
+        let fkiString = `foreign key (${fki.column}) references ${fki.referencesTable}(${fki.referencesColumn})`;
+        if(fki.onDelete){
+            fkiString += ` on delete ` + fki.onDelete;
+        }
+        if(fki.onUpdate){
+            fkiString += ` on update ` + fki.onUpdate;
+        }
+        return fkiString;
     }
 
     cleanColumnDef(column: CreateTableColumnNode):string {
