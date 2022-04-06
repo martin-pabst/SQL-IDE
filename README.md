@@ -13,6 +13,7 @@ Die SQL-IDE kann auf zwei Arten betrieben werden:
 
 
 # Embedded-Version
+![Embedded SQL-IDE](htdocs/assets/github-images/embedded.png)
 Die Editor-Kästen der Embedded-Version können [auf einfache Art und Weise in beliebige Webseiten eingebaut](https://www.learn-sql.de/doku.php?id=embed:start) werden. Damit sie den dazu nötigen HTML-Code nicht selbst schreiben müssen, [finden sie hier einen Wrapper-Generator von Christoph Gräßl](https://www.embed.learn-sql.de/createwrapper.html). Damit die Last auf meinem Server beherrschbar bleibt, möchte ich Sie bitten, die Dateien der Embedded-Version möglichst selbst zu hosten. Sie brauchen dazu lediglich einen Webserver, der Dateien ausliefern kann. Server-Side-Logik (z.B. PHP oder ähnliches) ist **nicht erforderlich**.
 
 Die Embedded-Version bietet
@@ -26,5 +27,6 @@ Die Embedded-Version bietet
   * Write-History mit Rollback-Funktion
 
 # Vollständige Entwicklungsumgebung
+![Vollständige SQL-IDE](htdocs/assets/github-images/ide.png)
 Die vollständige Entwicklungsumgebung ist für den Einsatz im Informatikunterricht optimiert. Sie bietet alle Möglichkeiten der Embedded-Version. Darüber hinaus verwaltet sie beliebig viele Datenbanken und speichert diese und alle SQL-Quelltexte der Schüler/innen und Lehrkräfte automatisch auf dem Server. Lehrkräfte können auf die Datenbanken und SQL-Quelltexte der Schüler/innen online zugreifen und so bei auftretenden Problemen einfach und schnell helfen. [Zum Hosting der Entwicklungsumgebung siehe hier.](https://www.learnj.de/doku.php?id=ide:testlogins:start)
 
