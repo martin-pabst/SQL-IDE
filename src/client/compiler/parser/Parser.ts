@@ -354,7 +354,7 @@ export class Parser {
 
             let errorsBeforeStatement: number = this.errorList.length;
 
-            while ([TokenType.space, TokenType.newline].indexOf(this.cct.tt) >= 0) {
+            while ([TokenType.space, TokenType.newline, TokenType.comment, TokenType.semicolon].indexOf(this.cct.tt) >= 0) {
                 this.nextToken();
             }
 
@@ -457,6 +457,10 @@ export class Parser {
                 this.nextToken();
                 this.expect(TokenType.keywordTransaction, true);
                 return null;
+            case TokenType.keywordLock:
+            case TokenType.keywordUnlock:
+                this.parseLockUnlock();
+                return null;
 
             default:
                 let s = TokenTypeReadable[this.tt];
@@ -471,6 +475,14 @@ export class Parser {
 
         return retStatements;
 
+    }
+
+    parseLockUnlock() {
+        this.nextToken();
+        this.expect(TokenType.keywordTables, true);
+        this.skip(TokenType.identifier);
+        this.skip([TokenType.keywordWrite, TokenType.keywordRead]);
+        this.skip(TokenType.semicolon);
     }
 
     parseSet(): OmittedStatementNode {

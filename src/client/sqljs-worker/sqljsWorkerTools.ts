@@ -4,7 +4,8 @@ function createDb(SQL, buffer) {
 
     db.create_function("isDate", function (inputText) {
 
-        if (inputText == null || typeof inputText != 'string') return false;
+        if(inputText == null) return true;
+        if (typeof inputText != 'string') return false;
 
         // var dateformat = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
         var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
@@ -56,8 +57,9 @@ function createDb(SQL, buffer) {
     });
 
     db.create_function("isDateTime", function (inputText) {
-
-        if (inputText == null || typeof inputText != 'string') return false;
+        if(inputText == null) return true;
+        
+        if (typeof inputText != 'string') return false;
 
         // var dateformat = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
         var dateformat = /^\d{4}[\-](0[1-9]|1[012])[\-](0[1-9]|[12][0-9]|3[01]) ([01][1-9]|2[0123]):([0-5][0-9]):([0-5][0-9])$/;

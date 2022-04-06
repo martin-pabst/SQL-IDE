@@ -28,6 +28,7 @@ export enum TokenType {
     keywordPrimary,
     keywordForeign,
     keywordTable,
+    keywordTables,
     keywordColumn,
     keywordDrop,
     keywordUnique,
@@ -82,6 +83,11 @@ export enum TokenType {
     keywordTransaction,
     keywordIf,
     keywordExists,
+
+    keywordLock,
+    keywordUnlock,
+    keywordWrite,
+    keywordRead,
 
     // brackets
     leftBracket, // ()
@@ -191,6 +197,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordPrimary]: "primary",
     [TokenType.keywordForeign]: "foreign",
     [TokenType.keywordTable]: "table",
+    [TokenType.keywordTables]: "tables",
     [TokenType.keywordColumn]: "column",
     [TokenType.keywordDrop]: "drop",
     [TokenType.keywordUnique]: "unique",
@@ -245,6 +252,10 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordTransaction]: "transaction",
     [TokenType.keywordIf]: "if",
     [TokenType.keywordExists]: "exists",
+    [TokenType.keywordLock]: "lock",
+    [TokenType.keywordUnlock]: "unlock",
+    [TokenType.keywordWrite]: "write",
+    [TokenType.keywordRead]: "read",
 
     // brackets
     [TokenType.leftBracket]: "(", // ()
@@ -368,6 +379,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "primary": TokenType.keywordPrimary,
     "foreign": TokenType.keywordForeign,
     "table": TokenType.keywordTable,
+    "tables": TokenType.keywordTables,
     "column": TokenType.keywordColumn,
     "drop": TokenType.keywordDrop,
     "unique": TokenType.keywordUnique,
@@ -423,7 +435,11 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "start": TokenType.keywordStart,
     "transaction": TokenType.keywordTransaction,
     "if": TokenType.keywordIf,
-    "exists": TokenType.keywordExists
+    "exists": TokenType.keywordExists,
+    "lock": TokenType.keywordLock,
+    "unlock": TokenType.keywordUnlock,
+    "write": TokenType.keywordWrite,
+    "read": TokenType.keywordRead
 
 
 };

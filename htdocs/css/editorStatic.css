@@ -18,3 +18,7 @@ html, body {
     height:100% !important;
     width:100% !important;
 }
+
+::-webkit-scrollbar-corner {
+    background: var(--scrollbar);
+}
