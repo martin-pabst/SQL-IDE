@@ -65,6 +65,15 @@
 
 }   
 
+/* to get slider-knob on top of vertical slider: */
+#rightdiv {
+    z-index: 1;
+}
+
+#code {
+    z-index: 2;
+}
+
 body .monaco-editor-hover .monaco-tokenized-source {
     word-break: normal;
 }
