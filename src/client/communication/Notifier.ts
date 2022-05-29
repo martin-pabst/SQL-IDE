@@ -112,7 +112,7 @@ export class Notifier {
                 break;
             case 5: // rollback
                 if (this.database.version > response.new_version) {
-                    this.main.getHistoryViewer().rollbackLocal();
+                    this.main.getHistoryViewer().rollbackLocal(response.new_version);
                 }
                 break;
         }
@@ -211,9 +211,13 @@ export class Notifier {
 
         ajax('getNewStatements', request, (response: GetNewStatementsResponse) => {
 
-            that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
-                that.getNewStatementsHttp();
-            })
+            if(response.rollbackToVersion != null){
+                that.main.getHistoryViewer().rollbackLocal(response.rollbackToVersion);
+            } else {
+                that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
+                    that.getNewStatementsHttp();
+                })
+            }
 
         });
 

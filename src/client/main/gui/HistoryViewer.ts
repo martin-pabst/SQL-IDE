@@ -113,10 +113,14 @@ export class HistoryViewer {
 
     }
 
-    rollbackLocal() {
+    rollbackLocal(new_version?: number) {
         let database = this.main.getCurrentWorkspace().database;
-        database.statements.pop();
-        database.version--;
+        if(new_version == null) new_version = database.version - 1;
+        
+        while(database.version > new_version){
+            database.statements.pop();
+            database.version--;
+        }
         this.main.getDatabaseTool().initializeWorker(database.templateDump, database.statements, () => {
 
         }, () => {

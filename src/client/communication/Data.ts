@@ -587,7 +587,8 @@ export type GetNewStatementsRequest = {
 export type GetNewStatementsResponse = {
     success: Boolean,
     newStatements: string[],
-    firstNewStatementIndex: number
+    firstNewStatementIndex: number,
+    rollbackToVersion: number
 }
 
 export type AddDatabaseStatementsRequest = {
