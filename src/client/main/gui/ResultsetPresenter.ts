@@ -90,12 +90,12 @@ export class ResultsetPresenter {
         let workspace = this.main.getCurrentWorkspace();
         let database = workspace.database;
 
-        if (hasDDLStatements && workspace.permissions <= 2) {
+        if (hasDDLStatements && workspace.permissions <= 1) {
             alert("Der Benutzer hat keine Berechtigung zum Ändern der Tabellenstruktur.");
             return;
         }
 
-        if (hasWriteStatements && workspace.permissions <= 1) {
+        if (hasWriteStatements && workspace.permissions == 0) {
             alert("Der Benutzer hat keine Berechtigung zum Einfügen/Löschen/Ändern von Datensätzen.");
             return;
         }
