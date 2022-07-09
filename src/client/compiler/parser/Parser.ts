@@ -1125,7 +1125,7 @@ export class Parser {
 
         this.expect(TokenType.rightBracket, true);
 
-        while ([TokenType.keywordEngine, TokenType.keywordDefault, TokenType.keywordCollate].indexOf(this.tt) >= 0) {
+        while ([TokenType.keywordAutoincrement, TokenType.keywordEngine, TokenType.keywordDefault, TokenType.keywordCollate].indexOf(this.tt) >= 0) {
             switch (this.tt) {
                 case TokenType.keywordCollate:
                     this.nextToken();
@@ -1144,7 +1144,11 @@ export class Parser {
                     this.skip(TokenType.equal);
                     this.expect(TokenType.identifier, true);
                     break;
-
+                case TokenType.keywordAutoincrement:
+                    this.nextToken();
+                    this.expect(TokenType.equal, true);
+                    this.expect(TokenType.integerConstant, true);
+                    break;
             }
 
         }

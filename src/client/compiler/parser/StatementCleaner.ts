@@ -106,7 +106,7 @@ export class StatementCleaner {
         }
 
         let st: string = `${column.identifier} ${type}`;
-        if(column.parameters != null && column.parameters.length > 0){
+        if(column.parameters != null && column.parameters.length > 0 && !column.isAutoIncrement){
             st += `(${column.parameters.join(", ")})`;
         }
         if(column.notNull){
