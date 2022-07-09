@@ -63,7 +63,7 @@ export class SymbolTable {
     }
 
     storeSymbol(symbol: Symbol) {
-        let list: Symbol[] = this.symbols.get(symbol.identifier);
+        let list: Symbol[] = this.symbols.get(symbol.identifier.toLowerCase());
         if (list == null) {
             list = [symbol];
             this.symbols.set(symbol.identifier.toLowerCase(), list);
