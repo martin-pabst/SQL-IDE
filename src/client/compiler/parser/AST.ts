@@ -19,6 +19,7 @@ export type ColumnNode = {
     type: TokenType.column | TokenType.allColumns,
     position: TextPosition,
     term: TermNode,
+    distinct: boolean,
     alias?: string
 }
 

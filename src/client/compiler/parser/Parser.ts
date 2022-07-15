@@ -1832,21 +1832,24 @@ export class Parser {
         let columns: ColumnNode[] = [];
 
         while ([TokenType.stringConstant, TokenType.integerConstant, TokenType.floatingPointConstant, TokenType.booleanConstant,
-        TokenType.identifier, TokenType.multiplication, TokenType.leftBracket].indexOf(this.tt) >= 0) {
+        TokenType.identifier, TokenType.multiplication, TokenType.leftBracket, TokenType.keywordDistinct].indexOf(this.tt) >= 0) {
             if (this.tt == TokenType.multiplication) {
                 columns.push({
                     term: null,
                     alias: null,
+                    distinct: false,
                     position: this.getCurrentPosition(),
                     type: TokenType.allColumns
                 });
                 this.nextToken();
             } else {
+                let distinct = this.comesToken(TokenType.keywordDistinct, true);
                 let columnTerm = this.parseTerm();
                 if (columnTerm != null) {
                     let column: ColumnNode = {
                         type: TokenType.column,
                         term: columnTerm,
+                        distinct: distinct,
                         position: columnTerm.position
                     }
                     columns.push(column);

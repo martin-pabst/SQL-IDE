@@ -10,6 +10,7 @@ export enum TokenType {
     false,
     // keywords
     keywordRename,
+    keywordDistinct,
     keywordTo,
     keywordAlter,
     keywordCommit,
@@ -179,6 +180,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.false]: "false",
     // keywords
     [TokenType.keywordRename]: "rename",
+    [TokenType.keywordDistinct]: "distinct",
     [TokenType.keywordTo]: "to",
     [TokenType.keywordAlter]: "alter",
     [TokenType.keywordCommit]: "commit",
@@ -361,6 +363,7 @@ export var specialCharList: {[keyword: string]:TokenType} = {
 
 export var keywordList: {[keyword: string]:TokenType} = {
     "rename": TokenType.keywordRename,
+    "distinct": TokenType.keywordDistinct,
     "to": TokenType.keywordTo,
     "alter": TokenType.keywordAlter,
     "commit": TokenType.keywordCommit,
