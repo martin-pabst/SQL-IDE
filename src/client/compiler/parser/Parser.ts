@@ -641,6 +641,7 @@ export class Parser {
     parseAlterTableAdd(node: AlterTableNode) {
         do {
             this.nextToken(); // skip "add" or ","
+            this.comesToken(TokenType.keywordAdd, true);
             let unique: boolean = false;
             switch (this.tt) {
                 case TokenType.keywordColumn:
@@ -676,6 +677,7 @@ export class Parser {
             if (fki != null) {
                 if (node.foreignKeys == null) node.foreignKeys = [];
                 node.foreignKeys.push(fki);
+                node.kind = "omittedKind";
             }
         }
 
