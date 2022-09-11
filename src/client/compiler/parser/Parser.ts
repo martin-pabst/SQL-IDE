@@ -1862,7 +1862,7 @@ export class Parser {
                     }
                 }
             }
-            if (tokenTypesAfterListEnd.indexOf(this.tt) >= 0) {
+            if (tokenTypesAfterListEnd.indexOf(this.tt) >= 0 || this.isEnd()) {
                 break;
             }
             this.expect(TokenType.comma, true);
