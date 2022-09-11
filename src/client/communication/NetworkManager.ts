@@ -322,8 +322,14 @@ export class NetworkManager {
                 cacheManager.fetchTemplateFromCache(workspace.database.based_on_template_id, (templateDump: Uint8Array) => {
 
                     if (templateDump != null) {
-                        // @ts-ignore
-                        workspace.database.templateDump = pako.inflate(templateDump);
+                        try{
+                            // @ts-ignore
+                            workspace.database.templateDump = pako.inflate(templateDump);
+                        } catch(err){
+                            console.log(err);
+                            console.log("Dump seems not to be compressed...");
+                            workspace.database.templateDump = templateDump;
+                        }
                         callback(null);
                         return;
                     } else {

@@ -238,6 +238,12 @@ body .monaco-editor-hover .monaco-tokenized-source {
     padding: 2em;
 }
 
+#login-center>form{
+    display: flex;
+    flex-direction: column;
+    width: 15em;
+}
+
 #login-password {
     margin-top: 20px;
 }

@@ -249,8 +249,8 @@ export class Notifier {
                 url: "servlet/registerLongPollingListener",
                 success: function (resp: string) {
                     console.log(resp);
-                    let response: LongPollingListenerResponse = JSON.parse(resp);
-                    if (!that.isOpen && that.workspace?.id == request.workspaceId && response.success) {
+                    let response: LongPollingListenerResponse = typeof resp == "string" ? JSON.parse(resp) : resp;
+                    if (resp != null && !that.isOpen && that.workspace?.id == request.workspaceId && response.success) {
                         that.executeNewStatements(response.newStatements, response.firstNewStatementIndex, () => {
                             that.getNewStatementsHttp();
                         })
