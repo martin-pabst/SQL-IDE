@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 11. Sep 2022 um 14:36
+-- Erstellungszeit: 11. Sep 2022 um 15:30
 -- Server-Version: 10.5.15-MariaDB-0+deb11u1
 -- PHP-Version: 7.4.28
 
@@ -60,14 +60,14 @@ CREATE TABLE `klasse` (
   `id` int(11) NOT NULL,
   `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `jahrgangsstufe` int(11) NOT NULL,
-  `klassenleitung` int(11) DEFAULT NULL
+  `klassenleitung_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `klasse`
 --
 
-INSERT INTO `klasse` (`id`, `name`, `jahrgangsstufe`, `klassenleitung`) VALUES
+INSERT INTO `klasse` (`id`, `name`, `jahrgangsstufe`, `klassenleitung_id`) VALUES
 (1, '5a', 5, 1),
 (2, '5b', 5, 11),
 (3, '6a', 6, 2),
@@ -88,15 +88,15 @@ INSERT INTO `klasse` (`id`, `name`, `jahrgangsstufe`, `klassenleitung`) VALUES
 --
 
 CREATE TABLE `lehrbefaehigung` (
-  `lehrkraft` int(11) NOT NULL,
-  `fach` int(11) NOT NULL
+  `lehrkraft_id` int(11) NOT NULL,
+  `fach_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `lehrbefaehigung`
 --
 
-INSERT INTO `lehrbefaehigung` (`lehrkraft`, `fach`) VALUES
+INSERT INTO `lehrbefaehigung` (`lehrkraft_id`, `fach_id`) VALUES
 (1, 1),
 (1, 2),
 (2, 2),
@@ -189,17 +189,17 @@ CREATE TABLE `note` (
   `wert` int(11) NOT NULL,
   `datum` date DEFAULT NULL,
   `gewicht` int(11) DEFAULT 1,
-  `schueler` int(11) NOT NULL,
-  `lehrkraft` int(11) NOT NULL,
-  `fach` int(11) NOT NULL,
-  `pruefung` int(11) DEFAULT NULL
+  `schueler_id` int(11) NOT NULL,
+  `lehrkraft_id` int(11) NOT NULL,
+  `fach_id` int(11) NOT NULL,
+  `pruefung_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `note`
 --
 
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (1, 1, '2022-11-03', 1, 1, 1, 1, 1),
 (2, 1, '2022-11-03', 1, 2, 1, 1, 1),
 (3, 2, '2022-11-03', 1, 3, 1, 1, 1),
@@ -1435,9 +1435,9 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (1233, 3, '2022-12-25', 1, 230, 4, 1, 127),
 (1234, 3, '2022-12-25', 1, 231, 4, 1, 127),
 (1235, 1, '2022-12-25', 1, 232, 4, 1, 127),
-(1236, 3, '2022-12-25', 1, 233, 4, 1, 127),
-(1237, 1, '2022-12-25', 1, 234, 4, 1, 127);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(1236, 3, '2022-12-25', 1, 233, 4, 1, 127);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
+(1237, 1, '2022-12-25', 1, 234, 4, 1, 127),
 (1238, 3, '2022-12-25', 1, 235, 4, 1, 127),
 (1239, 4, '2022-12-25', 1, 236, 4, 1, 127),
 (1240, 1, '2022-12-25', 1, 237, 4, 1, 127),
@@ -2617,9 +2617,9 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (2414, 4, '2023-03-31', 1, 259, 4, 1, 236),
 (2415, 6, '2023-03-31', 1, 260, 4, 1, 236),
 (2416, 4, '2023-03-31', 1, 261, 4, 1, 236),
-(2417, 3, '2023-03-31', 1, 262, 4, 1, 236),
-(2418, 1, '2023-03-31', 1, 263, 4, 1, 236);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(2417, 3, '2023-03-31', 1, 262, 4, 1, 236);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
+(2418, 1, '2023-03-31', 1, 263, 4, 1, 236),
 (2419, 4, '2023-03-31', 1, 264, 4, 1, 236),
 (2420, 4, '2023-03-31', 1, 265, 4, 1, 236),
 (2421, 1, '2023-03-31', 1, 266, 4, 1, 236),
@@ -3802,10 +3802,10 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (3598, 4, '2023-05-21', 1, 57, 7, 7, 360),
 (3599, 3, '2023-05-21', 1, 58, 7, 7, 360),
 (3600, 4, '2023-05-21', 1, 59, 7, 7, 360),
-(3601, 1, '2023-05-21', 1, 60, 7, 7, 360),
+(3601, 1, '2023-05-21', 1, 60, 7, 7, 360);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (3602, 5, '2023-05-21', 1, 61, 7, 7, 360),
-(3603, 3, '2023-05-21', 1, 62, 7, 7, 360);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(3603, 3, '2023-05-21', 1, 62, 7, 7, 360),
 (3604, 1, '2023-05-21', 1, 63, 7, 7, 360),
 (3605, 4, '2023-05-21', 1, 64, 7, 7, 360),
 (3606, 5, '2023-05-21', 1, 65, 7, 7, 360),
@@ -4981,11 +4981,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (4776, 6, '2022-11-22', 1, 305, 4, 1, 453),
 (4777, 3, '2022-11-22', 1, 306, 4, 1, 453),
 (4778, 4, '2022-11-22', 1, 307, 4, 1, 453),
-(4779, 2, '2022-11-22', 1, 308, 4, 1, 453),
+(4779, 2, '2022-11-22', 1, 308, 4, 1, 453);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (4780, 4, '2022-11-08', 1, 1, 4, 6, 454),
 (4781, 6, '2022-11-08', 1, 2, 4, 6, 454),
-(4782, 6, '2022-11-08', 1, 3, 4, 6, 454);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(4782, 6, '2022-11-08', 1, 3, 4, 6, 454),
 (4783, 5, '2022-11-08', 1, 4, 4, 6, 454),
 (4784, 3, '2022-11-08', 1, 5, 4, 6, 454),
 (4785, 1, '2022-11-08', 1, 6, 4, 6, 454),
@@ -6168,11 +6168,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (5962, 3, '2022-10-24', 1, 111, 14, 6, 506),
 (5963, 4, '2022-10-24', 1, 112, 14, 6, 506),
 (5964, 1, '2022-10-24', 1, 113, 14, 6, 506),
-(5965, 3, '2022-10-24', 1, 114, 14, 6, 506),
+(5965, 3, '2022-10-24', 1, 114, 14, 6, 506);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (5966, 1, '2022-10-24', 1, 115, 14, 6, 506),
 (5967, 4, '2022-10-24', 1, 116, 14, 6, 506),
-(5968, 4, '2022-10-24', 1, 117, 14, 6, 506);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(5968, 4, '2022-10-24', 1, 117, 14, 6, 506),
 (5969, 6, '2022-10-24', 1, 118, 14, 6, 506),
 (5970, 3, '2022-10-24', 1, 119, 14, 6, 506),
 (5971, 2, '2022-10-24', 1, 120, 14, 6, 506),
@@ -7345,11 +7345,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (7138, 3, '2023-01-02', 1, 283, 3, 7, 558),
 (7139, 4, '2023-01-02', 1, 284, 3, 7, 558),
 (7140, 4, '2023-01-02', 1, 285, 3, 7, 558),
-(7141, 5, '2023-01-02', 1, 286, 3, 7, 558),
+(7141, 5, '2023-01-02', 1, 286, 3, 7, 558);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (7142, 2, '2023-01-02', 1, 287, 3, 7, 558),
 (7143, 6, '2023-01-02', 1, 288, 3, 7, 558),
-(7144, 4, '2023-01-02', 1, 289, 3, 7, 558);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(7144, 4, '2023-01-02', 1, 289, 3, 7, 558),
 (7145, 5, '2023-01-02', 1, 290, 3, 7, 558),
 (7146, 5, '2023-01-02', 1, 291, 3, 7, 558),
 (7147, 5, '2023-01-02', 1, 292, 3, 7, 558),
@@ -8533,11 +8533,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (8325, 3, '2022-12-10', 1, 91, 13, 7, 610),
 (8326, 3, '2022-12-10', 1, 92, 13, 7, 610),
 (8327, 5, '2023-01-25', 1, 93, 13, 7, 611),
-(8328, 1, '2023-01-25', 1, 94, 13, 7, 611),
+(8328, 1, '2023-01-25', 1, 94, 13, 7, 611);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (8329, 3, '2023-01-25', 1, 95, 13, 7, 611),
 (8330, 4, '2023-01-25', 1, 96, 13, 7, 611),
-(8331, 4, '2023-01-25', 1, 97, 13, 7, 611);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(8331, 4, '2023-01-25', 1, 97, 13, 7, 611),
 (8332, 6, '2023-01-25', 1, 98, 13, 7, 611),
 (8333, 2, '2023-01-25', 1, 99, 13, 7, 611),
 (8334, 3, '2023-01-25', 1, 100, 13, 7, 611),
@@ -9709,11 +9709,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (9500, 5, '2023-04-24', 1, 237, 3, 5, 662),
 (9501, 1, '2023-04-24', 1, 238, 3, 5, 662),
 (9502, 6, '2023-04-24', 1, 239, 3, 5, 662),
-(9503, 6, '2023-04-24', 1, 240, 3, 5, 662),
+(9503, 6, '2023-04-24', 1, 240, 3, 5, 662);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (9504, 1, '2023-04-24', 1, 241, 3, 5, 662),
 (9505, 5, '2023-04-24', 1, 242, 3, 5, 662),
-(9506, 3, '2023-04-24', 1, 243, 3, 5, 662);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(9506, 3, '2023-04-24', 1, 243, 3, 5, 662),
 (9507, 5, '2023-04-24', 1, 244, 3, 5, 662),
 (9508, 2, '2023-04-24', 1, 245, 3, 5, 662),
 (9509, 5, '2023-04-24', 1, 246, 3, 5, 662),
@@ -10882,11 +10882,11 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (10672, 6, '2023-04-23', 1, 210, 12, 2, 711),
 (10673, 3, '2023-04-23', 1, 211, 12, 2, 711),
 (10674, 1, '2023-04-23', 1, 212, 12, 2, 711),
-(10675, 3, '2023-04-23', 1, 213, 12, 2, 711),
+(10675, 3, '2023-04-23', 1, 213, 12, 2, 711);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (10676, 6, '2023-04-23', 1, 214, 12, 2, 711),
 (10677, 2, '2023-04-23', 1, 215, 12, 2, 711),
-(10678, 2, '2023-04-23', 1, 216, 12, 2, 711);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(10678, 2, '2023-04-23', 1, 216, 12, 2, 711),
 (10679, 2, '2023-04-23', 1, 217, 12, 2, 711),
 (10680, 3, '2023-04-23', 1, 218, 12, 2, 711),
 (10681, 3, '2023-04-23', 1, 219, 12, 2, 711),
@@ -12029,12 +12029,12 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (11818, 1, '2023-05-28', 1, 114, 1, 2, 761),
 (11819, 5, '2023-05-28', 1, 115, 1, 2, 761),
 (11820, 2, '2023-05-28', 1, 116, 1, 2, 761),
-(11821, 6, '2023-05-28', 1, 117, 1, 2, 761),
+(11821, 6, '2023-05-28', 1, 117, 1, 2, 761);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (11822, 1, '2023-05-28', 1, 118, 1, 2, 761),
 (11823, 3, '2023-05-28', 1, 119, 1, 2, 761),
 (11824, 3, '2023-05-28', 1, 120, 1, 2, 761),
-(11825, 3, '2023-06-25', 1, 121, 1, 2, 762);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(11825, 3, '2023-06-25', 1, 121, 1, 2, 762),
 (11826, 5, '2023-06-25', 1, 122, 1, 2, 762),
 (11827, 6, '2023-06-25', 1, 123, 1, 2, 762),
 (11828, 3, '2023-06-25', 1, 124, 1, 2, 762),
@@ -13192,13 +13192,13 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (12980, 2, '2023-05-07', 1, 120, 11, 1, 812),
 (12981, 2, '2023-07-06', 1, 121, 11, 1, 813),
 (12982, 1, '2023-07-06', 1, 122, 11, 1, 813),
-(12983, 4, '2023-07-06', 1, 123, 11, 1, 813),
+(12983, 4, '2023-07-06', 1, 123, 11, 1, 813);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (12984, 5, '2023-07-06', 1, 124, 11, 1, 813),
 (12985, 1, '2023-07-06', 1, 125, 11, 1, 813),
 (12986, 4, '2023-07-06', 1, 126, 11, 1, 813),
 (12987, 1, '2023-07-06', 1, 127, 11, 1, 813),
-(12988, 3, '2023-07-06', 1, 128, 11, 1, 813);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(12988, 3, '2023-07-06', 1, 128, 11, 1, 813),
 (12989, 3, '2023-07-06', 1, 129, 11, 1, 813),
 (12990, 3, '2023-07-06', 1, 130, 11, 1, 813),
 (12991, 5, '2023-07-06', 1, 131, 11, 1, 813),
@@ -14336,13 +14336,13 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (14123, 5, '2023-06-05', 1, 263, 20, 6, 863),
 (14124, 4, '2023-06-05', 1, 264, 20, 6, 863),
 (14125, 3, '2023-06-05', 1, 265, 20, 6, 863),
-(14126, 4, '2023-06-05', 1, 266, 20, 6, 863),
+(14126, 4, '2023-06-05', 1, 266, 20, 6, 863);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (14127, 2, '2023-06-05', 1, 267, 20, 6, 863),
 (14128, 5, '2023-06-05', 1, 268, 20, 6, 863),
 (14129, 3, '2023-06-05', 1, 269, 20, 6, 863),
 (14130, 2, '2023-06-05', 1, 270, 20, 6, 863),
-(14131, 5, '2023-06-05', 1, 271, 20, 6, 863);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(14131, 5, '2023-06-05', 1, 271, 20, 6, 863),
 (14132, 1, '2023-06-05', 1, 272, 20, 6, 863),
 (14133, 4, '2023-06-05', 1, 273, 20, 6, 863),
 (14134, 5, '2023-06-05', 1, 274, 20, 6, 863),
@@ -15479,14 +15479,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (15265, 4, '2023-06-10', 1, 156, 9, 4, NULL),
 (15266, 4, '2022-12-08', 1, 157, 9, 4, NULL),
 (15267, 3, '2023-03-28', 1, 158, 9, 4, NULL),
-(15268, 3, '2023-06-23', 1, 159, 9, 4, NULL),
+(15268, 3, '2023-06-23', 1, 159, 9, 4, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (15269, 1, '2022-10-23', 1, 160, 9, 4, NULL),
 (15270, 5, '2022-10-09', 1, 161, 9, 4, NULL),
 (15271, 5, '2022-11-30', 1, 162, 9, 4, NULL),
 (15272, 4, '2023-07-14', 1, 163, 9, 4, NULL),
 (15273, 4, '2022-12-16', 1, 164, 9, 4, NULL),
-(15274, 3, '2022-09-22', 1, 165, 9, 4, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(15274, 3, '2022-09-22', 1, 165, 9, 4, NULL),
 (15275, 4, '2023-05-12', 2, 166, 9, 4, NULL),
 (15276, 2, '2022-09-28', 1, 167, 9, 4, NULL),
 (15277, 2, '2023-03-24', 1, 168, 9, 4, NULL),
@@ -16599,14 +16599,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (16384, 4, '2023-01-11', 2, 215, 16, 8, NULL),
 (16385, 5, '2023-07-02', 1, 216, 16, 8, NULL),
 (16386, 1, '2022-12-30', 1, 217, 16, 8, NULL),
-(16387, 1, '2022-11-18', 1, 218, 16, 8, NULL),
+(16387, 1, '2022-11-18', 1, 218, 16, 8, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (16388, 1, '2023-06-25', 1, 219, 16, 8, NULL),
 (16389, 4, '2023-02-16', 1, 220, 16, 8, NULL),
 (16390, 4, '2022-09-27', 1, 221, 16, 8, NULL),
 (16391, 4, '2023-06-21', 1, 222, 16, 8, NULL),
 (16392, 3, '2023-07-10', 1, 223, 16, 8, NULL),
-(16393, 3, '2023-04-30', 1, 224, 16, 8, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(16393, 3, '2023-04-30', 1, 224, 16, 8, NULL),
 (16394, 4, '2023-01-26', 1, 225, 16, 8, NULL),
 (16395, 3, '2022-10-18', 1, 226, 16, 8, NULL),
 (16396, 3, '2023-05-13', 1, 227, 16, 8, NULL),
@@ -17729,14 +17729,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (17513, 4, '2023-06-22', 1, 33, 4, 6, NULL),
 (17514, 3, '2023-04-30', 1, 34, 4, 6, NULL),
 (17515, 3, '2023-07-12', 1, 35, 4, 6, NULL),
-(17516, 3, '2023-05-12', 1, 36, 4, 6, NULL),
+(17516, 3, '2023-05-12', 1, 36, 4, 6, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (17517, 4, '2022-10-21', 1, 37, 4, 6, NULL),
 (17518, 5, '2023-04-05', 1, 38, 4, 6, NULL),
 (17519, 1, '2023-07-16', 1, 39, 4, 6, NULL),
 (17520, 3, '2023-05-26', 2, 40, 4, 6, NULL),
 (17521, 4, '2023-04-09', 1, 41, 4, 6, NULL),
-(17522, 1, '2022-11-30', 2, 42, 4, 6, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(17522, 1, '2022-11-30', 2, 42, 4, 6, NULL),
 (17523, 3, '2023-04-18', 1, 43, 4, 6, NULL),
 (17524, 1, '2022-11-13', 1, 44, 4, 6, NULL),
 (17525, 3, '2023-07-08', 2, 45, 4, 6, NULL),
@@ -18862,14 +18862,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (18645, 6, '2022-11-13', 1, 74, 13, 5, NULL),
 (18646, 3, '2022-11-09', 1, 75, 13, 5, NULL),
 (18647, 2, '2023-05-08', 1, 76, 13, 5, NULL),
-(18648, 1, '2023-01-11', 1, 77, 13, 5, NULL),
+(18648, 1, '2023-01-11', 1, 77, 13, 5, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (18649, 3, '2023-05-07', 1, 78, 13, 5, NULL),
 (18650, 2, '2022-10-11', 2, 79, 13, 5, NULL),
 (18651, 3, '2022-12-20', 1, 80, 13, 5, NULL),
 (18652, 5, '2023-04-14', 1, 81, 13, 5, NULL),
 (18653, 1, '2023-01-12', 1, 82, 13, 5, NULL),
-(18654, 3, '2023-04-24', 1, 83, 13, 5, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(18654, 3, '2023-04-24', 1, 83, 13, 5, NULL),
 (18655, 5, '2023-05-16', 1, 84, 13, 5, NULL),
 (18656, 5, '2023-07-15', 1, 85, 13, 5, NULL),
 (18657, 5, '2022-11-30', 1, 86, 13, 5, NULL),
@@ -19982,14 +19982,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (19764, 5, '2023-06-10', 1, 52, 1, 1, NULL),
 (19765, 4, '2023-05-04', 1, 53, 1, 1, NULL),
 (19766, 6, '2023-03-04', 1, 54, 1, 1, NULL),
-(19767, 1, '2023-06-19', 1, 55, 1, 1, NULL),
+(19767, 1, '2023-06-19', 1, 55, 1, 1, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (19768, 1, '2023-05-18', 1, 56, 1, 1, NULL),
 (19769, 6, '2023-01-31', 1, 57, 1, 1, NULL),
 (19770, 5, '2023-06-06', 2, 58, 1, 1, NULL),
 (19771, 6, '2023-04-02', 1, 59, 1, 1, NULL),
 (19772, 1, '2022-12-30', 1, 60, 1, 1, NULL),
-(19773, 2, '2022-11-01', 1, 61, 1, 1, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(19773, 2, '2022-11-01', 1, 61, 1, 1, NULL),
 (19774, 2, '2022-11-22', 1, 62, 1, 1, NULL),
 (19775, 5, '2023-06-06', 1, 63, 1, 1, NULL),
 (19776, 6, '2022-12-02', 1, 64, 1, 1, NULL),
@@ -21124,14 +21124,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (20905, 5, '2023-04-14', 1, 281, 9, 8, NULL),
 (20906, 1, '2023-02-09', 1, 282, 9, 8, NULL),
 (20907, 2, '2022-09-26', 1, 283, 9, 8, NULL),
-(20908, 1, '2023-01-25', 1, 284, 9, 8, NULL),
+(20908, 1, '2023-01-25', 1, 284, 9, 8, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (20909, 3, '2022-10-13', 1, 285, 9, 8, NULL),
 (20910, 3, '2023-04-20', 1, 286, 9, 8, NULL),
 (20911, 5, '2022-12-05', 1, 287, 9, 8, NULL),
 (20912, 1, '2023-03-04', 1, 288, 9, 8, NULL),
 (20913, 2, '2022-12-28', 1, 289, 9, 8, NULL),
-(20914, 1, '2023-07-09', 1, 290, 9, 8, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(20914, 1, '2023-07-09', 1, 290, 9, 8, NULL),
 (20915, 3, '2023-01-12', 1, 291, 9, 8, NULL),
 (20916, 6, '2023-04-07', 1, 292, 9, 8, NULL),
 (20917, 4, '2023-03-25', 1, 293, 9, 8, NULL),
@@ -22242,14 +22242,14 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (22022, 2, '2022-10-07', 2, 228, 17, 7, NULL),
 (22023, 4, '2022-09-20', 1, 148, 18, 5, NULL),
 (22024, 3, '2022-10-20', 1, 149, 18, 5, NULL),
-(22025, 1, '2023-05-24', 1, 150, 18, 5, NULL),
+(22025, 1, '2023-05-24', 1, 150, 18, 5, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (22026, 3, '2022-10-26', 2, 151, 18, 5, NULL),
 (22027, 3, '2022-12-31', 1, 152, 18, 5, NULL),
 (22028, 3, '2023-06-21', 1, 153, 18, 5, NULL),
 (22029, 6, '2023-01-15', 1, 154, 18, 5, NULL),
 (22030, 4, '2023-02-07', 2, 155, 18, 5, NULL),
-(22031, 3, '2023-01-03', 1, 156, 18, 5, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(22031, 3, '2023-01-03', 1, 156, 18, 5, NULL),
 (22032, 4, '2023-01-22', 2, 157, 18, 5, NULL),
 (22033, 4, '2022-10-14', 1, 158, 18, 5, NULL),
 (22034, 2, '2023-03-12', 1, 159, 18, 5, NULL),
@@ -23375,15 +23375,15 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (23154, 1, '2023-06-20', 1, 298, 5, 3, NULL),
 (23155, 3, '2022-09-27', 1, 299, 5, 3, NULL),
 (23156, 4, '2022-11-28', 1, 300, 5, 3, NULL),
-(23157, 3, '2023-04-01', 1, 301, 5, 3, NULL),
+(23157, 3, '2023-04-01', 1, 301, 5, 3, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (23158, 6, '2023-07-18', 2, 302, 5, 3, NULL),
 (23159, 3, '2023-05-28', 1, 303, 5, 3, NULL),
 (23160, 2, '2022-12-30', 1, 304, 5, 3, NULL),
 (23161, 4, '2023-03-16', 1, 305, 5, 3, NULL),
 (23162, 6, '2023-06-15', 1, 306, 5, 3, NULL),
 (23163, 1, '2023-05-11', 1, 307, 5, 3, NULL),
-(23164, 1, '2023-06-16', 1, 308, 5, 3, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(23164, 1, '2023-06-16', 1, 308, 5, 3, NULL),
 (23165, 1, '2023-07-09', 1, 148, 5, 9, NULL),
 (23166, 6, '2023-02-07', 1, 149, 5, 9, NULL),
 (23167, 3, '2022-12-17', 1, 150, 5, 9, NULL),
@@ -24505,15 +24505,15 @@ INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `
 (24283, 2, '2022-11-16', 1, 115, 13, 7, NULL),
 (24284, 3, '2022-10-12', 1, 116, 13, 7, NULL),
 (24285, 6, '2023-05-21', 1, 117, 13, 7, NULL),
-(24286, 4, '2023-07-15', 1, 118, 13, 7, NULL),
+(24286, 4, '2023-07-15', 1, 118, 13, 7, NULL);
+INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler_id`, `lehrkraft_id`, `fach_id`, `pruefung_id`) VALUES
 (24287, 1, '2023-06-28', 1, 119, 13, 7, NULL),
 (24288, 1, '2023-05-13', 1, 120, 13, 7, NULL),
 (24289, 6, '2022-12-04', 1, 121, 13, 7, NULL),
 (24290, 4, '2022-10-28', 1, 122, 13, 7, NULL),
 (24291, 6, '2023-02-20', 1, 123, 13, 7, NULL),
 (24292, 4, '2023-05-01', 1, 124, 13, 7, NULL),
-(24293, 1, '2023-06-26', 1, 125, 13, 7, NULL);
-INSERT INTO `note` (`id`, `wert`, `datum`, `gewicht`, `schueler`, `lehrkraft`, `fach`, `pruefung`) VALUES
+(24293, 1, '2023-06-26', 1, 125, 13, 7, NULL),
 (24294, 4, '2023-02-07', 1, 126, 13, 7, NULL),
 (24295, 3, '2023-07-06', 1, 127, 13, 7, NULL),
 (24296, 4, '2023-01-12', 1, 128, 13, 7, NULL),
@@ -25490,15 +25490,15 @@ CREATE TABLE `pruefung` (
   `laufende_nr` int(11) NOT NULL,
   `klasse` int(11) DEFAULT NULL,
   `datum` date DEFAULT NULL,
-  `fach` int(11) DEFAULT NULL,
-  `lehrkraft` int(11) DEFAULT NULL
+  `fach_id` int(11) DEFAULT NULL,
+  `lehrkraft_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `pruefung`
 --
 
-INSERT INTO `pruefung` (`id`, `typ`, `laufende_nr`, `klasse`, `datum`, `fach`, `lehrkraft`) VALUES
+INSERT INTO `pruefung` (`id`, `typ`, `laufende_nr`, `klasse`, `datum`, `fach_id`, `lehrkraft_id`) VALUES
 (1, 'Schulaufgabe', 1, 1, '2022-11-03', 1, 1),
 (2, 'Schulaufgabe', 1, 2, '2022-11-16', 1, 1),
 (3, 'Schulaufgabe', 1, 3, '2022-11-24', 1, 1),
@@ -26064,14 +26064,14 @@ CREATE TABLE `schueler` (
   `rufname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `geburtsdatum` date NOT NULL,
   `geschlecht` varchar(1) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `klasse` int(11) DEFAULT NULL
+  `klasse_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `schueler`
 --
 
-INSERT INTO `schueler` (`id`, `familienname`, `rufname`, `geburtsdatum`, `geschlecht`, `klasse`) VALUES
+INSERT INTO `schueler` (`id`, `familienname`, `rufname`, `geburtsdatum`, `geschlecht`, `klasse_id`) VALUES
 (1, 'Sellers', 'Angela', '2011-04-22', 'w', 1),
 (2, 'Hall', 'Elizabeth', '2011-01-01', 'w', 1),
 (3, 'Gillespie', 'Andrea', '2011-05-27', 'w', 1),
@@ -26388,16 +26388,16 @@ INSERT INTO `schueler` (`id`, `familienname`, `rufname`, `geburtsdatum`, `geschl
 --
 
 CREATE TABLE `unterrichtet` (
-  `lehrkraft` int(11) NOT NULL,
-  `fach` int(11) NOT NULL,
-  `klasse` int(11) NOT NULL
+  `lehrkraft_id` int(11) NOT NULL,
+  `fach_id` int(11) NOT NULL,
+  `klasse_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Daten für Tabelle `unterrichtet`
 --
 
-INSERT INTO `unterrichtet` (`lehrkraft`, `fach`, `klasse`) VALUES
+INSERT INTO `unterrichtet` (`lehrkraft_id`, `fach_id`, `klasse_id`) VALUES
 (1, 1, 1),
 (1, 1, 2),
 (1, 1, 3),
@@ -26522,14 +26522,14 @@ ALTER TABLE `fach`
 --
 ALTER TABLE `klasse`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `klassenlehrkraft` (`klassenleitung`);
+  ADD KEY `klassenlehrkraft` (`klassenleitung_id`);
 
 --
 -- Indizes für die Tabelle `lehrbefaehigung`
 --
 ALTER TABLE `lehrbefaehigung`
-  ADD PRIMARY KEY (`lehrkraft`,`fach`),
-  ADD KEY `fach` (`fach`);
+  ADD PRIMARY KEY (`lehrkraft_id`,`fach_id`),
+  ADD KEY `fach` (`fach_id`);
 
 --
 -- Indizes für die Tabelle `lehrkraft`
@@ -26542,10 +26542,10 @@ ALTER TABLE `lehrkraft`
 --
 ALTER TABLE `note`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `schueler` (`schueler`),
-  ADD KEY `lehrkraft` (`lehrkraft`),
-  ADD KEY `fach` (`fach`),
-  ADD KEY `pruefung` (`pruefung`);
+  ADD KEY `schueler` (`schueler_id`),
+  ADD KEY `lehrkraft` (`lehrkraft_id`),
+  ADD KEY `fach` (`fach_id`),
+  ADD KEY `pruefung` (`pruefung_id`);
 
 --
 -- Indizes für die Tabelle `pruefung`
@@ -26553,23 +26553,23 @@ ALTER TABLE `note`
 ALTER TABLE `pruefung`
   ADD PRIMARY KEY (`id`),
   ADD KEY `klasse` (`klasse`),
-  ADD KEY `fach` (`fach`),
-  ADD KEY `lehrkraft` (`lehrkraft`);
+  ADD KEY `fach` (`fach_id`),
+  ADD KEY `lehrkraft` (`lehrkraft_id`);
 
 --
 -- Indizes für die Tabelle `schueler`
 --
 ALTER TABLE `schueler`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `klasse` (`klasse`);
+  ADD KEY `klasse` (`klasse_id`);
 
 --
 -- Indizes für die Tabelle `unterrichtet`
 --
 ALTER TABLE `unterrichtet`
-  ADD PRIMARY KEY (`lehrkraft`,`fach`,`klasse`),
-  ADD KEY `fach` (`fach`),
-  ADD KEY `klasse` (`klasse`);
+  ADD PRIMARY KEY (`lehrkraft_id`,`fach_id`,`klasse_id`),
+  ADD KEY `fach` (`fach_id`),
+  ADD KEY `klasse` (`klasse_id`);
 
 --
 -- AUTO_INCREMENT für exportierte Tabellen
@@ -26619,45 +26619,45 @@ ALTER TABLE `schueler`
 -- Constraints der Tabelle `klasse`
 --
 ALTER TABLE `klasse`
-  ADD CONSTRAINT `klasse_ibfk_1` FOREIGN KEY (`klassenleitung`) REFERENCES `lehrkraft` (`id`);
+  ADD CONSTRAINT `klasse_ibfk_1` FOREIGN KEY (`klassenleitung_id`) REFERENCES `lehrkraft` (`id`);
 
 --
 -- Constraints der Tabelle `lehrbefaehigung`
 --
 ALTER TABLE `lehrbefaehigung`
-  ADD CONSTRAINT `lehrbefaehigung_ibfk_1` FOREIGN KEY (`lehrkraft`) REFERENCES `lehrkraft` (`id`),
-  ADD CONSTRAINT `lehrbefaehigung_ibfk_2` FOREIGN KEY (`fach`) REFERENCES `fach` (`id`);
+  ADD CONSTRAINT `lehrbefaehigung_ibfk_1` FOREIGN KEY (`lehrkraft_id`) REFERENCES `lehrkraft` (`id`),
+  ADD CONSTRAINT `lehrbefaehigung_ibfk_2` FOREIGN KEY (`fach_id`) REFERENCES `fach` (`id`);
 
 --
 -- Constraints der Tabelle `note`
 --
 ALTER TABLE `note`
-  ADD CONSTRAINT `note_ibfk_1` FOREIGN KEY (`schueler`) REFERENCES `schueler` (`id`),
-  ADD CONSTRAINT `note_ibfk_2` FOREIGN KEY (`lehrkraft`) REFERENCES `lehrkraft` (`id`),
-  ADD CONSTRAINT `note_ibfk_3` FOREIGN KEY (`fach`) REFERENCES `fach` (`id`),
-  ADD CONSTRAINT `note_ibfk_4` FOREIGN KEY (`pruefung`) REFERENCES `pruefung` (`id`);
+  ADD CONSTRAINT `note_ibfk_1` FOREIGN KEY (`schueler_id`) REFERENCES `schueler` (`id`),
+  ADD CONSTRAINT `note_ibfk_2` FOREIGN KEY (`lehrkraft_id`) REFERENCES `lehrkraft` (`id`),
+  ADD CONSTRAINT `note_ibfk_3` FOREIGN KEY (`fach_id`) REFERENCES `fach` (`id`),
+  ADD CONSTRAINT `note_ibfk_4` FOREIGN KEY (`pruefung_id`) REFERENCES `pruefung` (`id`);
 
 --
 -- Constraints der Tabelle `pruefung`
 --
 ALTER TABLE `pruefung`
   ADD CONSTRAINT `pruefung_ibfk_1` FOREIGN KEY (`klasse`) REFERENCES `klasse` (`id`),
-  ADD CONSTRAINT `pruefung_ibfk_2` FOREIGN KEY (`fach`) REFERENCES `fach` (`id`),
-  ADD CONSTRAINT `pruefung_ibfk_3` FOREIGN KEY (`lehrkraft`) REFERENCES `lehrkraft` (`id`);
+  ADD CONSTRAINT `pruefung_ibfk_2` FOREIGN KEY (`fach_id`) REFERENCES `fach` (`id`),
+  ADD CONSTRAINT `pruefung_ibfk_3` FOREIGN KEY (`lehrkraft_id`) REFERENCES `lehrkraft` (`id`);
 
 --
 -- Constraints der Tabelle `schueler`
 --
 ALTER TABLE `schueler`
-  ADD CONSTRAINT `schueler_ibfk_1` FOREIGN KEY (`klasse`) REFERENCES `klasse` (`id`);
+  ADD CONSTRAINT `schueler_ibfk_1` FOREIGN KEY (`klasse_id`) REFERENCES `klasse` (`id`);
 
 --
 -- Constraints der Tabelle `unterrichtet`
 --
 ALTER TABLE `unterrichtet`
-  ADD CONSTRAINT `unterrichtet_ibfk_1` FOREIGN KEY (`lehrkraft`) REFERENCES `lehrkraft` (`id`),
-  ADD CONSTRAINT `unterrichtet_ibfk_2` FOREIGN KEY (`fach`) REFERENCES `fach` (`id`),
-  ADD CONSTRAINT `unterrichtet_ibfk_3` FOREIGN KEY (`klasse`) REFERENCES `klasse` (`id`);
+  ADD CONSTRAINT `unterrichtet_ibfk_1` FOREIGN KEY (`lehrkraft_id`) REFERENCES `lehrkraft` (`id`),
+  ADD CONSTRAINT `unterrichtet_ibfk_2` FOREIGN KEY (`fach_id`) REFERENCES `fach` (`id`),
+  ADD CONSTRAINT `unterrichtet_ibfk_3` FOREIGN KEY (`klasse_id`) REFERENCES `klasse` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
