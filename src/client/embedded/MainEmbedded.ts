@@ -801,7 +801,7 @@ export class MainEmbedded implements MainBase {
         // let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">DB-Fehler</div>');
         // $tabheadings.append($thRuntimeError);
 
-        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">Write History</div>');
+        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">History</div>');
         $tabheadings.append($thHistory);
 
         let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');

@@ -37,11 +37,12 @@ export class ResultsetPresenter {
 
     constructor(private main: MainBase, private $bottomDiv: JQuery<HTMLElement>) {
 
-        this.$paginationDiv = jQuery('.jo_pagination');
+        this.$paginationDiv = <any>$bottomDiv.find('.jo_pagination');
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
-        this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto">0001 - 1000</span> von <span class="jo_pagination_all">5000</span></div>');
+        this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto">0001-1000</span>/<span class="jo_pagination_all">5000</span></div>');
         this.$arrowRight = jQuery('<div class="jo_button img_arrow-right-dark jo_active"></div>');
 
+        this.$paginationDiv.empty();
         this.$paginationDiv.append(this.$arrowLeft, this.$infoDiv, this.$arrowRight);
 
         this.$paginationDiv.hide();
@@ -426,7 +427,7 @@ export class ResultsetPresenter {
         let that = this;
         let from = this.paginationAll == 0 ? 0 : this.paginationFrom;
         let to = this.paginationAll == 0 ? 0 : Math.min(this.paginationFrom + this.paginationSize - 1, this.paginationAll);
-        this.$infoDiv.find('.jo_pagination_fromto').html(`${from} - ${to}`)
+        this.$infoDiv.find('.jo_pagination_fromto').html(`${from}-${to}`)
 
         if (this.showResultsBusy) {
             if (this.showResultPending) {

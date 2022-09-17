@@ -2450,7 +2450,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .joe_rightDiv {
     flex: 0 1 auto;
     position: relative;
-    width: 350px;
+    width: max(250px, 25%);
     border-left: 1px solid gray;
 }
 

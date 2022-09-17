@@ -177,8 +177,26 @@ export class Lexer {
                         this.next();
                         this.next();
                         return;
-                    } else {
+                    } else if (this.nextChar == "="){
+                        this.pushToken(TokenType.lowerOrEqual, '<=');
+                        this.next();
+                        this.next();
+                        return;
+                    }
+                    else {
                         this.pushToken(TokenType.lower, '<');
+                        this.next();
+                        return;
+                    }
+                case TokenType.greater:
+                    if (this.nextChar == "="){
+                        this.pushToken(TokenType.greaterOrEqual, '>=');
+                        this.next();
+                        this.next();
+                        return;
+                    }
+                    else {
+                        this.pushToken(TokenType.greater, '>');
                         this.next();
                         return;
                     }
