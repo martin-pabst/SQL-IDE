@@ -954,15 +954,15 @@ body .monaco-editor-hover .monaco-tokenized-source {
 }
 
 .jo_highlightStatementGreen {
-    background-color: #003000;
+    background-color: #015a0165;
 }
 
 .jo_highlightStatementRed {
-    background-color: #402020;
+    background-color: #9e292942;
 }
 
 .jo_highlightStatementYellow {
-    background-color: #303000;
+    background-color: #6b6b0a62;
 }
 
  .jo_decorate_breakpoint {
