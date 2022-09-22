@@ -455,6 +455,7 @@ export class SymbolResolver {
                     if (resultType == null) {
                         this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für die Datentypen " + typeLeft.toString() + " und " + typeRight.toString() + " nicht definiert.", "error", node.position);
                     }
+                    node.sqlType = resultType;
                     return resultType;
                 } else {
                     return null;
@@ -467,6 +468,7 @@ export class SymbolResolver {
                     if (resultType1 == null) {
                         this.pushError("Der Operator " + TokenTypeReadable[node.operator] + " ist für einen Operanden des Datentyps " + operandType.toString() + " nicht definiert.", "error", node.position);
                     }
+                    node.sqlType = resultType1;
                     return resultType1;
                 } else {
                     return null;
