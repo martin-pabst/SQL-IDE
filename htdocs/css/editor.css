@@ -713,6 +713,28 @@ body .monaco-editor-hover .monaco-tokenized-source {
     color: var(--file-errorcount);
 }
 
+.jo_folderlines {
+    display: flex;
+    flex-direction: row;
+}
+
+.jo_active>.jo_folderlines{
+    position: relative;
+    left: -1px;
+}
+
+.jo_active>.jo_filename, .jo_active>.jo_fileimage {
+    position: relative;
+    left: -1px;
+    top: -1px;
+}
+
+.jo_folderline {
+    border-left: 1px solid gray;
+    width: 5px;
+    margin-left: 4px;
+}
+
 .jo_homeworkButton, .jo_startButton {
     margin-top: 2px;
 }
@@ -759,7 +781,9 @@ body .monaco-editor-hover .monaco-tokenized-source {
     transform: scale(1.jo_2);
 }
 
-
+.jo_file_dragover {
+    background-color: rgba(34, 114, 27, 0.596);
+}
 
 .jo_inplaceeditor {
     z-index: 1000;

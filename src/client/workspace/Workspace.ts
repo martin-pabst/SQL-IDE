@@ -9,7 +9,7 @@ import { WDatabase } from "./WDatabase.js";
 export class Workspace {
     
     name: string;
-    path: string;
+    path: string = "";
     isFolder: boolean;
     id: number;
     owner_id: number;
@@ -45,7 +45,7 @@ export class Workspace {
             currentFileId: this.currentlyOpenModule == null ? null : this.currentlyOpenModule.file.id,
             files: [],
             sql_history: this.sql_history,
-            path: "",
+            path: this.path,
             isFolder: false,  
             permissions: this.permissions,
             database_id: this.databaseId
