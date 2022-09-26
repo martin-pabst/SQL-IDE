@@ -1939,6 +1939,16 @@ export class Parser {
         switch (this.tt) {
             case TokenType.leftBracket:
                 return this.parseBracket();
+            case TokenType.keywordNot:
+                position = position;
+                this.nextToken();
+                term = this.parseTermBinary(2);
+                return {
+                    type: TokenType.unaryOp,
+                    position: position,
+                    operand: term,
+                    operator: TokenType.keywordNot
+                }
             case TokenType.minus:
                 // case TokenType.not:
                 position = position;
