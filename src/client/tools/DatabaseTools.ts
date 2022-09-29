@@ -126,7 +126,8 @@ export class DatabaseTool {
 
             if(queries == null) queries = [];
             queries = queries.slice();
-            queries.unshift("PRAGMA foreign_keys = ON;")
+            queries.unshift("PRAGMA foreign_keys = OFF;")
+            queries.push("PRAGMA foreign_keys = ON;")
             let queryCount = queries.length;
 
             let execQuery = () => {
