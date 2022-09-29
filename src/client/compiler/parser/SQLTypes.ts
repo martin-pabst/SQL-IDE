@@ -67,7 +67,10 @@ export class SQLBaseType extends SQLType {
     }
 
     static getBaseType(name: string) {
-        if(name == 'char') name = 'varchar';
+        if(name != null && name.toLocaleLowerCase() == 'char'){
+            name = 'varchar';
+            
+        } 
         return this.baseTypeMap.get(name.toLocaleLowerCase());
     }
 
@@ -234,11 +237,11 @@ export class SQLDerivedType extends SQLType {
 
 let textTypes = ["varchar", "char", "text" ,"tinytext", "mediumtext", "longtext"];
 
-var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
-    (v: string, pv) => v.substring(0, pv[0]), textTypes);
+var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${Math.max(pv[0], 1)})`,
+    (v: string, pv) => v.substring(0, Math.max(pv[0], 1)), textTypes);
     
-var charType = new SQLBaseType("char", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
-    (v: string, pv) => v.substring(0, pv[0]), textTypes);
+var charType = new SQLBaseType("char", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${Math.max(pv[0], 1)})`,
+    (v: string, pv) => v.substring(0, Math.max(pv[0], 1)), textTypes);
 
 var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes.concat(["date", "datetime", "timestamp"]));
 var tinyTextType = new SQLBaseType("tinyText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);

@@ -1312,6 +1312,10 @@ export class Parser {
             this.expect(TokenType.rightBracket, true);
         }
 
+        if(identifier != null && identifier.toLocaleLowerCase() == "char" && node.parameters == null){
+            node.parameters = [1];
+        }
+
         // primary key autoincrement
         // references table(column)
         // not null
