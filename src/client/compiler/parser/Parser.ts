@@ -1581,15 +1581,15 @@ export class Parser {
 
         node.columnList = this.parseColumnList([TokenType.keywordFrom, TokenType.semicolon, TokenType.endofSourcecode], true);
 
-        let columnListKeywordArray = ["distinct", "as", "*"];
+        let columnListKeywordArray = ["distinct", "as", "*", "from"];
         if (node.columnList.findIndex(c => c.type == TokenType.allColumns) >= 0) {
-            columnListKeywordArray.pop();
+            columnListKeywordArray = ["from"];
         }
 
-        this.module.addCompletionHint(columnListStart, this.getCurrentPositionPlus(1), true, true, columnListKeywordArray)
+        this.module.addCompletionHint(columnListStart, this.getCurrentPositionPlus(2), true, true, columnListKeywordArray)
 
         let hasFrom = this.comesToken(TokenType.keywordFrom, true);
-        let fromListKeywordArray = ["join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
+        let fromListKeywordArray = [ "where", "join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
         // parse from ...
         if (!hasFrom) {
             columnListKeywordArray.unshift("from");

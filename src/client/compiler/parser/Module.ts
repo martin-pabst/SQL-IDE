@@ -142,7 +142,7 @@ export class Module {
             hintColumns: (typeof hintColumns == "boolean")? hintColumns : true, 
             hintColumnsOfTable: (typeof hintColumns == "string")? hintColumns : null,
             hintTables: hintTables,
-            hintKeywords: hintKeywords,
+            hintKeywords: hintKeywords == null ? null : hintKeywords.map(s => s.toUpperCase()),
             dontHint: dontHint,
             praefix: praefix,
             suffix: suffix
