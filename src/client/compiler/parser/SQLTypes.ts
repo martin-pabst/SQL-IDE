@@ -240,7 +240,7 @@ var varcharType = new SQLBaseType("varchar", ["Maximale Länge"], (ci, pv) => `c
 var charType = new SQLBaseType("char", ["Maximale Länge"], (ci, pv) => `check(length(${ci}) <= ${pv[0]})`,
     (v: string, pv) => v.substring(0, pv[0]), textTypes);
 
-var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes.concat(["date", "datetime", "timestamp"]));
+var textType = new SQLBaseType("text", ["Maximale Länge"], (ci, pv) => "", (v: string, pv) => v, textTypes.concat(["time", "date", "datetime", "timestamp"]));
 var tinyTextType = new SQLBaseType("tinyText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 var mediumTextType = new SQLBaseType("mediumText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 var longTextType = new SQLBaseType("longText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
@@ -265,9 +265,11 @@ var smallIntType = new SQLBaseType("smallint", ["Maximale Anzahl der Stellen"], 
 var mediumIntType = new SQLBaseType("mediumint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
 var bigIntType = new SQLBaseType("bigint", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);
 
+var timeType = new SQLBaseType("time", [], (ci, pv) => `check(isTime(${ci}))`, (v: string, pv) => v, []);
 var dateType = new SQLBaseType("date", [], (ci, pv) => `check(isDate(${ci}))`, (v: string, pv) => v, []);
 var dateTimeType = new SQLBaseType("datetime", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, ["timestamp"]);
 var timestampType = new SQLBaseType("timestamp", [], (ci, pv) => `check(isDateTime(${ci}))`, (v: string, pv) => v, ["datetime"]);
+
 
 var booleanType = new SQLBaseType("boolean", [], (ci, pv) => `check(${ci} == 0 or ${ci} == 1)`, (v, pv) => v == 1 ? "true" : "false",
     ["varchar", "text", "decimal", "numeric"]);
@@ -278,7 +280,9 @@ var nullType = new SQLBaseType("null", [], (ci, pv) => "", (v, pv) => v,
 let numericTypes = [decimalType, numericType, doubleType, realType, floatType, intType, integerType, tinyIntType, smallIntType, mediumIntType, bigIntType];
 
 let baseTypes = [varcharType, charType, textType, tinyTextType, mediumTextType, longTextType,
-    dateType, dateTimeType, timestampType, booleanType, nullType].concat(numericTypes);
+    timeType, dateType, dateTimeType, timestampType, booleanType, nullType].concat(numericTypes);
+
+let timeTypes = [timeType, dateType, dateTimeType, timestampType];
 
 SQLBaseType.addBaseTypes(baseTypes);
 
@@ -316,6 +320,14 @@ for (let i = 0; i < characterTypes.length; i++) {
     for (let j = i; j < characterTypes.length; j++) {
         characterTypes[i].addBinaryOperation(TokenType.concatenation, characterTypes[j], characterTypes[j]);
         characterTypes[i].addBinaryOperation(comparisonOperators, characterTypes[j], booleanType);
+    }
+}
+
+for(let i = 0; i < timeTypes.length; i++){
+    timeTypes[i].addBinaryOperation(comparisonOperators, timeTypes[i], booleanType);
+    for(let j = 0; j < characterTypes.length; j++){
+        timeTypes[i].addBinaryOperation(comparisonOperators, characterTypes[j], booleanType);
+        characterTypes[j].addBinaryOperation(comparisonOperators, timeTypes[i], booleanType);
     }
 }
 

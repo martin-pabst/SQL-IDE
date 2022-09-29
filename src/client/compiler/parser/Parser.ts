@@ -1066,8 +1066,12 @@ export class Parser {
         let identifier = "";
         if (this.expect(TokenType.identifier, false)) {
             identifier = <string>this.cct.value;
-            this.module.addCompletionHint(this.getCurrentPosition(), this.getCurrentPositionPlus(identifier.length + 3), false, false, ["("]);
+            let pos1 = this.getCurrentPosition();
+            let pos2 = this.getCurrentPositionPlus(identifier.length + 3);
             this.nextToken();
+            if(!this.comesToken(TokenType.leftBracket)){
+                this.module.addCompletionHint(pos1, pos2, false, false, ["("]);
+            }
         }
 
         let node: CreateTableNode = {

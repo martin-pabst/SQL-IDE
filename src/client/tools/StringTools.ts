@@ -162,3 +162,11 @@ export function isDate(inputText: string) {
           return false;
       }
   }
+  export function isTime(inputText: string) {
+
+      if (inputText == null || typeof inputText != 'string') return false;
+
+      var timeformat = /^([01][1-9]|2[0123]):([0-5][0-9]):([0-5][0-9])$/;
+      // Match the date format through regular expression
+      return inputText.match(timeformat) != null;
+  }
