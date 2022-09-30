@@ -420,7 +420,10 @@ export class Lexer {
                 }
             } else if (char == beginChar) {
                 this.next();
-                break;
+                if(this.currentChar != beginChar){
+                    break;
+                }
+                text += beginChar;
             } else if (char == "\n" || char == endChar) {
                 this.pushError('Innerhalb einer String-Konstante wurde das Zeilenende erreicht.', text.length + 1, "error", line, column);
                 break;

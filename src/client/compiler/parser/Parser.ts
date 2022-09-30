@@ -454,6 +454,7 @@ export class Parser {
             case TokenType.keywordUse:
                 return this.parseUse();
             case TokenType.keywordStart:
+                this.pushError("Die Aweisung 'start transaction' ist unnötig, da jede Anweisung automatisch commited wird.", "info");
                 this.nextToken();
                 this.expect(TokenType.keywordTransaction, true);
                 return null;
@@ -1284,6 +1285,9 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
+        if(identifier.toLowerCase() == 'year'){
+            identifier = 'int';
+        }
 
         let type = SQLBaseType.getBaseType(identifier);
         if (type == null) {
