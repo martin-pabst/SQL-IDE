@@ -7,7 +7,7 @@ import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
 import { SQLMethodStore } from "./SQLMethods.js";
-import { isDate, isDateTime } from "../../tools/StringTools.js";
+import { isDate, isDateTime, isTime } from "../../tools/StringTools.js";
 
 
 export class SymbolResolver {
@@ -724,7 +724,12 @@ export class SymbolResolver {
                                 let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
                                 this.pushError(error, "error", value.position);
                             }
-                        }
+                        } else if(destType == "time"){
+                            if(!isTime(value.constant)){
+                                let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Time-Werte haben die Form 'hh:min:ss', also z.B. '07:56:22'.`;
+                                this.pushError(error, "error", value.position);
+                            }
+                        } 
                     }
                 }
             }

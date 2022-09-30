@@ -105,6 +105,16 @@ function createDb(SQL, buffer) {
             return false;
         }
     });
+
+    db.create_function("isTime", function (inputText) {
+        if(inputText == null) return true;
+        
+        if (typeof inputText != 'string') return false;
+
+        var timeformat = /^([01][1-9]|2[0123]):([0-5][0-9]):([0-5][0-9])$/;
+        // Match the date format through regular expression
+        return inputText.match(timeformat) != null;
+    });
     return db;
 }
 
