@@ -58,7 +58,8 @@ export type InsertNode = {
 
     table: TableNode,
     columnList: IdentifierNode[],
-    values: ConstantNode[][]
+    values: ConstantNode[][],
+    select?: SelectNode
 }
 
 export type CreateTableNode = {

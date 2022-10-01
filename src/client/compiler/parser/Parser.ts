@@ -1070,7 +1070,7 @@ export class Parser {
             let pos1 = this.getCurrentPosition();
             let pos2 = this.getCurrentPositionPlus(identifier.length + 3);
             this.nextToken();
-            if(!this.comesToken(TokenType.leftBracket)){
+            if (!this.comesToken(TokenType.leftBracket)) {
                 this.module.addCompletionHint(pos1, pos2, false, false, ["("]);
             }
         }
@@ -1096,7 +1096,7 @@ export class Parser {
         while (this.tt != TokenType.rightBracket) {
             if (!first) this.expect(TokenType.comma, true);
             first = false;
-            if(this.comesToken(TokenType.keywordConstraint, true)){
+            if (this.comesToken(TokenType.keywordConstraint, true)) {
                 this.expect(TokenType.identifier, true);
                 this.expect([TokenType.keywordForeign, TokenType.keywordPrimary, TokenType.keywordUnique], false);
             }
@@ -1285,7 +1285,7 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
-        if(identifier.toLowerCase() == 'year'){
+        if (identifier.toLowerCase() == 'year') {
             identifier = 'int';
         }
 
@@ -1320,7 +1320,7 @@ export class Parser {
             this.expect(TokenType.rightBracket, true);
         }
 
-        if(identifier != null && identifier.toLocaleLowerCase() == "char" && node.parameters == null){
+        if (identifier != null && identifier.toLocaleLowerCase() == "char" && node.parameters == null) {
             node.parameters = [1];
         }
 
@@ -1434,6 +1434,7 @@ export class Parser {
     parseInsert(): InsertNode {
 
         let startPosition = this.getCurrentPosition();
+        let rightBracketPosition =startPosition;
         this.nextToken(); // skip "insert"
 
         this.expect(TokenType.keywordInto, true);
@@ -1488,19 +1489,42 @@ export class Parser {
                 }
                 this.nextToken();
             }
-
+            rightBracketPosition = this.getCurrentPosition();
             this.expect(TokenType.rightBracket, true);
         }
 
         node.valuesPosition = this.getCurrentPosition();
-        this.expect(TokenType.keywordValues, true);
 
-        this.parseValueLists(node.values);
+
+        switch (this.tt) {
+            case TokenType.keywordValues:
+                this.nextToken();
+                this.parseValueLists(node.values);
+                break;
+            case TokenType.keywordSelect:
+            case TokenType.leftBracket:
+                if(this.getCurrentPosition().line <= rightBracketPosition.line + 1){
+                    let selectNode = this.parseSelect();
+                    node.select = selectNode;
+                    // if(selectNode != null){
+                    //     if(node.columnList != null && selectNode.columnList != null){
+                    //         if(node.columnList.length != selectNode.columnList.length){
+                    //             this.pushError("Die insert-Anweisung erwartet " + node.columnList.length + " Werte je Datensatz, der nachfolgende select-Term liefert aber " + selectNode.columnList.length + " Werte je Datensatz.");                        
+                    //         } 
+                    //         node.select = selectNode;
+                    //     }
+                    // }
+                }
+                break;
+        }
+
+
 
         node.endPosition = this.getCurrentPosition();
 
         return node;
     }
+
 
     parseValueLists(values: ConstantNode[][]) {
         let insideListTokens = [TokenType.keywordNull, TokenType.charConstant, TokenType.stringConstant, TokenType.booleanConstant, TokenType.floatingPointConstant, TokenType.integerConstant];
@@ -1524,15 +1548,15 @@ export class Parser {
                     this.nextToken(); // consume comma
                 }
                 first = false;
-                if (this.tt == TokenType.identifier){
-                    if(this.cct.isDoubleQuotedIdentifier) {
+                if (this.tt == TokenType.identifier) {
+                    if (this.cct.isDoubleQuotedIdentifier) {
                         this.tt = TokenType.stringConstant
-                    } else if((this.cct.value + "").toLocaleLowerCase() == "date"){
+                    } else if ((this.cct.value + "").toLocaleLowerCase() == "date") {
                         this.nextToken();
                     }
-                } 
+                }
 
-                
+
 
                 //@ts-ignore
                 if (insideListTokens.indexOf(this.tt) < 0) {
@@ -1601,7 +1625,7 @@ export class Parser {
         this.module.addCompletionHint(columnListStart, this.getCurrentPositionPlus(2), true, true, columnListKeywordArray)
 
         let hasFrom = this.comesToken(TokenType.keywordFrom, true);
-        let fromListKeywordArray = [ "where", "join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
+        let fromListKeywordArray = ["where", "join", "left", "right", "inner", "outer", "natural", "on", "as", ", "];
         // parse from ...
         if (!hasFrom) {
             columnListKeywordArray.unshift("from");

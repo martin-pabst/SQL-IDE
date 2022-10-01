@@ -97,7 +97,7 @@ export class SymbolResolver {
     }
 
     pushNewSymbolTable(positionFrom: TextPosition, positionTo: TextPosition): SymbolTable {
-        if(positionTo == null) {
+        if (positionTo == null) {
             positionTo = {
                 line: 100000,
                 column: 1,
@@ -166,7 +166,7 @@ export class SymbolResolver {
 
         if (node.tableIdentifier == null) return;
 
-        if(!node.ifExists){
+        if (!node.ifExists) {
             let table = node.symbolTable.findTable(node.tableIdentifier);
             if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
         }
@@ -191,7 +191,7 @@ export class SymbolResolver {
 
         if (node.whereNode != null) {
             let whereSymbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
-            if(table != null) whereSymbolTable.storeTableSymbols(table);
+            if (table != null) whereSymbolTable.storeTableSymbols(table);
             this.resolveTerm(node.whereNode);
             this.symbolTableStack.pop();
         }
@@ -691,47 +691,71 @@ export class SymbolResolver {
         }
 
         if (columns.length > 0) {
-            // Parse value lists
-            for (let valueList of astNode.values) {
-                if (valueList.length != columns.length && valueList.length > 0) {
-                    this.pushError("Erwartet werden " + columns.length + " Elemente, hier stehen aber " + valueList.length + " Elemente in der Liste.", "error", valueList[0].position);
-                } else {
-                    for (let i = 0; i < valueList.length; i++) {
-                        let value = valueList[i];
-                        let column = columns[i];
-                        value.sqlType = SQLBaseType.fromConstantType(value.constantType);
-                        // constantType == 40 means: null
-                        // TODO: check if column is nullable!
-                        let destType = column.type.toString().toLocaleLowerCase();
-                        if (value.constantType == TokenType.keywordNull) {
-                            if (!column.isNullable || column.notNull) {
-                                this.pushError("Die Spalte " + column.identifier + " ist nicht nullable, daher kann null hier nicht eingefügt werden.", "error", value.position);
+            if (astNode.select != null) {
+                let table = this.resolveSelect(astNode.select);
+                if(table?.columns != null){
+                    if(columns.length != table.columns.length){
+                        this.pushError("Die insert-Anweisung erwartet " + columns.length + " Werte je Datensatz, die select-Anweisung liefert aber " + table.columns.length + ".", "error", astNode.position);
+                    } else {
+                        for(let i = 0; i < columns.length; i++){
+                            let insertColumn = columns[i];
+                            let selectColumn = table.columns[i];
+                            if(insertColumn.type != null && selectColumn.type != null){
+                                if(!selectColumn.type.canCastTo(insertColumn.type)){
+                                    this.pushError("Der Datentyp " + selectColumn.type.toString() + " der " 
+                                    + (i+1) + "-ten Spalte des select-Terms kann nicht in den Datentyp " + 
+                                    insertColumn.type.toString() + " der entsprechenden Spalte der insert-Anweisung umgewandelt werden.", "error", astNode.position );
+                                }
                             }
-                        } else if (!value.sqlType.canCastTo(column.type)) {
-                            let error: string = "Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.";
-
-                            if(destType == "date") error += "<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.";
-                            if(destType == "datetime" || destType == "timestamp") error += "<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.";
-
-                            this.pushError(error, "error", value.position);
-                        } else if(destType == "date"){
-                            if(!isDate(value.constant)){
-                                let error: string = `'${value.constant}' ist kein date-Wert.<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.`;
-                                this.pushError(error, "error", value.position);
-                            }
-                        } else if(destType == "datetime" || destType == "timestamp"){
-                            if(!isDateTime(value.constant)){
-                                let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
-                                this.pushError(error, "error", value.position);
-                            }
-                        } else if(destType == "time"){
-                            if(!isTime(value.constant)){
-                                let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Time-Werte haben die Form 'hh:min:ss', also z.B. '07:56:22'.`;
-                                this.pushError(error, "error", value.position);
-                            }
-                        } 
+                        }
                     }
                 }
+
+
+            } else {
+                // Parse value lists
+                for (let valueList of astNode.values) {
+                    if (valueList.length != columns.length && valueList.length > 0) {
+                        this.pushError("Erwartet werden " + columns.length + " Elemente, hier stehen aber " + valueList.length + " Elemente in der Liste.", "error", valueList[0].position);
+                    } else {
+                        for (let i = 0; i < valueList.length; i++) {
+                            let value = valueList[i];
+                            let column = columns[i];
+                            value.sqlType = SQLBaseType.fromConstantType(value.constantType);
+                            // constantType == 40 means: null
+                            // TODO: check if column is nullable!
+                            let destType = column.type.toString().toLocaleLowerCase();
+                            if (value.constantType == TokenType.keywordNull) {
+                                if (!column.isNullable || column.notNull) {
+                                    this.pushError("Die Spalte " + column.identifier + " ist nicht nullable, daher kann null hier nicht eingefügt werden.", "error", value.position);
+                                }
+                            } else if (!value.sqlType.canCastTo(column.type)) {
+                                let error: string = "Der Wert " + value.constant + " vom Datentyp " + value.sqlType.toString() + " kann nicht in den Datentyp " + column.type.toString() + " der Spalte " + column.identifier + " umgewandelt werden.";
+
+                                if (destType == "date") error += "<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.";
+                                if (destType == "datetime" || destType == "timestamp") error += "<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.";
+
+                                this.pushError(error, "error", value.position);
+                            } else if (destType == "date") {
+                                if (!isDate(value.constant)) {
+                                    let error: string = `'${value.constant}' ist kein date-Wert.<br><b>Tipp: </b>Datumswerte haben die Form 'yyyy-mm-dd', also z.B. '2022-06-15'.`;
+                                    this.pushError(error, "error", value.position);
+                                }
+                            } else if (destType == "datetime" || destType == "timestamp") {
+                                if (!isDateTime(value.constant)) {
+                                    let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Timestamps haben die Form 'yyyy-mm-dd hh:min:ss', also z.B. '2022-06-15 07:56:22'.`;
+                                    this.pushError(error, "error", value.position);
+                                }
+                            } else if (destType == "time") {
+                                if (!isTime(value.constant)) {
+                                    let error: string = `'${value.constant}' ist kein ${destType}-Wert.<br><b>Tipp: </b>Time-Werte haben die Form 'hh:min:ss', also z.B. '07:56:22'.`;
+                                    this.pushError(error, "error", value.position);
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
         }
 
