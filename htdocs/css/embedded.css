@@ -74,6 +74,7 @@
     position: relative;
     width: max(250px, 25%);
     border-left: 1px solid gray;
+    z-index: 0;
 }
 
 .jo_alternativeText {
