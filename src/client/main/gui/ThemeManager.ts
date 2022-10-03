@@ -22,7 +22,8 @@ export class ThemeManager {
             }
         }
     }
-    internalSwitchTheme(theme: Theme) {
+    
+    private internalSwitchTheme(theme: Theme) {
         monaco.editor.setTheme(theme.monacoTheme);
 
         let root = document.documentElement;
@@ -124,6 +125,11 @@ export class ThemeManager {
                 "--runInputColor": "#ffffff",
                 "--runBackgroundColor": "rgba(255, 255, 255, 0.2)",
 
+                // table
+                "--table-even": "#222", /*#d1d2e4*/
+                "--table-heading": "#202060", /*#c3f2b9*/
+
+
             }
         });
 
@@ -137,8 +143,8 @@ export class ThemeManager {
                 "--backgroundLight": "#f3f3f3",
                 "--backgroundHeading": "#dcdcdc",
                 "--backgroundSelected": "#e8e8e8",
-                "--fontColorNormal": "#756161",
-                "--fontColorLight": "#756161",
+                "--fontColorNormal": "#000",
+                "--fontColorLight": "#303030",
                 "--slider": "#b0b0b0",
                 "--loginButtonBackgrond": "#59a15d",
                 "--loginButtonFontColor": "#000000",
@@ -216,6 +222,10 @@ export class ThemeManager {
                 "--defaultOutputColor": "#303030",
                 "--runInputColor": "#000000",
                 "--runBackgroundColor": "rgba(0, 0, 0, 0.2)",
+
+                // table
+                "--table-even": "#d1d2e4", /*#d1d2e4*/
+                "--table-heading": "#c3f2b9", /*#c3f2b9*/
 
             }
         });

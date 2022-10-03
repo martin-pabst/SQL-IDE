@@ -76,7 +76,12 @@ export class NetworkManager {
 
         this.main.projectExplorer.writeEditorTextToFile();
 
-        let userSettings = this.main.user.settings;
+        if (this.main.userDataDirty) {
+
+            this.main.userDataDirty = false;
+            this.sendUpdateUserSettings(() => { });
+        }
+
 
         let wdList: WorkspaceData[] = [];
         let fdList: FileData[] = [];

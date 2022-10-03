@@ -13,6 +13,9 @@
     --console-error: rgb(236, 41, 41);
     --homework-workspace: rgb(77, 77, 224);
     --homework-file: green;
+    --table-even: #222; /*#d1d2e4*/
+    --table-heading: #202060; /*#c3f2b9*/
+
 }
 
 
@@ -291,7 +294,7 @@
     border-left: 1px solid #444;
     border-right: 1px solid #444;
     padding: 0;
-    background-color: #202060;
+    background-color: var(--table-heading);
     user-select: none;
 }
 
@@ -312,7 +315,7 @@
     top: 0; /* Don't forget this, required for the stickiness */
   }
 
-.jo_result-body tr:nth-child(even) {background: #222}
+.jo_result-body tr:nth-child(even) {background: var(--table-even)}
 
 .jo_pagination {
     display: flex;
