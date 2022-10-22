@@ -365,6 +365,10 @@ export class ResultsetPresenter {
 
         }
 
+        this.$bottomDiv.find('.jo_tabheading').removeClass('jo_active');
+        $runtimeErrorsTabHeading.addClass('jo_active');
+        $runtimeErrorsTab.addClass('jo_active');
+
     }
 
     isSelectStatement(statement: SQLStatement): boolean {
