@@ -28,7 +28,7 @@ export class StatementCleaner {
         let statementHeader: string = `insert into ${ast.table.identifier}`;
 
         if (ast.columnList != null && ast.columnList.length > 0) {
-            statementHeader += `(${ast.columnList.map(c => c.identifier).join(", ")})`;
+            statementHeader += `(${ast.columnList.map(c => this.escapeIdentifier(c.identifier)).join(", ")})`;
         }
 
         statementHeader += '\nvalues\n';
@@ -64,7 +64,7 @@ export class StatementCleaner {
     }
 
     cleanCreateTableStatement(ast: CreateTableNode): string {
-        let st: string = `create table ${ast.ifNotExists ? " if not exists" : ""} ${ast.identifier}(\n   `;
+        let st: string = `create table ${ast.ifNotExists ? " if not exists" : ""} ${this.escapeIdentifier(ast.identifier)}(\n   `;
 
         st += ast.columnList.map(column => this.cleanColumnDef(column)).join(",\n   ");
         if (ast.foreignKeyInfoList != null && ast.foreignKeyInfoList.length > 0) {
@@ -80,11 +80,11 @@ export class StatementCleaner {
         }
 
         if (pkc.length > 0) {
-            st += `,\n   primary key(${pkc.join(", ")})`;
+            st += `,\n   primary key(${this.escapeIdentifiers(pkc).join(", ")})`;
         }
 
         if (ast.uniqueConstraints.length > 0) {
-            st += ",\n   " + ast.uniqueConstraints.map(uk => 'unique(' + uk.join(", ") + ")").join(",\n   ");
+            st += ",\n   " + ast.uniqueConstraints.map(uk => 'unique(' + this.escapeIdentifiers(uk).join(", ") + ")").join(",\n   ");
         }
 
         st += '\n);';
@@ -93,7 +93,7 @@ export class StatementCleaner {
     }
 
     cleanForeignKeyInfo(fki: ForeignKeyInfo): string {
-        let fkiString = `foreign key (${fki.column}) references ${fki.referencesTable}(${fki.referencesColumn})`;
+        let fkiString = `foreign key (${this.escapeIdentifier(fki.column)}) references ${this.escapeIdentifier(fki.referencesTable)}(${this.escapeIdentifier(fki.referencesColumn)})`;
         if (fki.onDelete) {
             fkiString += ` on delete ` + fki.onDelete;
         }
@@ -110,7 +110,7 @@ export class StatementCleaner {
             type = "integer";
         }
 
-        let st: string = `${column.identifier} ${type}`;
+        let st: string = `${this.escapeIdentifier(column.identifier)} ${type}`;
         if (column.parameters != null && column.parameters.length > 0 && !column.isAutoIncrement) {
             st += `(${column.parameters.join(", ")})`;
         }
@@ -129,7 +129,7 @@ export class StatementCleaner {
         if (column.foreignKeyInfo != null) {
             let fki = column.foreignKeyInfo;
             let c: string = fki.referencesColumn;
-            if (fki.referencesTable) c = fki.referencesTable + "(" + c + ")";
+            if (fki.referencesTable) c = this.escapeIdentifier(fki.referencesTable) + "(" + this.escapeIdentifier(c) + ")";
             st += " references " + c;
         }
         if (column.collate != null) {
@@ -139,11 +139,19 @@ export class StatementCleaner {
             }
         }
         let parameters = column.parameters ? column.parameters : [0, 0];
-        let checkFunction = column.baseType.checkFunction(column.identifier, parameters);
+        let checkFunction = column.baseType.checkFunction(this.escapeIdentifier(column.identifier), parameters);
         if (checkFunction != "") {
             st += " " + checkFunction;
         }
         return st;
+    }
+
+    escapeIdentifier(id: string){
+        return '"' + id + '"';
+    }
+
+    escapeIdentifiers(list: string[]):string[] {
+        return list.map(this.escapeIdentifier);
     }
 
 }

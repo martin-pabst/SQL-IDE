@@ -71,21 +71,22 @@ export class MySqlImporter {
         // get all entries from the zip
         let entries = await reader.getEntries();
         entries = entries.filter(entry => entry.filename.endsWith(".sql"))
-        let text: string = null;
+        let text: string = "";
         if (entries.length) {
-
-            // get first entry content as text by using a TextWriter
-            text = await entries[0].getData(
-                // writer
-                //@ts-ignore
-                new zip.TextWriter(),
-                // options
-                {
-                    onprogress: (index, max) => {
-                        // onprogress callback
+            for(let entry of entries){
+                // get first entry content as text by using a TextWriter
+                text += await entry.getData(
+                    // writer
+                    //@ts-ignore
+                    new zip.TextWriter(),
+                    // options
+                    {
+                        onprogress: (index, max) => {
+                            // onprogress callback
+                        }
                     }
-                }
-            );
+                );
+            }
         }
 
         // close the ZipReader
