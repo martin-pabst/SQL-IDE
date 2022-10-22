@@ -1274,6 +1274,8 @@ export class Parser {
         this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, hintColumns, hintTables, hints, null, praefix, suffix);
     }
 
+    identifierMap: {[key: string]:string} = {'year': 'int', 'binary': 'varchar', 'varbinary': 'varchar'};
+
     parseType(node: CreateTableColumnNode, primaryKeyAlreadyDefined: boolean) {
 
         let datatypes = SQLBaseType.baseTypes.map(type => type.toString());
@@ -1285,8 +1287,10 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
-        if (identifier.toLowerCase() == 'year') {
-            identifier = 'int';
+        let mappedIdentifier:string = this.identifierMap[identifier.toLocaleLowerCase()];
+
+        if (mappedIdentifier != null) {
+            identifier = mappedIdentifier;
         }
 
         let type = SQLBaseType.getBaseType(identifier);
@@ -1399,7 +1403,7 @@ export class Parser {
                     }
 
                     node.defaultValue = <string>this.cct.value;
-                    if (typeof this.cct.value == "string") {
+                    if (typeof this.cct.value == "string" && node.defaultValue.toLowerCase() != 'null' ) {
                         node.defaultValue = "'" + node.defaultValue + "'";
                     }
                     //@ts-ignore
@@ -1551,9 +1555,14 @@ export class Parser {
                 if (this.tt == TokenType.identifier) {
                     if (this.cct.isDoubleQuotedIdentifier) {
                         this.tt = TokenType.stringConstant
-                    } else if ((this.cct.value + "").toLocaleLowerCase() == "date") {
-                        this.nextToken();
+                    } else {
+                        let lv = (this.cct.value + "").toLocaleLowerCase();
+                        if (["date", "_binary"].indexOf(lv) >= 0) {
+                            this.nextToken();
+                        }
                     }
+                    
+                    
                 }
 
 
