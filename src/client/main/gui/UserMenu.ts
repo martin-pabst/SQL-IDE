@@ -15,22 +15,22 @@ export class UserMenu {
         let $userSettingsButton = jQuery('#buttonUserSettings');
         let that = this;
 
-        // $userSettingsButton.on("click", (e) => {
+        $userSettingsButton.on("click", (e) => {
 
-        //     let contextMenuItems: ContextMenuItem[] = [
-        //         {
-        //             caption: "Passwort ändern...",
-        //             callback: () => {
-        //                 let passwortChanger = new PasswordChanger(that.main);
-        //                 passwortChanger.show();
-        //             }
-        //         }
-        //     ]
+            let contextMenuItems: ContextMenuItem[] = [
+                {
+                    caption: "Passwort ändern...",
+                    callback: () => {
+                        let passwortChanger = new PasswordChanger(that.main);
+                        passwortChanger.show();
+                    }
+                }
+            ]
 
 
-        //     openContextMenu(contextMenuItems, $userSettingsButton.offset().left, $userSettingsButton.offset().top + $userSettingsButton.height());
+            openContextMenu(contextMenuItems, $userSettingsButton.offset().left, $userSettingsButton.offset().top + $userSettingsButton.height());
 
-        // });
+        });
 
     }
 
