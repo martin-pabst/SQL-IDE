@@ -498,7 +498,12 @@ export class ProjectExplorer {
         }
     }
 
-    setWorkspaceActive(w: Workspace) {
+    setWorkspaceActive(w: Workspace, callback?: () => void) {
+
+        if(w == this.main.getCurrentWorkspace()){
+            if(callback != null) callback();
+            return;
+        }
 
         if (w != null) {
             this.fileListPanel.$buttonNew.show();
@@ -506,19 +511,19 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.select(w, false);
 
-        let callback = (error: string) => {this.initializeDatabaseTool(error, w)};
+        let callbackAfterDatabaseFetched = (error: string) => {this.initializeDatabaseTool(error, w, callback)};
 
         if (w.database == null) {
             this.main.waitOverlay.show("Bitte warten, hole Datenbank vom Server ...");
 
-            this.main.networkManager.fetchDatabase(w, callback);
+            this.main.networkManager.fetchDatabase(w, callbackAfterDatabaseFetched);
         } else {
-            callback(null);
+            callbackAfterDatabaseFetched(null);
         }
 
     }
 
-    initializeDatabaseTool(error: string, w: Workspace) {
+    initializeDatabaseTool(error: string, w: Workspace, callback?: () => void) {
         if (error != null) {
             alert(error);
             return;
@@ -570,6 +575,7 @@ export class ProjectExplorer {
             () => {
                 this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
                 this.main.getHistoryViewer().clearAndShowStatements(w.database.statements);
+                if(callback != null) callback();
             });
 
     }

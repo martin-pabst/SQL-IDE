@@ -5,7 +5,7 @@ import { Workspace } from "../workspace/Workspace.js";
 export class TemplateUploader {
 
     uploadCurrentDatabase(workspace_id: number, main: Main, dump: Uint8Array | null, 
-        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace",
+        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace" | "distributeWorkspace", 
         callback: (response: UploadTemplateResponse) => void = () => { }) {
             
         main.waitOverlay.show('Bitte warten, lade Vorlage auf den Server hoch ...');
@@ -27,7 +27,7 @@ export class TemplateUploader {
 
 
     private uploadIntern(buffer: Uint8Array, workspace_id: number,
-        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace",
+        reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace"| "distributeWorkspace",
         main: Main, callback: (response: UploadTemplateResponse) => void) {
 
         $.ajax({

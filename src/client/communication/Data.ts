@@ -305,7 +305,7 @@ export type DeleteRepositoryResponse = { success: boolean, message?: string };
  */
 export type DistributeWorkspaceRequest = {
     workspace_id: number, // Workspace to copy
-    language: number, // 0 == Java, 1 == SQL
+    database_as_template_id: number, 
     class_id: number,
     student_ids: number[]
 }

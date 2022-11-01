@@ -7,6 +7,7 @@ import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
 import { NotifierClient } from "./NotifierClient.js";
+import { TemplateUploader } from "../tools/TemplateUploader.js";
 
 export class NetworkManager {
 
@@ -229,20 +230,31 @@ export class NetworkManager {
 
     sendDistributeWorkspace(ws: Workspace, klasse: ClassData, student_ids: number[], callback: (error: string) => void) {
 
-        this.sendUpdates(() => {
+        let callbackAfterSettingWorkspaceActive = () => {
 
-            let request: DistributeWorkspaceRequest = {
-                workspace_id: ws.id,
-                class_id: klasse?.id,
-                student_ids: student_ids,
-                language: 1
-            }
+            new TemplateUploader().uploadCurrentDatabase(ws.id, this.main, null,
+                "distributeWorkspace",
+                (response) => {
 
-            ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
-                callback(response.message)
-            }, callback);
+                    this.sendUpdates(() => {
+    
+                    let request: DistributeWorkspaceRequest = {
+                        workspace_id: ws.id,
+                        database_as_template_id: response.newTemplateId,
+                        class_id: klasse?.id,
+                        student_ids: student_ids
+                    }
+        
+                    ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
+                        callback(response.message)
+                    }, callback);
+        
+                }, false);
+                });
 
-        }, false);
+        }
+
+        this.main.projectExplorer.setWorkspaceActive(ws, callbackAfterSettingWorkspaceActive);
 
     }
 
