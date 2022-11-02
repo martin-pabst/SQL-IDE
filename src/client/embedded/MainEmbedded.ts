@@ -146,7 +146,7 @@ export class MainEmbedded implements MainBase {
 
         this.readConfig($div);
 
-        this.writeQueryManager = new WriteQueryManager(this, this.config.databaseURL == null ? "Empty database" : this.config.databaseURL);
+        this.writeQueryManager = new WriteQueryManager(this, (this.config.databaseURL == null ? "Empty database" : this.config.databaseURL) + this.config.id);
 
         this.initGUI($div);
 

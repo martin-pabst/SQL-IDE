@@ -42,6 +42,7 @@ export class WriteQueryManager implements WriteQueryListener {
         this.writtenStatements = [];
         this.statementsToExecute = [];
         this.main.historyViewer.clear();
+        this.forceWriteStatements();
     }
 
     writeStatementsIfNecessary() {
