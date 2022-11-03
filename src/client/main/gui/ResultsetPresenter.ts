@@ -338,7 +338,7 @@ export class ResultsetPresenter {
             query = query.replace(/\n/g, " ");
             query = query.replace(/\s\s+/g, ' ');
 
-            let $errorLine = $('<div class="jo_error-line" style="flex-direction:column; width: fit-content"></div>')
+            let $errorLine = jQuery('<div class="jo_error-line" style="flex-direction:column; width: fit-content"></div>')
             $errorList.append($errorLine);
 
             $errorLine.on(mousePointer + 'down', () => {
@@ -354,13 +354,13 @@ export class ResultsetPresenter {
             })
 
 
-            let $sqlDiv = $('<div class="jo_sqlErrorStatement"></div>');
+            let $sqlDiv = jQuery('<div class="jo_sqlErrorStatement"></div>');
             $errorLine.append($sqlDiv);
 
             monaco.editor.colorize(query, "vscSQL", {}).then(
                 (html) => { $sqlDiv.html(html) });
 
-            let $messageDiv = $('<div class="jo_sqlErrorMessage">' + error.message + '</div>');
+            let $messageDiv = jQuery('<div class="jo_sqlErrorMessage">' + error.message + '</div>');
             $errorLine.append($messageDiv);
 
         }
