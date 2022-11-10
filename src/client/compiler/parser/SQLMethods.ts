@@ -31,8 +31,16 @@ export class SQLMethodStore {
     constructor(){
         this.pushOneParameterMethod("max" ,"integer", "integer");
         this.pushOneParameterMethod("max" ,"float", "float");
+        this.pushOneParameterMethod("max" ,"date", "date");
+        this.pushOneParameterMethod("max" ,"time", "time");
+        this.pushOneParameterMethod("max" ,"datetime", "datetime");
+        this.pushOneParameterMethod("max" ,"timestamp", "timestamp");
         this.pushOneParameterMethod("min" ,"integer", "integer");
         this.pushOneParameterMethod("min" ,"float", "float");
+        this.pushOneParameterMethod("min" ,"date", "date");
+        this.pushOneParameterMethod("min" ,"time", "time");
+        this.pushOneParameterMethod("min" ,"datetime", "datetime");
+        this.pushOneParameterMethod("min" ,"timestamp", "timestamp");
         this.pushOneParameterMethod("avg" ,"integer", "integer");
         this.pushOneParameterMethod("avg" ,"float", "float");
         this.pushOneParameterMethod("sum" ,"float", "float");
