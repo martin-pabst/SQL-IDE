@@ -716,6 +716,11 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_folderlines {
     display: flex;
     flex-direction: row;
+    overflow: visible;
+}
+
+.jo_workspace {
+    overflow: visible;
 }
 
 .jo_active>.jo_folderlines{
@@ -733,6 +738,9 @@ body .monaco-editor-hover .monaco-tokenized-source {
     border-left: 1px solid gray;
     width: 5px;
     margin-left: 4px;
+    position: relative;
+    top: -4px;
+    height: 26px;
 }
 
 .jo_homeworkButton, .jo_startButton {
