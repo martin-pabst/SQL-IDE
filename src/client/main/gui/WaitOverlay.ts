@@ -6,6 +6,7 @@ export class WaitOverlay {
     $bitteWartenProgress: JQuery<HTMLElement>;
 
     constructor(private $waitDiv: JQuery<HTMLElement>){
+        $waitDiv.css('display', 'none');
         this.$bitteWartenText = $waitDiv.find('.bitteWartenText');
         this.$bitteWartenProgress = $waitDiv.find('.bitteWartenProgress');
     }

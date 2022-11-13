@@ -719,14 +719,14 @@ body .monaco-editor-hover .monaco-tokenized-source {
 }
 
 .jo_active>.jo_folderlines{
-    position: relative;
-    left: -1px;
+    /* position: relative; */
+    /* left: -1px; */
 }
 
 .jo_active>.jo_filename, .jo_active>.jo_fileimage {
-    position: relative;
-    left: -1px;
-    top: -1px;
+    /* position: relative; */
+    /* left: -1px; */
+    /* top: -1px; */
 }
 
 .jo_folderline {
