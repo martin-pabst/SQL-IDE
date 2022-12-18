@@ -1623,7 +1623,7 @@ html, body {
 }
 
 .jo_pagination_info>span{
-    color: white;
+    color: var(--fontColorLight);
     font-weight: bold;
 }
 
