@@ -300,7 +300,7 @@ export class Main implements MainBase {
 
             let workspace: Workspace = Workspace.restoreFromData(ws, this);
             this.workspaceList.push(workspace);
-            if (ws.id == this.user.currentWorkspace_id) {
+            if (ws.id == this.user.currentWorkspace_id && !ws.isFolder) {
                 currentWorkspace = workspace;
             }
         }
@@ -308,7 +308,12 @@ export class Main implements MainBase {
         this.projectExplorer.renderWorkspaces(this.workspaceList);
 
         if (currentWorkspace == null && this.workspaceList.length > 0) {
-            currentWorkspace = this.workspaceList[0];
+            for(let ws of this.workspaceList){
+                if(!ws.isFolder){
+                    currentWorkspace = this.workspaceList[0];
+                    break;
+                }
+            }
         }
 
         if (currentWorkspace != null) {
