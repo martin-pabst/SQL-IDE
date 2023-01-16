@@ -716,23 +716,31 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_folderlines {
     display: flex;
     flex-direction: row;
+    overflow: visible;
+}
+
+.jo_workspace {
+    overflow: visible;
 }
 
 .jo_active>.jo_folderlines{
-    position: relative;
-    left: -1px;
+    /* position: relative; */
+    /* left: -1px; */
 }
 
 .jo_active>.jo_filename, .jo_active>.jo_fileimage {
-    position: relative;
-    left: -1px;
-    top: -1px;
+    /* position: relative; */
+    /* left: -1px; */
+    /* top: -1px; */
 }
 
 .jo_folderline {
     border-left: 1px solid gray;
     width: 5px;
     margin-left: 4px;
+    position: relative;
+    top: -4px;
+    height: 26px;
 }
 
 .jo_homeworkButton, .jo_startButton {

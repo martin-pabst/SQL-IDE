@@ -242,14 +242,16 @@ export class ProjectExplorer {
                 that.main.networkManager.sendDeleteWorkspaceOrFile("workspace", workspace.id, (error: string) => {
                     if (error == null) {
                         that.main.removeWorkspace(workspace);
-                        that.fileListPanel.enableNewButton(that.main.workspaceList.length > 0);
-                        that.fileListPanel.clear();
-                        that.main.databaseExplorer.clear();
-                        that.main.getResultsetPresenter().clear();
+                        if(!workspace.isFolder){
+                            that.fileListPanel.clear();
+                            that.main.databaseExplorer.clear();
+                            that.main.getResultsetPresenter().clear();
+                            that.fileListPanel.enableNewButton(false);
+                            that.main.getMonacoEditor().setModel(null);
+                        }
                         successfulNetworkCommunicationCallback();
                     } else {
-                        alert('Der Server ist nicht erreichbar!');
-
+                        alert('Fehler: ' + error);
                     }
                 });
             }
@@ -498,7 +500,7 @@ export class ProjectExplorer {
         }
     }
 
-    setWorkspaceActive(w: Workspace, callback?: () => void) {
+    setWorkspaceActive(w: Workspace, callback?: () => void, scrollIntoView: boolean = false) {
 
         if(w == this.main.getCurrentWorkspace()){
             if(callback != null) callback();
@@ -509,7 +511,7 @@ export class ProjectExplorer {
             this.fileListPanel.$buttonNew.show();
         }
 
-        this.workspaceListPanel.select(w, false);
+        this.workspaceListPanel.select(w, false, scrollIntoView);
 
         let callbackAfterDatabaseFetched = (error: string) => {this.initializeDatabaseTool(error, w, callback)};
 

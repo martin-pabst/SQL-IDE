@@ -71,13 +71,18 @@ export class Workspace {
             let $button = jQuery('<div class="jo_settingsButton img_settings jo_button jo_active" title="Datenbank-Einstellungen..."></div>');
             $buttonDiv.append($button);
             let that = this;
-            $button.on('mousedown', (e) => e.stopPropagation());
-            $button.on('click', (e) => {
+            $button.on('pointerdown', (e) => e.stopPropagation());
+            $button.on('pointerup', (e) => {
                 e.stopPropagation();
 
                 new DatabaseSettingsDialog(<any>that.main, that);
 
             });
+
+            $button[0].addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            }, false);
 
         // } else {
         //     $buttonDiv.find('.jo_startButton').remove();

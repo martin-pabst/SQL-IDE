@@ -665,6 +665,12 @@ export class AccordionPanel {
         }
 
         if (that.withDeleteButton) {
+
+            element.$htmlFirstLine.find('.jo_delete')[0].addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            }, false);
+
             element.$htmlFirstLine.find('.jo_delete').on(mousePointer + 'up', (ev) => {
                 ev.preventDefault();
                 openContextMenu([{
