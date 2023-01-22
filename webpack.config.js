@@ -29,14 +29,15 @@ const ideConfig = {
     },
     output: {
         path: path.resolve(__dirname, 'htdocs/js.webpack'),
-        filename: 'sql-ide.js',
+        filename: 'sql-ide.js'
     },
     module: {
         rules: [
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                use: ["babel-loader", "source-map-loader"],
+                // use: ["babel-loader", "source-map-loader"],
+                use: ["source-map-loader"],
                 enforce: "pre"
             }, {
                 test: /\.css$/,
@@ -54,6 +55,9 @@ const ideConfig = {
                 ],
               },
         ]
+    },
+    optimization: {
+        // minimize: false
     },
     plugins: [
         new MiniCssExtractPlugin({
@@ -91,14 +95,15 @@ const embeddedConfig = {
     },
     output: {
         path: path.resolve(__dirname, 'htdocs/js.webpack'),
-        filename: 'sql-ide-embedded.js',
+        filename: 'sql-ide-embedded.js'
     },
     module: {
         rules: [
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                use: ["babel-loader", "source-map-loader"],
+                // use: ["babel-loader", "source-map-loader"],
+                use: ["source-map-loader"],
                 enforce: "pre"
             }, {
                 test: /\.css$/,
