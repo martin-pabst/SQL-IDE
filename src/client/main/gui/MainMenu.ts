@@ -4,6 +4,7 @@ import { PasswordChanger } from "./UserMenu.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
+import { ajax } from "../../communication/AjaxHelper.js";
 
 export type Action = (identifier: string) => void;
 
@@ -157,6 +158,23 @@ export class MainMenu {
 
             ]
         };
+
+        if (user != null && (user.is_admin )) {
+            mainMenu.items[0].subMenu.items.push({
+                            identifier:"Shutdown server...",
+                            action: () => {
+                                if(confirm("Server wirklich herunterfahren?")){
+                                    ajax("shutdown", {}, () => {
+                                        alert('Server erfolgreich heruntergefahren.');
+                                    }, (message) => {
+                                        alert(message);
+                                    })
+                                }
+                            }
+                        }
+            )
+        }
+
 
         jQuery('#mainmenu').empty();
         this.initMenu(mainMenu, 0);
