@@ -1287,6 +1287,8 @@ export class Parser {
         }
 
         let identifier = <string>this.cct.value;
+        let identifierPos = this.getCurrentPosition()
+
         let mappedIdentifier:string = this.identifierMap[identifier.toLocaleLowerCase()];
 
         if (mappedIdentifier != null) {
@@ -1324,9 +1326,18 @@ export class Parser {
             this.expect(TokenType.rightBracket, true);
         }
 
-        if (identifier != null && identifier.toLocaleLowerCase() == "char" && node.parameters == null) {
-            node.parameters = [1];
+        if(identifier != null && node.parameters == null){
+            switch(identifier.toLocaleLowerCase()){
+                case "char":
+                    node.parameters = [1];
+                    break;
+                case "varchar":
+                    node.parameters = [1];
+                    this.pushError("Hinter dem Datentyp varchar wird zwingend eine Längenangabe in Klammern erwaretet, also z.B. varchar(30)", "error", identifierPos)
+                    break;
+            }
         }
+
 
         // primary key autoincrement
         // references table(column)
