@@ -1279,7 +1279,8 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         this.handleError(sqlite3_create_function_v2(
             this.db,
             name,
-            func.length,
+        // M. Pabst, 17.02.2023
+            name == "concat" ? -1 : func.length,
             SQLITE_UTF8,
             0,
             func_ptr,

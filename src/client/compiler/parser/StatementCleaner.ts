@@ -24,6 +24,7 @@ export class StatementCleaner {
         }
     }
 
+
     cleanInsertStatement(ast: InsertNode): string {
         let statementHeader: string = `insert into ${ast.table.identifier}`;
 

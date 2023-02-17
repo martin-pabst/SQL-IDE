@@ -1,4 +1,4 @@
-importScripts('../../lib/sql.js/sql-wasm.js', 'sqljsWorkerTools.js');
+importScripts('../../lib/sql.js/sql-wasm-debug.js', 'sqljsWorkerTools.js');
 
 //@ts-ignore
 var initsql = initSqlJs({

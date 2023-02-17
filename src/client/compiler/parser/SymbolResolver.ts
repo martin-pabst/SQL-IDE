@@ -567,43 +567,56 @@ export class SymbolResolver {
         let methodStore = SQLMethodStore.getInstance();
         let methods = methodStore.getMethods(node.identifier);
 
-        methods = methods.filter(m => m.parameters.length == node.operands.length);
-        if (node.operands.length == 1 && node.operands[0].type == TokenType.allColumns) {
-            methods = methods.filter(m => m.acceptsStarParameter);
-            node.sqlType = methods[0].returnType;
-            return node.sqlType;
-        }
+        if (node.identifier.toLocaleLowerCase() == 'concat') {
+            if(node.operands.length == 0){
+                this.pushError("Die Methode concat benötigt mindestens einen Parameter.", "error", node.position);
+                return null;
+            }
+            let method = methods[0];
+            node.sqlType = method.returnType;
 
-        if (methods.length == 0) {
+            return node.sqlType;
+        } else {
+
+            methods = methods.filter(m => m.parameters.length == node.operands.length);
+            if (node.operands.length == 1 && node.operands[0].type == TokenType.allColumns) {
+                methods = methods.filter(m => m.acceptsStarParameter);
+                node.sqlType = methods[0].returnType;
+                return node.sqlType;
+            }
+
+            if (methods.length == 0) {
+                this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
+                return null;
+            }
+
+            for (let operand of node.operands) {
+                if (this.resolveTerm(operand) == null) {
+                    node.sqlType = methods[0].returnType;
+                    return node.sqlType;
+                }
+            }
+
+            for (let method of methods) {
+                let found = true;
+                for (let i = 0; i < method.parameters.length; i++) {
+                    let methodParameter = method.parameters[i];
+                    let operand = node.operands[i];
+                    if (!operand.sqlType.canCastTo(methodParameter.type)) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) {
+                    node.sqlType = method.returnType;
+                    return node.sqlType;
+                }
+            }
+
             this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
             return null;
         }
 
-        for (let operand of node.operands) {
-            if (this.resolveTerm(operand) == null) {
-                node.sqlType = methods[0].returnType;
-                return node.sqlType;
-            }
-        }
-
-        for (let method of methods) {
-            let found = true;
-            for (let i = 0; i < method.parameters.length; i++) {
-                let methodParameter = method.parameters[i];
-                let operand = node.operands[i];
-                if (!operand.sqlType.canCastTo(methodParameter.type)) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                node.sqlType = method.returnType;
-                return node.sqlType;
-            }
-        }
-
-        this.pushError("Es gibt keine passende Methode mit dem Bezeichner '" + node.identifier + "'.", "error", node.position);
-        return null;
 
     }
 
@@ -693,18 +706,18 @@ export class SymbolResolver {
         if (columns.length > 0) {
             if (astNode.select != null) {
                 let table = this.resolveSelect(astNode.select);
-                if(table?.columns != null){
-                    if(columns.length != table.columns.length){
+                if (table?.columns != null) {
+                    if (columns.length != table.columns.length) {
                         this.pushError("Die insert-Anweisung erwartet " + columns.length + " Werte je Datensatz, die select-Anweisung liefert aber " + table.columns.length + ".", "error", astNode.position);
                     } else {
-                        for(let i = 0; i < columns.length; i++){
+                        for (let i = 0; i < columns.length; i++) {
                             let insertColumn = columns[i];
                             let selectColumn = table.columns[i];
-                            if(insertColumn.type != null && selectColumn.type != null){
-                                if(!selectColumn.type.canCastTo(insertColumn.type)){
-                                    this.pushError("Der Datentyp " + selectColumn.type.toString() + " der " 
-                                    + (i+1) + "-ten Spalte des select-Terms kann nicht in den Datentyp " + 
-                                    insertColumn.type.toString() + " der entsprechenden Spalte der insert-Anweisung umgewandelt werden.", "error", astNode.position );
+                            if (insertColumn.type != null && selectColumn.type != null) {
+                                if (!selectColumn.type.canCastTo(insertColumn.type)) {
+                                    this.pushError("Der Datentyp " + selectColumn.type.toString() + " der "
+                                        + (i + 1) + "-ten Spalte des select-Terms kann nicht in den Datentyp " +
+                                        insertColumn.type.toString() + " der entsprechenden Spalte der insert-Anweisung umgewandelt werden.", "error", astNode.position);
                                 }
                             }
                         }

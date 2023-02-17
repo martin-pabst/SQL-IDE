@@ -45,6 +45,7 @@ export class SQLMethodStore {
         this.pushOneParameterMethod("avg" ,"float", "float");
         this.pushOneParameterMethod("sum" ,"float", "float");
         this.pushOneParameterMethod("sum" ,"integer", "integer");
+        this.pushOneParameterMethod("concat" ,"text", "text");
 
         let countMethod = new SQLMethod("count", true, "integer", [new SQLMethodParameter("spalte", "text")]);
         countMethod.acceptsStarParameter = true;
