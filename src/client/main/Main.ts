@@ -311,6 +311,7 @@ export class Main implements MainBase {
             for(let ws of this.workspaceList){
                 if(!ws.isFolder){
                     currentWorkspace = this.workspaceList[0];
+                    
                     break;
                 }
             }

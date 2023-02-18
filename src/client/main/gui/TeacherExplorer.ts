@@ -86,7 +86,6 @@ export class TeacherExplorer {
         main.getMonacoEditor().updateOptions({ readOnly: true });
 
         main.workspaceList = this.ownWorkspaces;
-        main.currentWorkspace = this.currentOwnWorkspace;
         main.workspacesOwnerId = main.user.id;
         main.projectExplorer.setExplorerColor(null);
 
@@ -96,9 +95,10 @@ export class TeacherExplorer {
             main.currentWorkspace = main.workspaceList[0];
         }
 
-        if (main.currentWorkspace != null) {
-            main.projectExplorer.setWorkspaceActive(main.currentWorkspace);
+        if (this.currentOwnWorkspace != null) {
+            main.projectExplorer.setWorkspaceActive(this.currentOwnWorkspace);
         }
+        main.currentWorkspace = this.currentOwnWorkspace;
 
         this.studentPanel.select(null, false);
 

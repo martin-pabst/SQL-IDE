@@ -508,7 +508,16 @@ export class ProjectExplorer {
         }
 
         if (w != null) {
-            this.fileListPanel.$buttonNew.show();
+            if(w.isFolder){
+                this.main.currentWorkspace = null;
+                this.main.databaseTool.initializeWorker(null, [], null, () => {
+                    this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
+                });
+                this.setModuleActive(null);
+                return;
+            } else {
+                this.fileListPanel.$buttonNew.show();
+            }
         }
 
         this.workspaceListPanel.select(w, false, scrollIntoView);
