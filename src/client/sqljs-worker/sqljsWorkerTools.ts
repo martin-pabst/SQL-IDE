@@ -1,6 +1,6 @@
-export function createDb(SQL, buffer) {
+export function createDb1(SQL, buffer) {
 
-    db = new SQL.Database(buffer);
+    var db = new SQL.Database(buffer);
 
     db.create_function("isDate", function (inputText) {
 

@@ -128,7 +128,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 }
 
 .jo_parenthesis_warning>.jo_warning_light {
-    background-image: url("../assets/graphics/Warnlampe_css.png");
+    background-image: url("assets/graphics/Warnlampe_css.png");
     position: absolute;
     z-index: 1;
     width: 100%;

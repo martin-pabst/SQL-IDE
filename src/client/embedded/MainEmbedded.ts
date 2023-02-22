@@ -601,7 +601,7 @@ export class MainEmbedded implements MainBase {
     makeWaitDiv(): JQuery<HTMLElement> {
 
         //@ts-ignore
-        let url = (window.javaOnlineDir == null ? '' : window.javaOnlineDir) + 'assets/projectexplorer/svg-loaders/grid.svg';
+        let url = (window.javaOnlineDir == null ? '' : window.javaOnlineDir) + 'assets/graphics/grid.svg';
 
         let waitHtml = `
         <div class="bitteWarten">
