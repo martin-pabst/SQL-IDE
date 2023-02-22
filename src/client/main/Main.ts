@@ -28,6 +28,7 @@ import { Notifier } from "../communication/Notifier.js";
 import { checkIfMousePresent } from "../tools/HtmlTools.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
+import jQuery from "jquery";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {

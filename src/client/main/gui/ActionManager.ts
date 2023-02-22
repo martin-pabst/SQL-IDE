@@ -1,5 +1,6 @@
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
+import jQuery from "jquery";
 
 export type ButtonToggler = (state: boolean) => void;
 

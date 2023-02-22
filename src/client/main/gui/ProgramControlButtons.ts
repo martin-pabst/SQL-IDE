@@ -18,6 +18,7 @@
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
 import { ResultsetPresenter } from "./ResultsetPresenter.js";
+import jQuery from "jquery";
 
 
 export class ProgramControlButtons {

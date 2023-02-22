@@ -8,6 +8,8 @@ import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
 import { NotifierClient } from "./NotifierClient.js";
 import { TemplateUploader } from "../tools/TemplateUploader.js";
+import jQuery from "jquery";
+
 
 export class NetworkManager {
 

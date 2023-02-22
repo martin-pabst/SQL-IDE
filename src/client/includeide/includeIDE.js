@@ -3,11 +3,9 @@ let base = "https://embed.learn-sql.de/include/";
 
 let scripts = [
     base + 'js.webpack/sql-ide-embedded.css',
-    base + "lib/jquery/jquery-3.3.1.js",
     base + "lib/pako/pako.js",
     base + "lib/zip.js/zip.min.js",
     base + "lib/sql.js/sql-wasm.js",
-    base + "js/sqljs-worker/sqljsWorkerTools.js",
     base + "lib/monaco-editor/dev/vs/loader.js"    
 ];
 
@@ -59,7 +57,7 @@ function initScripts(jo_doc){
     bodyElement.style.height = "100%";
     bodyElement.style.margin = "0";
     window.javaOnlineDir = base;
-    includeJs(base + "js.webpack/sql-ide-embedded.js");
+    includeJs(base + "js.webpack/sql-ide-embedded.js", null, 'module');
 
 }
 

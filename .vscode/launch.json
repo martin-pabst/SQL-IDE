@@ -7,28 +7,25 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome Port 6500",
-            "url": "http://localhost:6500",
-            "webRoot": "${workspaceFolder}/htdocs",
-            "sourceMaps": true
+            "name": "Debug IDE Version",
+            "url": "http://localhost:4000",
+            "webRoot": "${workspaceFolder}"
         },
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch embedded SQL-IDE",
-            "url": "http://localhost:5501/htdocs/embedded.html",
+            "name": "Debug Embedded Version",
+            "url": "http://localhost:4000/embedded.html",
             "webRoot": "${workspaceFolder}"
         },
         {
             "name": "Convert SVGs",
             "type": "node",
             "request": "launch",
-            "args": ["${workspaceRoot}/src/development/svgencoder.ts"],
-            //"args": ["${relativeFile}"],
-            "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
-            "sourceMaps": true,
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector",
+            "args": [
+                "${workspaceRoot}/src/development/svgencoder.js"
+            ],
+            "cwd": "${workspaceRoot}"
         }
     ]
 }

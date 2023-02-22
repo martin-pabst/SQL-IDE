@@ -5,6 +5,7 @@ import { Helper } from "./gui/Helper.js";
 import { userInfo } from "os";
 import { UserMenu } from "./gui/UserMenu.js";
 import { escapeHtml } from "../tools/StringTools.js";
+import jQuery from "jquery";
 
 export class Login {
 

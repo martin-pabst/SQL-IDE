@@ -2,6 +2,7 @@ import { openContextMenu, makeEditable, ContextMenuItem, animateToTransparent, j
 import { Helper } from "./Helper.js";
 import { escapeHtml } from "../../tools/StringTools.js";
 import { MainBase } from "../MainBase.js";
+import jQuery from "jquery";
 
 export type AccordionElement = {
     name: string;

@@ -1,6 +1,7 @@
 import { MainBase } from "../main/MainBase.js";
 import { DatabaseTool } from "./DatabaseTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
+import jQuery from "jquery";
 
 export type LoadableDatabase = {
     binDump?: Uint8Array,

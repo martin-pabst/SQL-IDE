@@ -3,6 +3,7 @@ import { copyTextToClipboard, openContextMenu } from "../../tools/HtmlTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
+import jQuery from "jquery";
 
 type HistoryPanelEntry = {
     statement: string;

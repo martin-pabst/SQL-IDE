@@ -2,6 +2,7 @@ import { ClassData, UserData } from "../../communication/Data.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { isEmptyObject } from "jquery";
+import jQuery from "jquery";
 
 export class DistributeToStudentsDialog {
 

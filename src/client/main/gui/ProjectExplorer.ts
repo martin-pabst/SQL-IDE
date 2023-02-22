@@ -9,6 +9,7 @@ import { WorkspaceData, Workspaces, ClassData, CreateWorkspaceData } from "../..
 import { dateToString } from "../../tools/StringTools.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
+import jQuery from "jquery";
 
 
 export class ProjectExplorer {

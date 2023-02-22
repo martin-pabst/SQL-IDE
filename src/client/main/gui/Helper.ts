@@ -1,4 +1,5 @@
 import { Main } from "../Main.js";
+import jQuery from "jquery";
 
 export type HelperDirection = "top" | "bottom" | "left" | "right";
 

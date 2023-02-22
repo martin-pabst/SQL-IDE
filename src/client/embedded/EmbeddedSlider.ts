@@ -1,4 +1,6 @@
 
+import jQuery from "jquery";
+
 export class EmbeddedSlider {
 
     $sliderDiv: JQuery<HTMLElement>;

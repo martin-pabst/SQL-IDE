@@ -1,6 +1,15 @@
 import { Formatter } from "../main/gui/Formatter.js";
 import { ThemeManager } from "../main/gui/ThemeManager.js";
 import { MainEmbedded } from "./MainEmbedded.js";
+import jQuery from "jquery";
+
+import '/css/editor.css';
+import '/css/bottomdiv.css';
+import '/css/run.css';
+import '/css/icons.css';
+import '/css/databaseExplorer.css';
+import '/css/embedded.css';
+
 
 // declare const require: any;
 

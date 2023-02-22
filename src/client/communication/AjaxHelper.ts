@@ -1,4 +1,5 @@
 import { LoginRequest, PerformanceData } from "./Data.js";
+import jQuery from "jquery";
 
 // export var credentials: { username: string, password: string } = { username: null, password: null };
 

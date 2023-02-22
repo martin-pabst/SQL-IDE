@@ -1,4 +1,4 @@
-function createDb(SQL, buffer) {
+export function createDb(SQL, buffer) {
 
     db = new SQL.Database(buffer);
 

@@ -4,6 +4,7 @@ import { ClassData, UserData, CRUDUserRequest, CRUDClassRequest, GetWorkspacesRe
 import { ajax } from "../../communication/AjaxHelper.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Helper } from "./Helper.js";
+import jQuery from "jquery";
 
 export class TeacherExplorer {
 

@@ -1,5 +1,6 @@
 import { Main } from "../Main";
 import { ViewModes, ViewMode } from "../../communication/Data";
+import jQuery from "jquery";
 
 export class ViewModeController {
 

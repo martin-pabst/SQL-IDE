@@ -5,6 +5,7 @@ import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ajax } from "./AjaxHelper.js";
 import { GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, LongPollingListenerResponse, RegisterLongPollingListenerRequest, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
+import jQuery from "jquery";
 
 export class Notifier {
 

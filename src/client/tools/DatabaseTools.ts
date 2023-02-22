@@ -1,5 +1,6 @@
 import { MainBase } from "../main/MainBase.js";
 import { WorkerSim } from "../sqljs-worker/sqljsWorkerSim.js";
+import jQuery from "jquery";
 
 export type DatabaseDumpType = "binaryUncompressed" | "binaryCompressed" | "other";
 
@@ -78,7 +79,7 @@ export class DatabaseTool {
 
         // console.log("Starting worker...");
 
-        let url: string = "js/sqljs-worker/sqljsWorker.js"
+        let url: string = "worker/sqljs-worker.js"
         if(this.main.isEmbedded()){
             //@ts-ignore
             url = window.javaOnlineDir + url;
