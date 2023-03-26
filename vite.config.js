@@ -9,10 +9,10 @@ export default defineConfig({
         '/sprites': 'http://localhost:6500',
         '/servlet/websocket': {target: 'ws://localhost:6500', ws: true},
         '/servlet/subscriptionwebsocket': {target: 'ws://localhost:6500', ws: true},
-        // '/worker': {
-        //   rewrite: (path) => path.replace('/worker', '/dist/worker'),
-        //   target: "http://localhost:4000"
-        // }
+        '/worker': {
+          rewrite: (path) => path.replace('/worker', '/dist/worker'),
+          target: "http://localhost:4000"
+        }
       }
     },
     build: {

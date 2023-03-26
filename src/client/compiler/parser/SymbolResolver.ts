@@ -112,7 +112,7 @@ export class SymbolResolver {
     resolveSelect(selectNode: SelectNode): Table {
         let resultTable: Table = new Table(null);
 
-        selectNode.symbolTable = this.pushNewSymbolTable(selectNode.position, selectNode.endPosition);
+        selectNode.symbolTable = this.pushNewSymbolTable(selectNode.position, selectNode.symbolTableEndPosition);
 
         // From
         let joinedTables: Table[] = [];
@@ -154,8 +154,15 @@ export class SymbolResolver {
             }
         }
 
-
         // TODO: group by, order by
+
+        if(selectNode.union != null){
+            this.symbolTableStack.pop();
+            let secondTable = this.resolveSelect(selectNode.union);
+            if(secondTable.columns.length != resultTable.columns.length){
+                this.pushError("Die select-Anweisungen links und rechts vom Schlüsselwort 'union' müssen dieselbe Anzahl von Spalten besitzen.", "error", selectNode.symbolTableEndPosition);
+            }
+        }
 
         return resultTable;
     }

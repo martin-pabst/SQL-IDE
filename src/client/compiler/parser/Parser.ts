@@ -1628,6 +1628,7 @@ export class Parser {
             type: TokenType.keywordSelect,
             position: startPosition,
             endPosition: this.getCurrentPosition(),
+            symbolTableEndPosition: this.getCurrentPosition(),
             symbolTable: null,
             columnList: [],
             fromNode: null,
@@ -1700,6 +1701,14 @@ export class Parser {
 
         if (this.tt == TokenType.keywordLimit) {
             node.limitNode = this.parseLimit();
+        }
+
+        node.symbolTableEndPosition = this.getCurrentPosition();
+
+        if(this.comesToken(TokenType.keywordUnion, true)){
+            if(this.expect(TokenType.keywordSelect, false)){
+                node.union = this.parseSelect();
+            }
         }
 
         node.endPosition = this.getCurrentPosition();

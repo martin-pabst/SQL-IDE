@@ -45,7 +45,10 @@ export type SelectNode = {
     groupByNode?: GroupByNode,
     orderByNode?: OrderByNode[],
     limitNode?: LimitNode,
-    sqlType?: SQLType
+    sqlType?: SQLType,
+
+    union?: SelectNode,
+    symbolTableEndPosition: TextPosition   // if union != null then symbolTableEndPosition != endPosition
 }
 
 export type InsertNode = {
