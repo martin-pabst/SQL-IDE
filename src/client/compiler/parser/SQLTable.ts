@@ -45,6 +45,7 @@ export class Table {
     public columns: Column[] = [];
 
     public size: number;
+    type: ("table"|"view");
 
     constructor(public identifier: string){
 
@@ -54,6 +55,7 @@ export class Table {
         let table: Table = new Table(ts.name);
         table.columns = ts.columns.map( column => Column.fromColumnStructure(column, table));
         table.size = ts.size;
+        table.type = ts.type;
         return table;
     }
 

@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
+import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -68,6 +68,9 @@ export class SymbolResolver {
                     this.resolveAlterTable(astNode)
                     this.symbolTableStack.pop();
                     break;
+                case TokenType.keywordView:
+                    this.resolveCreateView(astNode);
+                    this.symbolTableStack.pop();
 
                 default:
                     break;
@@ -319,7 +322,8 @@ export class SymbolResolver {
         let thisTable: Table = {
             identifier: createTableNode.identifier,
             columns: null,
-            size: 0
+            size: 0,
+            type: "table"
         }
 
         thisTable.columns = createTableNode.columnList.map(c => {
@@ -663,6 +667,13 @@ export class SymbolResolver {
 
         return SQLBaseType.getBaseType("boolean");
     }
+
+    resolveCreateView(astNode: CreateViewNode){
+        let symbolTable = this.pushNewSymbolTable(astNode.position, astNode.endPosition);
+        this.resolveSelect(astNode.selectStatement);
+        symbolTable.childSymbolTables.push(this.symbolTableStack.pop());
+    }
+
 
     resolveInsert(astNode: InsertNode) {
 

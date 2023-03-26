@@ -42,6 +42,7 @@ export type TableStructure = {
     size: number;
     columns: ColumnStructure[];
     completeSQL: string;
+    type: ("table"|"view");
 }
 
 export type DatabaseStructure = {
@@ -239,19 +240,22 @@ export class DatabaseTool {
         /*
             @see https://stackoverflow.com/questions/6460671/sqlite-schema-information-metadata
         */
-        let sql = `SELECT name, sql FROM sqlite_master WHERE type='table';`
+        let sql = `SELECT name, sql, type FROM sqlite_master WHERE type='table' or type='view';`
         let that = this;
 
         this.executeQuery(sql, (result) => {
             let sql1 = "";
-            result[0]?.values?.forEach(value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
+            let values = result[0]?.values;
+            let types: ("table"|"view")[] = values?.map(value => value[2]);
+
+            values?.forEach(value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
 
             if (sql1 != "") {
                 this.executeQuery(sql1, (result1) => {
                     // console.log("DB structure: ");
                     // console.log(result1);
 
-                    that.databaseStructure = that.parseDatabaseStructure(result, result1)
+                    that.databaseStructure = that.parseDatabaseStructure(result, result1, types)
 
                     callback(that.databaseStructure);
 
@@ -266,7 +270,7 @@ export class DatabaseTool {
 
     }
 
-    parseDatabaseStructure(tables: QueryResult[], columns: QueryResult[]): DatabaseStructure {
+    parseDatabaseStructure(tables: QueryResult[], columns: QueryResult[], types: ("table"|"view")[]): DatabaseStructure {
         this.databaseStructure = {
             tables: []
         };
@@ -282,7 +286,8 @@ export class DatabaseTool {
                 name: tableName,
                 size: 0,
                 completeSQL: tableSQL,
-                columns: []
+                columns: [],
+                type: types[i]
             }
 
             tableNameToStructureMap.set(tableName, tableStructure);

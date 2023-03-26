@@ -377,7 +377,7 @@ export class ResultsetPresenter {
     }
 
     isDDLStatement(statement: SQLStatement): boolean {
-        return statement.ast != null && [TokenType.keywordCreate, TokenType.keywordDrop, TokenType.keywordAlter].indexOf(statement.ast.type) >= 0;
+        return statement.ast != null && [TokenType.keywordCreate, TokenType.keywordDrop, TokenType.keywordAlter, TokenType.keywordView].indexOf(statement.ast.type) >= 0;
     }
 
     isWriteStatement(statement: SQLStatement): boolean {

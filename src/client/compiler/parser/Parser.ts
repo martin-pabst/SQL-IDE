@@ -1,7 +1,7 @@
 import { param, timers } from "jquery";
 import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode } from "./AST.js";
+import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode, CreateViewNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 import { SQLBaseType } from "./SQLTypes.js";
@@ -435,13 +435,13 @@ export class Parser {
             case TokenType.keywordInsert:
                 return this.parseInsert();
             case TokenType.keywordCreate:
-                return this.parseCreateTableOrDatabase();
+                return this.parseCreateTableOrDatabaseOrView();
             case TokenType.keywordUpdate:
                 return this.parseUpdate();
             case TokenType.keywordDelete:
                 return this.parseDelete();
             case TokenType.keywordDrop:
-                return this.parseDropTable();
+                return this.parseDropTableOrView();
             case TokenType.keywordAlter:
                 return this.parseAlterTable();
             case TokenType.keywordCommit:
@@ -859,10 +859,10 @@ export class Parser {
         node.columnDef = this.parseColumnDefinition(false);
     }
 
-    parseDropTable(): DropTableNode {
+    parseDropTableOrView(): DropTableNode {
 
         let startPosition = this.getCurrentPosition();
-        this.nextToken(); // skip "Delete"
+        this.nextToken(); // skip "Drop"
 
         let node: DropTableNode = {
             type: TokenType.keywordDrop,
@@ -874,8 +874,8 @@ export class Parser {
             ifExists: false
         }
 
-        if (!this.expect(TokenType.keywordTable, true)) {
-            this.addCompletionHintHere(false, false, ["table"], 1);
+        if (!this.expect([TokenType.keywordTable, TokenType.keywordView], true)) {
+            this.addCompletionHintHere(false, false, ["table", "view"], 1);
         }
 
         if (this.comesToken(TokenType.keywordIf, true)) {
@@ -1015,12 +1015,14 @@ export class Parser {
 
     }
 
-    parseCreateTableOrDatabase(): CreateTableNode | OmittedStatementNode {
+    parseCreateTableOrDatabaseOrView(): CreateTableNode | OmittedStatementNode | CreateViewNode {
         switch (this.ct[1].tt) {
             case TokenType.keywordDatabase:
                 return this.parseCreateDatabase();
             case TokenType.keywordTable:
                 return this.parseCreateTable();
+            case TokenType.keywordView:
+                return this.parseCreateView();
             default:
                 this.nextToken();
                 this.pushError("Nach 'create' wird 'table' erwartet.");
@@ -1042,6 +1044,65 @@ export class Parser {
         while (this.tt != TokenType.semicolon && this.tt != TokenType.endofSourcecode) {
             node.endPosition = this.getEndOfCurrentToken();
             this.nextToken();
+        }
+
+        return node;
+    }
+
+    parseCreateView(): CreateViewNode {
+        let startPosition = this.getCurrentPosition();
+        this.nextToken(); // skip "create"
+        this.nextToken(); // skip "view"
+
+        let ifNotExists: boolean = false;
+        if (this.comesToken(TokenType.keywordIf)) {
+            this.nextToken();
+            this.expect(TokenType.keywordNot, true);
+            this.expect(TokenType.keywordExists, true);
+            ifNotExists = true;
+        }
+
+        let identifier = "";
+        if (!this.expect(TokenType.identifier, false)){
+            return null;
+        } 
+        
+        identifier = <string>this.cct.value;
+        this.nextToken();
+
+        let columnIdentifiers: string[] = [];
+
+        if(this.comesToken(TokenType.leftBracket, true)){
+
+            do {
+                if(this.expect(TokenType.identifier, false)){
+                    columnIdentifiers.push(<string>this.cct.value)
+                }
+                this.nextToken();
+            } while(this.comesToken(TokenType.comma, true))
+
+            this.expect(TokenType.rightBracket, true);
+        }
+
+        if (!this.expect(TokenType.keywordAs, true)){
+            return null;
+        } 
+
+        if(!this.expect(TokenType.keywordSelect, false)){
+            return null;
+        }
+
+        let selectStatement = this.parseSelect();
+
+        let node: CreateViewNode = {
+            type: TokenType.keywordView,
+            identifier: identifier,
+            position: startPosition,
+            endPosition: this.getCurrentPosition(),
+            symbolTable: null,
+            ifNotExists: ifNotExists,
+            columnIdentifierList: columnIdentifiers,
+            selectStatement: selectStatement
         }
 
         return node;

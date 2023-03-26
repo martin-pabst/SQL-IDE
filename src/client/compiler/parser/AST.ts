@@ -7,7 +7,7 @@ import { Table } from "./SQLTable.js";
 export type ASTNode = 
     StatementNode | TermNode | ColumnNode | CreateTableColumnNode
     
-    export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | 
+    export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | CreateViewNode |
             DeleteNode | DropTableNode | AlterTableNode | CreateIndexNode | OmittedStatementNode;
 
     export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
@@ -78,6 +78,20 @@ export type CreateTableNode = {
     uniqueConstraints: string[][],
     foreignKeyInfoList: ForeignKeyInfo[]
 }
+
+export type CreateViewNode = {
+    type: TokenType.keywordView,
+    position: TextPosition,
+    endPosition: TextPosition,
+    identifier: string,
+    symbolTable: SymbolTable,
+    ifNotExists: boolean,
+
+    columnIdentifierList: string[],
+    selectStatement: SelectNode
+}
+
+
 
 export type ForeignKeyInfo = {
     column: string,
