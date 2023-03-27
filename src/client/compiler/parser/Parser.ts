@@ -47,7 +47,7 @@ export class Parser {
         value: "das Ende des Programms"
     };
 
-    beginStatementKeywords = ["select", "insert into", "update", "create table", "delete from", "alter table", "drop table"];
+    beginStatementKeywords = ["select", "insert into", "update", "create table", "create view", "delete from", "alter table", "drop table", "drop view"];
 
     constructor() {
 
@@ -1063,32 +1063,35 @@ export class Parser {
         }
 
         let identifier = "";
-        if (!this.expect(TokenType.identifier, false)){
+        if (!this.expect(TokenType.identifier, false)) {
             return null;
-        } 
-        
+        }
+
         identifier = <string>this.cct.value;
         this.nextToken();
 
         let columnIdentifiers: string[] = [];
 
-        if(this.comesToken(TokenType.leftBracket, true)){
+        if (this.comesToken(TokenType.leftBracket, true)) {
 
             do {
-                if(this.expect(TokenType.identifier, false)){
+                if (this.expect(TokenType.identifier, false)) {
                     columnIdentifiers.push(<string>this.cct.value)
                 }
                 this.nextToken();
-            } while(this.comesToken(TokenType.comma, true))
+            } while (this.comesToken(TokenType.comma, true))
 
             this.expect(TokenType.rightBracket, true);
         }
 
-        if (!this.expect(TokenType.keywordAs, true)){
-            return null;
-        } 
+        if (!this.expect(TokenType.keywordAs, true)) {
+            this.module.addCompletionHint(this.getCurrentPosition(), this.getCurrentPositionPlus(2), false, false, ["as"]);
 
-        if(!this.expect(TokenType.keywordSelect, false)){
+            return null;
+        }
+
+        if (!this.expect(TokenType.keywordSelect, false)) {
+            this.module.addCompletionHint(this.getCurrentPosition(), this.getCurrentPositionPlus(2), false, false, ["select"]);
             return null;
         }
 
@@ -1335,7 +1338,7 @@ export class Parser {
         this.module.addCompletionHint(this.getEndOfPosition(pos0), pos1, hintColumns, hintTables, hints, null, praefix, suffix);
     }
 
-    identifierMap: {[key: string]:string} = {'year': 'int', 'binary': 'varchar', 'varbinary': 'varchar'};
+    identifierMap: { [key: string]: string } = { 'year': 'int', 'binary': 'varchar', 'varbinary': 'varchar' };
 
     parseType(node: CreateTableColumnNode, primaryKeyAlreadyDefined: boolean) {
 
@@ -1350,7 +1353,7 @@ export class Parser {
         let identifier = <string>this.cct.value;
         let identifierPos = this.getCurrentPosition()
 
-        let mappedIdentifier:string = this.identifierMap[identifier.toLocaleLowerCase()];
+        let mappedIdentifier: string = this.identifierMap[identifier.toLocaleLowerCase()];
 
         if (mappedIdentifier != null) {
             identifier = mappedIdentifier;
@@ -1387,8 +1390,8 @@ export class Parser {
             this.expect(TokenType.rightBracket, true);
         }
 
-        if(identifier != null && node.parameters == null){
-            switch(identifier.toLocaleLowerCase()){
+        if (identifier != null && node.parameters == null) {
+            switch (identifier.toLocaleLowerCase()) {
                 case "char":
                     node.parameters = [1];
                     break;
@@ -1475,7 +1478,7 @@ export class Parser {
                     }
 
                     node.defaultValue = <string>this.cct.value;
-                    if (typeof this.cct.value == "string" && node.defaultValue.toLowerCase() != 'null' ) {
+                    if (typeof this.cct.value == "string" && node.defaultValue.toLowerCase() != 'null') {
                         node.defaultValue = "'" + node.defaultValue + "'";
                     }
                     //@ts-ignore
@@ -1510,7 +1513,7 @@ export class Parser {
     parseInsert(): InsertNode {
 
         let startPosition = this.getCurrentPosition();
-        let rightBracketPosition =startPosition;
+        let rightBracketPosition = startPosition;
         this.nextToken(); // skip "insert"
 
         this.expect(TokenType.keywordInto, true);
@@ -1579,7 +1582,7 @@ export class Parser {
                 break;
             case TokenType.keywordSelect:
             case TokenType.leftBracket:
-                if(this.getCurrentPosition().line <= rightBracketPosition.line + 1){
+                if (this.getCurrentPosition().line <= rightBracketPosition.line + 1) {
                     let selectNode = this.parseSelect();
                     node.select = selectNode;
                     // if(selectNode != null){
@@ -1633,8 +1636,8 @@ export class Parser {
                             this.nextToken();
                         }
                     }
-                    
-                    
+
+
                 }
 
 
@@ -1724,53 +1727,62 @@ export class Parser {
                 hintEndPosition = this.getCurrentPosition();
             }
 
-            this.module.addCompletionHint(node.fromStartPosition, hintEndPosition, false, true, fromListKeywordArray, dontHint)
             node.fromEndPosition = this.getCurrentPosition();
-        }
 
-        // parse where...
+            // parse where...
 
-        let whereKeywordArray = ["like"];
-        if (this.tt == TokenType.keywordWhere) {
-            let position = this.getCurrentPosition();
-            let whereStart = this.getCurrentPosition();
-            this.nextToken();
-            node.whereNode = this.parseTerm();
-            this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(4), true, true, whereKeywordArray)
-            // if (node.whereNode != null) node.whereNode.position = position;
-        } else {
-            fromListKeywordArray.push("where");
-        }
-
-        let groupKeywordArray = [];
-        if (this.tt == TokenType.keywordGroup) {
-            let groupStart = this.getCurrentPosition();
-            node.groupByNode = this.parseGroupBy();
-            this.module.addCompletionHint(groupStart, this.getCurrentPosition(), true, true, groupKeywordArray);
-        } else {
-            whereKeywordArray.push("group by");
-        }
-
-        if (this.tt == TokenType.keywordOrder) {
-            let orderStart = this.getCurrentPosition();
-            node.orderByNode = this.parseOrderBy();
-            this.module.addCompletionHint(orderStart, this.getCurrentPosition(), true, true, ["asc", "desc"]);
-        } else {
-            whereKeywordArray.push("order by");
-            groupKeywordArray.push("order by");
-        }
-
-        if (this.tt == TokenType.keywordLimit) {
-            node.limitNode = this.parseLimit();
-        }
-
-        node.symbolTableEndPosition = this.getCurrentPosition();
-
-        if(this.comesToken(TokenType.keywordUnion, true)){
-            if(this.expect(TokenType.keywordSelect, false)){
-                node.union = this.parseSelect();
+            let whereKeywordArray = ["like", "union"];
+            if (this.tt == TokenType.keywordWhere) {
+                let position = this.getCurrentPosition();
+                let whereStart = this.getCurrentPosition();
+                this.nextToken();
+                node.whereNode = this.parseTerm();
+                this.module.addCompletionHint(whereStart, this.getCurrentPositionPlus(4), true, true, whereKeywordArray)
+                // if (node.whereNode != null) node.whereNode.position = position;
+            } else {
+                fromListKeywordArray.push("where");
             }
+
+            let groupKeywordArray = [];
+            if (this.tt == TokenType.keywordGroup) {
+                let groupStart = this.getCurrentPosition();
+                node.groupByNode = this.parseGroupBy();
+                this.module.addCompletionHint(groupStart, this.getCurrentPosition(), true, true, groupKeywordArray);
+            } else {
+                whereKeywordArray.push("group by");
+            }
+
+            if (this.tt == TokenType.keywordOrder) {
+                let orderStart = this.getCurrentPosition();
+                node.orderByNode = this.parseOrderBy();
+                this.module.addCompletionHint(orderStart, this.getCurrentPosition(), true, true, ["asc", "desc"]);
+            } else {
+                whereKeywordArray.push("order by");
+                groupKeywordArray.push("order by");
+            }
+
+            if (this.tt == TokenType.keywordLimit) {
+                node.limitNode = this.parseLimit();
+            }
+
+            node.symbolTableEndPosition = this.getCurrentPosition();
+
+            if (this.comesToken(TokenType.keywordUnion, true)) {
+                if (this.expect(TokenType.keywordSelect, false)) {
+                    node.union = this.parseSelect();
+                }
+            } else {
+                console.log("union?");
+                if (hasFrom && node.fromNode != null) {
+                    console.log("yes!");
+                    fromListKeywordArray.push("union");
+                }
+            }
+
+            this.module.addCompletionHint(node.fromStartPosition, hintEndPosition, false, true, fromListKeywordArray, dontHint)
+
         }
+
 
         node.endPosition = this.getCurrentPosition();
         node.endPosition.column += 3;
