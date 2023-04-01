@@ -1,15 +1,15 @@
 import { Main } from "./Main.js";
 import jQuery from "jquery";
 
-import '/css/editor.css';
-import '/css/editorStatic.css';
-import '/css/bottomdiv.css';
-import '/css/run.css';
-import '/css/helper.css';
-import '/css/icons.css';
-import '/css/databaseExplorer.css';
-import '/css/dialog.css';
-import '/css/databasedialogs.css';
+import '/include/css/editor.css';
+import '/include/css/editorStatic.css';
+import '/include/css/bottomdiv.css';
+import '/include/css/run.css';
+import '/include/css/helper.css';
+import '/include/css/icons.css';
+import '/include/css/databaseExplorer.css';
+import '/include/css/dialog.css';
+import '/include/css/databasedialogs.css';
 
 
 jQuery(function () {

@@ -1,0 +1,344 @@
+:root {
+    --bottomdiv-tabheading-hover: white;
+    --bottomdiv-tabheading-active: rgb(97,97,255);
+    --noErrorMessage: rgb(37, 211, 37);
+    --console-top-borderbottom: #c4c4c4;
+    --console-top-background: #1e1e1e;
+    --consoleEntry-withBorder: #303030;
+    --consoleEntryValue: white;
+    --consoleEntryIdentifier: rgb(156, 156, 235);
+    --consoleEntryNoValue: gray;
+    --consoleEntryCaption: white;
+    --error-Caption: rgb(166, 165, 176);
+    --console-error: rgb(236, 41, 41);
+    --homework-workspace: rgb(77, 77, 224);
+    --homework-file: green;
+    --table-even: #222; /*#d1d2e4*/
+    --table-heading: #202060; /*#c3f2b9*/
+
+}
+
+
+.jo_bottomdiv-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.jo_tabheadings {
+    width: 100%;
+    min-height: 25px;
+    font-size: 10pt;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 4px;
+}
+
+.jo_tabheading {
+    line-height: 24px;
+    padding: 0 5px;
+    margin: 0 2px;
+    user-select: none;
+}
+
+.jo_tabheading:hover {
+    color: var(--bottomdiv-tabheading-hover);
+    cursor: pointer;
+}
+
+.jo_tabheading.jo_active {
+    border-bottom: 1px solid var(--bottomdiv-tabheading-active);
+    font-weight: bold;
+}
+
+.jo_tabheading-right {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    right: 8px;
+    height: 16px;
+    top: 6px;
+}
+
+.jo_tabs {
+    overflow: visible;
+    height: calc(100% - 30px);
+}
+
+.jo_tabs>div {
+    display: none;
+}
+
+.jo_tabs>div.jo_active {
+    display: block;
+}
+
+.jo_tab {
+    height: 100%;
+    position: relative;
+}
+
+.jo_resultTab {
+    font-family: Consolas, "Courier New", monospace;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 12px;
+    letter-spacing: 0px;
+    overflow: auto;
+    height: 100%;
+    position: relative;
+}
+
+
+.jo_label_destination:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.jo_errorsTab {
+    height: 100%;
+    overflow: auto;
+    padding-left: 4px;
+}
+
+.jo_noErrorMessage {
+    color: var(--noErrorMessage);
+    user-select: none;
+}
+
+.jo_resultTab {
+    height: 100%;
+    overflow: visible;
+}
+
+.jo_historyTab {
+    overflow: auto;
+    height: 100%;
+    padding-left: 5px;
+    padding-right: 15px;
+}
+
+.jo_panelEntry {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-left: 5px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid gray;
+}
+
+.jo_panelEntryText {
+    font-size: 10pt;
+    font-family: 'Consolas', 'Roboto Mono', monospace;
+    width: calc(100% - 30px);
+}
+
+.jo_panelEntryIndex {
+    color: rgb(124, 182, 70);
+    margin-right: 5px;
+}
+
+.jo_panelEntryRollbackButton {
+    margin-right: 5px;
+}
+
+.jo_panelEntryCopyButton {
+    margin-right: 5px;
+}
+
+.jo_panelEntryRollbackButton:not(.jo_active) {
+    filter: grayscale() brightness(80%);
+}
+
+.jo_result-inner{
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    height: 100%;
+    padding-left: 5px;
+    box-sizing: border-box;
+}
+
+.jo_result-body{
+    flex-grow: 1;
+    overflow: auto;
+    background-color: var(--console-top-background);
+    padding-right: 5px;
+}
+
+.jo_result-header{
+    height: 2em;
+    position: relative;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+}
+
+.jo_decorationsOverviewRuler {
+    display: none;
+}
+
+
+.jo_runtimeErrorPosition{
+    cursor: pointer;
+}
+
+.jo_runtimeErrorPosition:hover{
+    font-weight: bold;
+}
+
+.jo_error-caption {
+    color: var(--error-Caption);
+}
+
+.jo_network-busy {
+    visibility: hidden;
+    margin-right: 8px;
+}
+
+.jo_homeworkTabheading {
+    visibility: hidden;
+}
+
+.jo_homeworkTab {
+    display: none;
+    height: 100%;
+}
+
+.jo_homeworkTab.jo_active {
+    display: flex !important;
+    flex-direction: row;
+}
+
+.jo_homeworkTabLeft {
+    display: flex;
+    padding: 0 4px;
+    flex-direction: column;
+    flex: 1;
+    border-right: 1px solid gray;
+    overflow: auto;
+}
+
+.jo_homeworkTabRight {
+    display: flex;
+    padding: 0 4px;
+    flex-direction: column;
+    flex: 4;
+    overflow: auto;
+}
+
+.jo_homeworkDate {
+    border-bottom: 1px dotted gray;
+    cursor: pointer;
+    user-select: none;
+}
+
+.jo_homeworkDate:hover, .jo_homeworkEntry:hover {
+    background-color: var(--file-hover);
+}
+
+.jo_homeworkDate:active, .jo_homeworkEntry:active {
+    filter: brightness(130%);
+}
+
+.jo_homeworkEntry {
+    cursor: pointer;
+    user-select: none;
+}
+
+.jo_homeworkDate.jo_active:hover {
+    background-color: var(--file-active-hover);
+}
+
+.jo_homeworkDate.jo_active {
+    background-color: var(--file-active);
+}
+
+.jo_homeworkHeading {
+    color: var(--fontColorLight);
+    font-weight: bold;
+}
+
+.jo_homeworkRevisionButton {
+    background-color: var(--loginButtonBackground);
+    color: var(--loginButtonFontColor);
+    padding: 2px 4px;
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+.img_homework-corrected {
+    width: 24px !important;
+} 
+
+.jo_homework-workspace {
+    color: var(--homework-workspace);
+}
+
+.jo_homework-file {
+    color: var(--homework-file);
+}
+
+.jo_result-body table {
+  text-align: left;
+  position: relative;
+  border-collapse: collapse;
+}
+
+.jo_result-body th {
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
+    padding: 0;
+    background-color: var(--table-heading);
+    user-select: none;
+}
+
+.jo_result-body th>div {
+    padding: 0.25rem;
+    border-bottom: 2px solid #444;    
+    border-top: 2px solid #444;    
+}
+
+.jo_result-body td {
+    padding: 0.25rem;
+    border: 1px solid #444;
+    user-select: none;
+  }
+
+.jo_result-body th {
+    position: sticky;
+    top: 0; /* Don't forget this, required for the stickiness */
+  }
+
+.jo_result-body tr:nth-child(even) {background: var(--table-even)}
+
+.jo_pagination {
+    display: flex;
+    flex-direction: row;
+}
+
+.jo_pagination_info {
+    padding: 0 4px;
+    color: var(--fontColorNormal);
+    font-family: Consolas, "Roboto Mono";
+    user-select: none;
+}
+
+.jo_pagination_info>span{
+    color: var(--fontColorLight);
+    font-weight: bold;
+}
+
+.jo_sqlErrorStatement, .jo_sqlErrorMessage {
+    user-select: none;
+}
+
+.jo_runtimeerrorsTab {
+    overflow: auto;
+    height: calc(100% - 25px);
+}
