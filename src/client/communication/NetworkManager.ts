@@ -9,6 +9,7 @@ import { CacheManager } from "./CacheManager.js";
 import { NotifierClient } from "./NotifierClient.js";
 import { TemplateUploader } from "../tools/TemplateUploader.js";
 import jQuery from "jquery";
+import { FileTool } from "../tools/FileTool.js";
 
 
 export class NetworkManager {
@@ -69,7 +70,7 @@ export class NetworkManager {
 
     }
 
-    initializeNotifierClient(){
+    initializeNotifierClient() {
         this.notifierClient = new NotifierClient(this.main, this);
     }
 
@@ -239,19 +240,19 @@ export class NetworkManager {
                 (response) => {
 
                     this.sendUpdates(() => {
-    
-                    let request: DistributeWorkspaceRequest = {
-                        workspace_id: ws.id,
-                        database_as_template_id: response.newTemplateId,
-                        class_id: klasse?.id,
-                        student_ids: student_ids
-                    }
-        
-                    ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
-                        callback(response.message)
-                    }, callback);
-        
-                }, false);
+
+                        let request: DistributeWorkspaceRequest = {
+                            workspace_id: ws.id,
+                            database_as_template_id: response.newTemplateId,
+                            class_id: klasse?.id,
+                            student_ids: student_ids
+                        }
+
+                        ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
+                            callback(response.message)
+                        }, callback);
+
+                    }, false);
                 });
 
         }
@@ -338,24 +339,31 @@ export class NetworkManager {
             if (response.success) {
 
                 workspace.database = WDatabase.fromDatabaseData(response.database, response.version)
+
+                if (workspace.database.based_on_template_id == null) {
+                    callback(null);
+                    return
+                }
+                
                 cacheManager.fetchTemplateFromCache(workspace.database.based_on_template_id, (templateDump: Uint8Array) => {
 
-                    if (templateDump != null) {
-                        try{
+                    if (FileTool.isZipfile(templateDump)) {
+                        try {
                             // @ts-ignore
                             workspace.database.templateDump = pako.inflate(templateDump);
-                        } catch(err){
+                        } catch (err) {
                             console.log(err);
                             console.log("Dump seems not to be compressed...");
                             workspace.database.templateDump = templateDump;
                         }
+                    } else {
+                        workspace.database.templateDump = templateDump;
+                    }
+
+                    if (FileTool.isSqLiteFile(workspace.database.templateDump)) {
                         callback(null);
                         return;
                     } else {
-                        if (workspace.database.based_on_template_id == null) {
-                            callback(null);
-                            return
-                        }
                         this.fetchTemplate(workspace.id, (template) => {
                             if (template != null) {
                                 cacheManager.saveTemplateToCache(workspace.database.based_on_template_id, template);
@@ -557,7 +565,7 @@ export class NetworkManager {
 
         ajax("rollback", request, (response: RollbackResponse) => {
             if (response.success) {
-                
+
                 callback(null, workspace.database.version > response.new_version);
             } else {
                 alert(response.message);

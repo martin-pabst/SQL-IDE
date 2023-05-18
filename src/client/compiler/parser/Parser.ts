@@ -1772,9 +1772,7 @@ export class Parser {
                     node.union = this.parseSelect();
                 }
             } else {
-                console.log("union?");
                 if (hasFrom && node.fromNode != null) {
-                    console.log("yes!");
                     fromListKeywordArray.push("union");
                 }
             }
