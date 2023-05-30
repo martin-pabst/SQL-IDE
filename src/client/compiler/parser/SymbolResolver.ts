@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../tools/DatabaseTools.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { CompletionHint, Module } from "./Module.js";
 import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./Ast.js";
+import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
 import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
@@ -41,7 +41,7 @@ export class SymbolResolver {
 
             switch (astNode.type) {
                 case TokenType.keywordSelect:
-                    this.resolveSelect(astNode);
+                    this.resolveSelect(astNode, statement.resultTypes);
                     this.symbolTableStack.pop();
                     break;
                 case TokenType.keywordInsert:
@@ -112,7 +112,7 @@ export class SymbolResolver {
         return st;
     }
 
-    resolveSelect(selectNode: SelectNode): Table {
+    resolveSelect(selectNode: SelectNode, resultTypes: SQLType[]): Table {
         let resultTable: Table = new Table(null);
 
         selectNode.symbolTable = this.pushNewSymbolTable(selectNode.position, selectNode.symbolTableEndPosition);
@@ -132,12 +132,15 @@ export class SymbolResolver {
                     for (let column of table.columns) {
                         let c: Column = new Column(column.identifier, column.type, resultTable, false, true, column.defaultValue, column.isAutoIncrement);
                         resultTable.columns.push(c);
+                        resultTypes.push(column.type)
                     }
                 }
             } else {
                 this.resolveTerm(columnNode.term);
                 let c1: Column = new Column(columnNode.alias, columnNode.term.sqlType, resultTable, false, true, null, false);
                 resultTable.columns.push(c1);
+                resultTypes.push(columnNode.term.sqlType);
+                
                 if (c1.identifier != null) {
                     selectNode.symbolTable.storeSymbol({
                         identifier: c1.identifier,
@@ -161,7 +164,7 @@ export class SymbolResolver {
 
         if(selectNode.union != null){
             this.symbolTableStack.pop();
-            let secondTable = this.resolveSelect(selectNode.union);
+            let secondTable = this.resolveSelect(selectNode.union, []);
             if(secondTable.columns.length != resultTable.columns.length){
                 this.pushError("Die select-Anweisungen links und rechts vom Schlüsselwort 'union' müssen dieselbe Anzahl von Spalten besitzen.", "error", selectNode.symbolTableEndPosition);
             }
@@ -418,7 +421,7 @@ export class SymbolResolver {
                 break;
 
             case TokenType.subquery:
-                tosNode.table = this.resolveSelect(tosNode.query);
+                tosNode.table = this.resolveSelect(tosNode.query, []);
                 joinedTables.push(tosNode.table);
                 if (tosNode.alias != null) {
                     tosNode.table.identifier = tosNode.alias;
@@ -501,7 +504,7 @@ export class SymbolResolver {
                 return this.resolveDot(node);
                 break;
             case TokenType.keywordSelect:
-                let selectTable = this.resolveSelect(node);
+                let selectTable = this.resolveSelect(node, []);
                 if (selectTable.columns.length != 1) {
                     this.pushError("Die Ergebnistabelle einer Unterabfrage an dieser Stelle muss genau eine Spalte besitzen.", "error", node.position);
                     return null;
@@ -645,7 +648,7 @@ export class SymbolResolver {
                 if (selectNode.columnList.length != 1) {
                     this.pushError("Wenn rechts vom Operator '" + operatorString + "' eine Unterabfrage steht, muss die Ergebnistabelle dieser Unterabfrage genau eine Spalte haben.", "error", selectNode.position);
                 }
-                this.resolveSelect(selectNode);
+                this.resolveSelect(selectNode, []);
                 let pType = selectNode.columnList[0].term.sqlType;
                 if (!pType.canCastTo(leftType)) {
                     this.pushError("Der Datentyp der Ergebnisspalte der Unterabfrage ist " + pType.toString() + ". Dieser kann nicht in den Datentyp " + leftType.toString() + " umgewandelt werden.", "error", selectNode.position);
@@ -670,7 +673,7 @@ export class SymbolResolver {
 
     resolveCreateView(astNode: CreateViewNode){
         let symbolTable = this.pushNewSymbolTable(astNode.position, astNode.endPosition);
-        this.resolveSelect(astNode.selectStatement);
+        this.resolveSelect(astNode.selectStatement, []);
         symbolTable.childSymbolTables.push(this.symbolTableStack.pop());
     }
 
@@ -723,7 +726,7 @@ export class SymbolResolver {
 
         if (columns.length > 0) {
             if (astNode.select != null) {
-                let table = this.resolveSelect(astNode.select);
+                let table = this.resolveSelect(astNode.select, []);
                 if (table?.columns != null) {
                     if (columns.length != table.columns.length) {
                         this.pushError("Die insert-Anweisung erwartet " + columns.length + " Werte je Datensatz, die select-Anweisung liefert aber " + table.columns.length + ".", "error", astNode.position);

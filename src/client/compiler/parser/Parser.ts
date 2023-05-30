@@ -4,7 +4,7 @@ import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "..
 import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode, CreateViewNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
-import { SQLBaseType } from "./SQLTypes.js";
+import { SQLBaseType, SQLType } from "./SQLTypes.js";
 
 export type SQLStatement = {
     ast: ASTNode,
@@ -13,7 +13,8 @@ export type SQLStatement = {
     hasErrors: boolean,
     acceptedBySQLite: boolean,
     sql?: string,
-    sqlCleaned?: string
+    sqlCleaned?: string, 
+    resultTypes: SQLType[]
 }
 
 
@@ -384,7 +385,8 @@ export class Parser {
                     from: startPosition,
                     to: this.getEndOfPosition(this.lastToken.position),
                     hasErrors: hasErrors,
-                    acceptedBySQLite: false
+                    acceptedBySQLite: false, 
+                    resultTypes: []
                 });
             }
             // console.log(mainProgram[mainProgram.length - 1]);
@@ -1406,8 +1408,9 @@ export class Parser {
         // primary key autoincrement
         // references table(column)
         // not null
-
-        this.addCompletionHintHere(false, false, ["primary key", "references", "not null"]);
+        if(this.tt != TokenType.comma){
+            this.addCompletionHintHere(false, false, ["primary key", "references", "not null"]);
+        }
 
         let alreadySeenKeywords: TokenType[] = [];
 
@@ -1439,7 +1442,9 @@ export class Parser {
                     if (!this.expect(TokenType.keywordKey, true)) {
                         this.addCompletionHintHere(false, false, ["key"]);
                     } else {
-                        this.addCompletionHintHere(false, false, ["autoincrement, \n"])
+                        if(!this.comesToken(TokenType.comma)){
+                            this.addCompletionHintHere(false, false, ["autoincrement, \n"])
+                        }
                     }
                     node.isPrimary = true;
                     break;
@@ -1870,6 +1875,7 @@ export class Parser {
             }
 
             if (this.tt == TokenType.keywordOn) {
+                this.nextToken();
                 leftSide.on = this.parseTerm();
             }
 
@@ -1951,8 +1957,9 @@ export class Parser {
             this.nextToken();
 
             //@ts-ignore
-            if (this.tt == TokenType.keywordAs) {
-                this.nextToken();
+            let comesKeywordAs: boolean = (this.tt == TokenType.keywordAs);
+            if (comesKeywordAs || this.tt == TokenType.identifier) {
+                if(comesKeywordAs) this.nextToken();
                 if (this.expect(TokenType.identifier, false)) {
                     node.alias = <string>this.cct.value;
                     this.nextToken();
