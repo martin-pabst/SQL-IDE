@@ -77,6 +77,16 @@ export class DatabaseSettingsDialog {
         let that = this;
         this.$dialog.css('visibility', 'visible');
 
+        if(!this.main.user.is_teacher){
+            jQuery('#b2').next().remove();
+            jQuery('#b2').remove();
+        }
+
+        if(!this.main.user.is_admin){
+            jQuery('#b3').next().remove();
+            jQuery('#b3').remove();
+        }
+
         jQuery('#jo_ds_cancel_button').on('click', () => { this.showMainWindow(); });
         jQuery('#jo_ds_save_button').on('click', () => { 
             this.saveNameAndPublishedTo();
