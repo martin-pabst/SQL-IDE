@@ -63,7 +63,7 @@ export class DatabaseExplorer {
         </div>`);
 
         $table.find('.jo_tableheader').on('pointerup', () => {
-            this.main.getResultsetPresenter().showTable(table.identifier);
+            this.main.getResultsetPresenter().showTable(table);
 
         })
 
