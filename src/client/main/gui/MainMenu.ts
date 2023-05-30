@@ -21,6 +21,7 @@ type MenuItem = {
     action?: Action;
     link?: string;
     subMenu?: Menu;
+    noHoverAnimation?: boolean
 }
 
 export class MainMenu {
@@ -201,17 +202,22 @@ export class MainMenu {
             if (mi.identifier == '-') {
                 mi.$element = jQuery('<div class="jo_menuitemdivider"></div>');
             } else {
-                mi.$element = jQuery('<div>' + mi.identifier + '</div>');
+                let noHoverKlass = mi.noHoverAnimation ? ' class="jo_menuitem_nohover"' : '';
+                mi.$element = jQuery(`<div${noHoverKlass}>${mi.identifier}</div>`);
                 if (mi.link != null) {
                     let $link = jQuery('<a href="' + mi.link + '" target="_blank" class="jo_menulink"></a>');
-                    $link.on("mousedown", (event) => {
+                    $link.on("pointerdown", (event) => {
                         event.stopPropagation();
+                    })
+                    $link.on("pointerup", (ev) => {
+                        ev.stopPropagation();
                         setTimeout(() => {
                             menu.$element.hide();
                         }, 500);
                     })
                     $link.append(mi.$element);
                     mi.$element = $link;
+
                 }
                 if (mi.subMenu != null) {
                     this.initMenu(mi.subMenu, level + 1);
@@ -226,7 +232,7 @@ export class MainMenu {
         }
 
         let that = this;
-        jQuery(document).on('mousedown', () => {
+        jQuery(document).on('pointerdown', () => {
             for (let i = 0; i < 5; i++) {
                 if (that.currentSubmenu[i] != null) {
                     that.currentSubmenu[i].hide();
@@ -242,7 +248,22 @@ export class MainMenu {
         let that = this;
 
         if (mi.action != null) {
-            mi.$element.on('mousedown', (ev) => { mi.action(mi.identifier); });
+            mi.$element.on('pointerdown', (ev) => {
+                ev.stopPropagation();
+            })
+
+
+            mi.$element.on('pointerup', (ev) => {
+                ev.stopPropagation();
+                mi.action(mi.identifier);
+                for (let i = 0; i < 5; i++) {
+                    if (that.currentSubmenu[i] != null) {
+                        that.currentSubmenu[i].hide();
+                        that.currentSubmenu[i] = null;
+                    }
+                }
+                that.openSubmenusOnMousemove = false;
+            });
         }
 
         if (mi.subMenu != null) {
