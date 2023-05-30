@@ -45,6 +45,8 @@ export class ErrorManager {
 
     showErrors(workspace: Workspace): Map<Module, number> {
 
+        this.main.getResultsetPresenter().showErrorDecorations([]);
+
         this.lightBulbOnClickFunctionList = [];
 
         let errorCountMap: Map<Module, number> = new Map();
