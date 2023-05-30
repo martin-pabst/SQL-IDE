@@ -1,6 +1,8 @@
 import { NetworkManager } from "../../communication/NetworkManager.js";
 import { TokenType } from "../../compiler/lexer/Token.js";
 import { SQLStatement } from "../../compiler/parser/Parser.js";
+import { Table } from "../../compiler/parser/SQLTable.js";
+import { SQLType } from "../../compiler/parser/SQLTypes.js";
 import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
 import { QueryResult } from "../../tools/DatabaseTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
@@ -31,6 +33,7 @@ export class ResultsetPresenter {
     paginationSize: number = 1000;
 
     result: QueryResult;
+    resultColumnTypes: SQLType[];
 
     writeQueryListeners: WriteQueryListener[] = [];
 
@@ -231,7 +234,7 @@ export class ResultsetPresenter {
                     statement.sql += " limit 100000";
                 }
                 this.main.getDatabaseTool().executeQuery(statement.sql,
-                    (results) => { this.presentResultsIntern(statement.sql, results); callback1(); },
+                    (results) => { this.presentResultsIntern(statement.sql, results, statement.resultTypes); callback1(); },
                     (error) => { errors.push({ statement: statement, message: error }); callback1(); });
             }
         } else {
@@ -310,10 +313,12 @@ export class ResultsetPresenter {
 
     }
 
-    showTable(identifier: string) {
-        let statement = "select * from " + identifier + ";";
+    showTable(table: Table) {
+        let statement = "select * from " + table.identifier + ";";
         this.main.getDatabaseTool().executeQuery(statement,
-            (results) => { this.presentResultsIntern(statement, results); },
+            (results) => { 
+                this.presentResultsIntern(statement, results, table.columns.map(c => c.type)); 
+            },
             (error) => { });
     }
 
@@ -384,13 +389,14 @@ export class ResultsetPresenter {
         return statement.ast != null && [TokenType.keywordInsert, TokenType.keywordDelete, TokenType.keywordUpdate].indexOf(statement.ast.type) >= 0;
     }
 
-    private presentResultsIntern(query: string, results: QueryResult[]) {
+    private presentResultsIntern(query: string, results: QueryResult[], columnTypes: SQLType[]) {
         let $resultTabheading = this.$bottomDiv.find('.jo_resultTabheading');
         let $resultHeader = this.$bottomDiv.find('.jo_result-header');
 
         let mousePointer = window.PointerEvent ? "pointer" : "mouse";
         $resultTabheading.trigger(mousePointer + "down");
         this.result = results.pop();
+        this.resultColumnTypes = columnTypes;
 
         let headerDiv = $resultHeader;
 
@@ -464,13 +470,26 @@ export class ResultsetPresenter {
         let rows = this.result.values.slice(this.paginationFrom - 1, this.paginationFrom + this.paginationSize - 1);
 
         let i = 0;
+
+        let typeIsBoolean: boolean[] = this.resultColumnTypes.map(t => {
+            console.log(t.getBaseTypeName())
+            return ['boolean', 'tinyint(1)'].indexOf(t.toString()) >= 0
+        })
+
+
         let f = () => {
             if (i < rows.length) {
                 for (let j = i; j < Math.min(i + 200, rows.length); j++) {
                     let row = rows[j];
                     let $row = jQuery('<tr></tr>');
                     $table.append($row);
-                    row.forEach((cell) => { $row.append(jQuery(`<td>${cell}</td>`)) });
+                    row.forEach((cell, index) => {
+                        let stringValue = cell;
+                        if( typeIsBoolean[index]){
+                            stringValue = cell == 1 ? 'true' : 'false';
+                        } 
+                        $row.append(jQuery(`<td>${stringValue}</td>`)) 
+                    });
                 }
                 i = Math.min(i + 200, rows.length);
                 if (i < rows.length) {
