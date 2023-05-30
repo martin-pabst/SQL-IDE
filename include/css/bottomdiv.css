@@ -29,7 +29,7 @@
 
 .jo_tabheadings {
     width: 100%;
-    min-height: 25px;
+    height: 25px;
     font-size: 10pt;
     display: flex;
     flex-direction: row;
