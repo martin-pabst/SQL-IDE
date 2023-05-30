@@ -63,6 +63,8 @@
     --editorTooltip-border: #454545;
     --renameInput-color: #ffffff;
 
+    --highlightStatementGreen-color: #015a0165;
+
 }   
 
 /* to get slider-knob on top of vertical slider: */
@@ -161,7 +163,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 #login, .bitteWarten {
     z-index: 1000;
     position: absolute;
-    height: 100%;
+    /* height: 100%; */
     width: 100%;
     background-color: var(--backgroundDark);
     display: flex;
@@ -986,7 +988,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 }
 
 .jo_highlightStatementGreen {
-    background-color: #015a0165;
+    background-color: var(--highlightStatementGreen-color);
 }
 
 .jo_highlightStatementRed {
@@ -1005,28 +1007,6 @@ body .monaco-editor-hover .monaco-tokenized-source {
 
 .jo_margin_breakpoint {
     background: var(--margin-breakpoint-active);
-    width: var(--breakpoint-size) !important;
-    height: var(--breakpoint-size) !important;
-    left: 1px !important;
-    top: 3px;
-    border-radius: var(--breakpoint-radius);
-}
-
-.line-numbers:hover::before {
-    content: "";
-    position: absolute;
-    background: var(--margin-breakpoint);
-    width: var(--breakpoint-size) !important;
-    height: var(--breakpoint-size) !important;
-    left: 1px !important;
-    top: 3px;
-    border-radius: var(--breakpoint-radius);
-}
-
-.line-numbers:active::before {
-    content: "";
-    position: absolute;
-    background: var(--margin-breakpoint-mousedown);
     width: var(--breakpoint-size) !important;
     height: var(--breakpoint-size) !important;
     left: 1px !important;
@@ -1186,6 +1166,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
 .jo_infodiv_line {
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     justify-content: center;
 }
