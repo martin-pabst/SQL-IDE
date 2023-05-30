@@ -22,7 +22,7 @@ export class ThemeManager {
             }
         }
     }
-    
+
     private internalSwitchTheme(theme: Theme) {
         monaco.editor.setTheme(theme.monacoTheme);
 
@@ -129,6 +129,9 @@ export class ThemeManager {
                 "--table-even": "#222", /*#d1d2e4*/
                 "--table-heading": "#202060", /*#c3f2b9*/
 
+                // highlight statements
+                "--highlightStatementGreen-color": "#015a0165",
+
 
             }
         });
@@ -226,6 +229,9 @@ export class ThemeManager {
                 // table
                 "--table-even": "#d1d2e4", /*#d1d2e4*/
                 "--table-heading": "#c3f2b9", /*#c3f2b9*/
+
+                // highlight statements
+                "--highlightStatementGreen-color": "#015a0120",
 
             }
         });
