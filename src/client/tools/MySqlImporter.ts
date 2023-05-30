@@ -162,7 +162,8 @@ export class MySqlImporter {
                             unique: index.unique,
                             position: null, endPosition: null, symbolTable: null
                         },
-                        sql: `create ${index.unique ? 'unique ' : ''} index ${index.index_name} on ${tmn.tableIdentifier}(${index.column});`
+                        sql: `create ${index.unique ? 'unique ' : ''} index ${index.index_name} on ${tmn.tableIdentifier}(${index.column});`,
+                        resultTypes: []
                     })
                 }
             }
