@@ -7,7 +7,7 @@ import { MyHoverProvider } from "./MyHoverProvider.js";
 import { MyCodeActionProvider } from "./MyCodeActionProvider.js";
 import { MyReferenceProvider } from "./MyReferenceProvider.js";
 import { Workspace } from "../../workspace/Workspace.js";
-import { defineVscSQL } from "./VscSql.js";
+import { defineVscSQL } from "./VSCSql.js";
 import { MainBase } from "../MainBase.js";
 import { Helper } from "./Helper.js";
 import jQuery from "jquery";
