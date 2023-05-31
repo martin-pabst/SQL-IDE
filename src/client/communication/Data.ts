@@ -695,3 +695,13 @@ export type LongPollingListenerResponse = {
     newStatements?: string[]
 }
 
+export type RegisterDatabaseSSEListenerRequest = { workspaceId: number, registerOrUnregister: "register" | "unregister" }
+
+export type RegisterDatabaseSSEListenerResponse = { success: boolean, message: string }
+
+export type DatabaseChangedSSEMessage = {
+    databaseId: number,
+    firstNewStatementIndex?: number,
+    newStatements?: string[],
+    rollbackToVersion?: number
+}

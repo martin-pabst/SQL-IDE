@@ -1,7 +1,7 @@
 import { ajaxAsync } from "./AjaxHelper.js";
 
 
-type SSEEventType = "doFileUpdate";
+type SSEEventType = "doFileUpdate" | "broadcastDatabaseChange";
 
 type SSECallbackMethod = (data: any) => Promise<any>;
 

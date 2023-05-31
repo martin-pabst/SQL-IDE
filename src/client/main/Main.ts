@@ -24,11 +24,11 @@ import { TextPosition } from "../compiler/lexer/Token.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
-import { Notifier } from "../communication/Notifier.js";
 import { checkIfMousePresent } from "../tools/HtmlTools.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
 import jQuery from "jquery";
+import { NewNotifier } from "../communication/NewNotifier.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -133,7 +133,7 @@ export class Main implements MainBase {
 
     resultsetPresenter: ResultsetPresenter;
 
-    notifier: Notifier;
+    notifier: NewNotifier;
 
     waitOverlay: WaitOverlay = new WaitOverlay(jQuery('.bitteWarten'));
     historyViewer: HistoryViewer = new HistoryViewer(this, jQuery('.jo_historyTab'));
@@ -176,7 +176,7 @@ export class Main implements MainBase {
 
         this.resultsetPresenter = new ResultsetPresenter(this, jQuery('.jo_bottomdiv-inner'));
 
-        this.notifier = new Notifier(this);
+        this.notifier = new NewNotifier(this);
 
     }
 

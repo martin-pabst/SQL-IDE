@@ -87,7 +87,7 @@ export class ResultsetPresenter {
     executeSelectedStatements() {
 
         let statements = this.fetchSelectedStatements().filter(st => st.ast.type != TokenType.omittedeStatement);
-        
+
         if (statements.length == 0) return;
 
         let hasDDLStatements: boolean = statements.some(st => this.isDDLStatement(st));
@@ -146,23 +146,24 @@ export class ResultsetPresenter {
                         if (sucessfullyExecutedModifyingStatements.length == 0)
                             return;
 
+                        let modifyingStatements = sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned)
+                        database.statements = database.statements.concat(modifyingStatements);
+                        this.main.getHistoryViewer().appendStatements(modifyingStatements);
+                        database.version += modifyingStatements.length;
+
                         // Step 3: Send successful statements to server in order to retrieve new db-version-number
                         main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned), (statements_before, new_version) => {
-
-                            // Step 4: If another user sent statements between steps 1 and 3 then they are in array statements_before.
-                            // Add all new statements to local statement list
-                            statements_before.forEach(st => database.statements.push(st));
-                            this.main.getHistoryViewer().appendStatements(statements_before);
-                            let modifyingStatements = sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned)
-                            database.statements = database.statements.concat(modifyingStatements);
-                            this.main.getHistoryViewer().appendStatements(modifyingStatements);
-                            database.version = new_version;
 
                             // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2
                             // => clear whole database and execute all statements in the right order, beginning with a empty database.
                             if (statements_before.length > 0) {
+    
+                                workspace.database.version = 0;
+                                workspace.database.statements = [];
+                                main.networkManager.getNewStatements(workspace, () => {
+                                    this.resetDatabase(database);
+                                })
 
-                                this.resetDatabase(database);
 
                             } else {
 
@@ -316,8 +317,8 @@ export class ResultsetPresenter {
     showTable(table: Table) {
         let statement = "select * from " + table.identifier + ";";
         this.main.getDatabaseTool().executeQuery(statement,
-            (results) => { 
-                this.presentResultsIntern(statement, results, table.columns.map(c => c.type)); 
+            (results) => {
+                this.presentResultsIntern(statement, results, table.columns.map(c => c.type));
             },
             (error) => { });
     }
@@ -484,10 +485,10 @@ export class ResultsetPresenter {
                     $table.append($row);
                     row.forEach((cell, index) => {
                         let stringValue = cell;
-                        if( typeIsBoolean[index]){
+                        if (typeIsBoolean[index]) {
                             stringValue = cell == 1 ? 'true' : 'false';
-                        } 
-                        $row.append(jQuery(`<td>${stringValue}</td>`)) 
+                        }
+                        $row.append(jQuery(`<td>${stringValue}</td>`))
                     });
                 }
                 i = Math.min(i + 200, rows.length);
