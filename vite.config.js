@@ -6,7 +6,6 @@ export default defineConfig({
     server:{
       proxy:{
         '/servlet': 'http://localhost:6500',
-        '/sprites': 'http://localhost:6500',
         '/servlet/websocket': {target: 'ws://localhost:6500', ws: true},
         '/servlet/subscriptionwebsocket': {target: 'ws://localhost:6500', ws: true},
         '/worker': {
