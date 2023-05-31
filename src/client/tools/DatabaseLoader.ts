@@ -1,3 +1,4 @@
+import { csrfToken } from "../communication/AjaxHelper.js";
 import { MainBase } from "../main/MainBase.js";
 import { DatabaseTool } from "./DatabaseTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
@@ -50,6 +51,7 @@ export class DatabaseFetcher {
     async loadSqLiteDump(url: string, urlWithoutProtocol: string): Promise<LoadableDatabase> {
 
         return new Promise((resolve, reject) => {
+
             jQuery.ajax({
                 type: 'GET',
                 async: true,

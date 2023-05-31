@@ -162,6 +162,7 @@ export type LoginResponse = {
     user: UserData,
     classdata: ClassData[], // null if !is_teacher
     workspaces: Workspaces,
+    csrfToken: string,
     isTestuser: boolean
 }
 

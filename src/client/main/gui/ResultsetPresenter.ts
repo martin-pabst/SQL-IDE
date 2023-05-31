@@ -472,7 +472,6 @@ export class ResultsetPresenter {
         let i = 0;
 
         let typeIsBoolean: boolean[] = this.resultColumnTypes.map(t => {
-            console.log(t.getBaseTypeName())
             return ['boolean', 'tinyint(1)'].indexOf(t.toString()) >= 0
         })
 

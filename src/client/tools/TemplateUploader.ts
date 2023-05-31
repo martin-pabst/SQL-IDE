@@ -1,3 +1,4 @@
+import { csrfToken } from "../communication/AjaxHelper.js";
 import { UploadTemplateResponse } from "../communication/Data.js";
 import { Main } from "../main/Main.js";
 import { Workspace } from "../workspace/Workspace.js";
@@ -30,13 +31,16 @@ export class TemplateUploader {
         reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace"| "distributeWorkspace",
         main: Main, callback: (response: UploadTemplateResponse) => void) {
 
+        let headers: {[key: string]: string;} = { 'x-workspaceid': "" + workspace_id, "x-reason": reason };
+        if(csrfToken != null) headers["x-token-pm"] = csrfToken;
+        
         $.ajax({
             type: 'POST',
             async: true,
             contentType: 'application/octet-stream',
             data: buffer,
             processData: false,
-            headers: { 'x-workspaceid': "" + workspace_id, "x-reason": reason },
+            headers: headers,
             url: "servlet/uploadTemplate",
             success: function (response: UploadTemplateResponse) {
                 main.waitOverlay.hide();

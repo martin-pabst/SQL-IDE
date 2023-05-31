@@ -1,15 +1,15 @@
 import { Main } from "../main/Main.js";
-import { ajax } from "./AjaxHelper.js";
+import { ajax, csrfToken } from "./AjaxHelper.js";
 import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
-import { NotifierClient } from "./NotifierClient.js";
 import { TemplateUploader } from "../tools/TemplateUploader.js";
 import jQuery from "jquery";
 import { FileTool } from "../tools/FileTool.js";
+import { SSEManager } from "./SSEManager.js";
 
 
 export class NetworkManager {
@@ -26,8 +26,6 @@ export class NetworkManager {
     errorHappened: boolean = false;
 
     interval: any;
-
-    notifierClient: NotifierClient;
 
     constructor(private main: Main, private $updateTimerDiv: JQuery<HTMLElement>) {
 
@@ -68,10 +66,6 @@ export class NetworkManager {
 
         }, 1000);
 
-    }
-
-    initializeNotifierClient() {
-        this.notifierClient = new NotifierClient(this.main, this);
     }
 
     sendUpdates(callback?: () => void, sendIfNothingIsDirty: boolean = false) {
@@ -139,6 +133,14 @@ export class NetworkManager {
                 return;
             }
         }
+
+    }
+
+    initializeSSE() {
+        SSEManager.subscribe("doFileUpdate", (data) => {
+            this.sendUpdates(() => {}, true);
+        })
+
 
     }
 
@@ -392,12 +394,16 @@ export class NetworkManager {
             workspaceId: workspaceId
         }
 
+        let headers: {[key: string]: string;} = {};
+        if(csrfToken != null) headers = {"x-token-pm": csrfToken};
+    
         $.ajax({
             type: 'POST',
             async: true,
             data: JSON.stringify(request),
             contentType: 'application/json',
             url: "servlet/getTemplate",
+            headers: headers,
             xhrFields: { responseType: 'arraybuffer' },
             success: function (response: any) {
                 callback(new Uint8Array(response));

@@ -3,7 +3,7 @@ import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { Main } from "../main/Main.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
-import { ajax } from "./AjaxHelper.js";
+import { ajax, csrfToken } from "./AjaxHelper.js";
 import { GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, LongPollingListenerResponse, RegisterLongPollingListenerRequest, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
 import jQuery from "jquery";
 
@@ -242,11 +242,15 @@ export class Notifier {
                 workspaceId: that.workspace.id
             }
 
+            let headers: {[key: string]: string;} = {};
+            if(csrfToken != null) headers = {"x-token-pm": csrfToken};    
+
             $.ajax({
                 type: 'POST',
                 async: true,
                 data: JSON.stringify(request),
                 contentType: 'application/json',
+                headers: headers,
                 url: "servlet/registerLongPollingListener",
                 success: function (resp: string) {
                     console.log(resp);

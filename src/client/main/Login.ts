@@ -126,7 +126,7 @@ export class Login {
                         that.main.viewModeController.initViewMode();
                         that.main.bottomDiv.hideHomeworkTab();
 
-                        that.main.networkManager.initializeNotifierClient();
+                        that.main.networkManager.initializeSSE();
 
                     }
 

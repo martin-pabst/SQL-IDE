@@ -1,7 +1,6 @@
 import { LoginRequest, PerformanceData } from "./Data.js";
-import jQuery from "jquery";
-
-// export var credentials: { username: string, password: string } = { username: null, password: null };
+import jQuery from 'jquery';
+import { SSEManager } from "./SSEManager.js";
 
 export class PerformanceCollector {
     static performanceData: PerformanceData[] = [];
@@ -14,7 +13,7 @@ export class PerformanceCollector {
             pe = { count: 0, sumTime: 0, url: url };
             PerformanceCollector.performanceData.push(pe);
         }
-        pe.count++;
+        pe.count++; //Test
         let dt = Math.round(performance.now() - startTime);
         pe.sumTime += dt;
         PerformanceCollector.performanceDataCount++;
@@ -41,22 +40,39 @@ export class PerformanceCollector {
 
 
 
+export var csrfToken: string = "";
+
 export function ajax(url: string, request: any, successCallback: (response: any) => void,
 
     errorCallback?: (message: string) => void) {
 
+        if(!url.startsWith("http")){
+            url = "servlet/" + url;
+        }
+   
+
     showNetworkBusy(true);
     let time = performance.now();
+
+    let headers: {[key: string]: string;} = {};
+    if(csrfToken != null) headers = {"x-token-pm": csrfToken};
 
     $.ajax({
         type: 'POST',
         async: true,
         data: JSON.stringify(request),
         contentType: 'application/json',
-        url: "servlet/" + url,
+        headers: headers,
+        url: url,
         success: function (response: any) {
 
             PerformanceCollector.registerPerformanceEntry(url, time);
+
+            if(response["csrfToken"] != null)
+            {
+                csrfToken = response["csrfToken"];
+                SSEManager.open(csrfToken);
+            }
 
             showNetworkBusy(false);
             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
@@ -94,6 +110,55 @@ export function showNetworkBusy(busy: boolean) {
         jQuery('.jo_network-busy').css('visibility','visible');
     } else {
         jQuery('.jo_network-busy').css('visibility','hidden');
+    }
+}
+
+
+export function extractCsrfTokenFromGetRequest(){
+    let url = window.location.href;
+    let tokenIndex = url.indexOf("csrfToken=");
+    if(tokenIndex >= 0){
+        let token = url.substring(tokenIndex + "csrfToken=".length);
+        if(token != null && token.length > 0){
+            csrfToken = token;
+        }
+    }
+}
+
+
+export async function ajaxAsync(url: string, data: any): Promise<any>{
+    let headers: [string, string][] = [["content-type", "text/json"]];
+
+    if(csrfToken != null){
+        headers.push(["x-token-pm", csrfToken]);
+    }
+
+    try {
+        let response = await fetch(url, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(data)
+        })
+
+         let obj: any = await response.json()
+
+        if(obj["token"] != null){
+            csrfToken = obj["token"];
+            SSEManager.open(csrfToken);
+        }
+
+        if(obj == null){
+            alert("Fehler beim Übertragen der Daten.");             
+        } else if(obj.success != true){
+            alert("Fehler beim Übertragen der Daten:\n" + obj.message);             
+        }
+
+        return obj;
+    } catch (exception){
+        return {
+            status: "Error",
+            message: "Es ist ein Fehler aufgetreten: " + exception
+        }
     }
 }
 
