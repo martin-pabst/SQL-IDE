@@ -121,8 +121,14 @@ export class DatabaseSettingsDialog {
             }
         })
 
+        let newName = <string>jQuery('.jo_databasename').val();
+        let newDescription = <string>jQuery('.jo_ds_settings_description').val();
+
+        this.workspace.name = newName;
+        this.workspace.panelElement.$htmlFirstLine.find('.jo_filename').text(newName);
+
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
-            <string>jQuery('.jo_databasename').val(), published_to, <string>jQuery('.jo_ds_settings_description').val(),
+            newName, published_to, newDescription,
              () => {
                  if($('#jo_upload_db').prop('checked')){
                     new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");                    
