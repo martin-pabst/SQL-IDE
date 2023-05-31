@@ -59,11 +59,12 @@ export class DistributeToStudentsDialog {
                 $('.jo_ds_student_line').show();
             } else {
                 $('.jo_ds_student_line').each((index, element) => {
+                let filterTextLowerCase = filterText.toLocaleLowerCase();
                     let $element = jQuery(element);
                     let klass:ClassData = $element.data('klass');
                     let student: UserData = $element.data('student');
                     let text = klass.name + " " + student.rufname + " " + student.familienname;
-                    if(text.indexOf(filterText) >= 0){
+                    if(text.toLocaleLowerCase().indexOf(filterTextLowerCase) >= 0){
                         $element.show();
                     } else {
                         $element.hide();
@@ -79,11 +80,13 @@ export class DistributeToStudentsDialog {
         this.$dialog.css('visibility', 'visible');
 
         jQuery('#jo_ds_cancel_button').on('click', () => { that.close() });
-        jQuery('#jo_ds_distribute_button').on('click', () => {that.distributeWorkspace();});
+        jQuery('#jo_ds_distribute_button').on('click', () => {that.distributeDatabase();});
+
+        (<HTMLInputElement>jQuery('.jo_ds_filterdiv>input')[0]).focus();
 
     }
 
-    distributeWorkspace() {
+    distributeDatabase() {
 
         let student_ids: number[] = [];
         $('.jo_ds_student_line').each((index, element) => {
