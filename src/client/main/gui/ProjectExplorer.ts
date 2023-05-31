@@ -503,6 +503,8 @@ export class ProjectExplorer {
 
     setWorkspaceActive(w: Workspace, callback?: () => void, scrollIntoView: boolean = false) {
 
+        if(callback == null) callback = () => {}
+
         if(w == this.main.getCurrentWorkspace()){
             if(callback != null) callback();
             return;
@@ -523,7 +525,10 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.select(w, false, scrollIntoView);
 
-        let callbackAfterDatabaseFetched = (error: string) => {this.initializeDatabaseTool(error, w, callback)};
+        let callbackAfterDatabaseFetched = (error: string) => {
+            this.main.waitOverlay.show("Bitte warten, initialisiere Datenbank ...");
+            this.initializeDatabaseTool(error, w, callback)
+        };
 
         if (w.database == null) {
             this.main.waitOverlay.show("Bitte warten, hole Datenbank vom Server ...");
