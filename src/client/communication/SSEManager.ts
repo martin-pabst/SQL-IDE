@@ -40,6 +40,16 @@ export class SSEManager {
             
             SSEManager.eventSource.onmessage = (event) => {
                 let ssm: ServerSentMessage = JSON.parse(event.data);
+
+                if(ssm.eventType == "checkIfAlive"){
+                    ajaxAsync("/servlet/sseKeepAlive?keepAliveToken=" + ssm.data, "");
+                    return;
+                }
+
+                if(ssm.eventType == "close"){
+                    SSEManager.close();
+                }
+
                 let subscriber = SSEManager.eventTypeToSubscriberInfoMap.get(ssm.eventType);
                 if(subscriber != null){
 
