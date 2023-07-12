@@ -13,7 +13,7 @@ export type SQLStatement = {
     hasErrors: boolean,
     acceptedBySQLite: boolean,
     sql?: string,
-    sqlCleaned?: string, 
+    sqlCleaned?: string,
     resultTypes: SQLType[]
 }
 
@@ -385,7 +385,7 @@ export class Parser {
                     from: startPosition,
                     to: this.getEndOfPosition(this.lastToken.position),
                     hasErrors: hasErrors,
-                    acceptedBySQLite: false, 
+                    acceptedBySQLite: false,
                     resultTypes: []
                 });
             }
@@ -1347,68 +1347,102 @@ export class Parser {
         let datatypes = SQLBaseType.baseTypes.map(type => type.toString());
         this.addCompletionHintHere(false, false, datatypes);
 
-        if (!this.expect(TokenType.identifier, false)) {
+        if (!this.expect([TokenType.identifier, TokenType.keywordEnum], false)) {
             this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + this.cct.value);
             return;
         }
 
-        let identifier = <string>this.cct.value;
-        let identifierPos = this.getCurrentPosition()
+        let type: SQLBaseType;
 
-        let mappedIdentifier: string = this.identifierMap[identifier.toLocaleLowerCase()];
+        if (this.cct.tt == TokenType.keywordEnum) {
 
-        if (mappedIdentifier != null) {
-            identifier = mappedIdentifier;
-        }
+            if(this.expect(TokenType.leftBracket, true)){
+                this.nextToken();
+    
+                let constants: ConstantNode[] = [];
+                //@ts-ignore
+                while(this.cct.tt != TokenType.rightBracket && !this.isEnd()){
+    
+                    let constant = this.parseConstant();
+                    if(constant != null) constants.push(constant);
+    
+                    if(this.comesToken(TokenType.comma)) this.nextToken();
+    
+                }
+    
+                if(constants.length > 0){
+                    type = SQLBaseType.fromConstantType(constants[0].constantType);
+                } else {
+                    type = SQLBaseType.getBaseType('text');
+                }
+    
+                let values = constants.map( cn => cn.constant);
+    
+                type.checkFunction = (ci, pv) => `check(${ci} in (${values})})`                
+            } 
 
-        let type = SQLBaseType.getBaseType(identifier);
-        if (type == null) {
-            this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + identifier);
-        }
-        node.baseType = type;
-        this.nextToken();
 
-        if (this.tt == TokenType.leftBracket) {
+        } else {
+            let identifier = <string>this.cct.value;
+            let identifierPos = this.getCurrentPosition()
+
+            let mappedIdentifier: string = this.identifierMap[identifier.toLocaleLowerCase()];
+
+            if (mappedIdentifier != null) {
+                identifier = mappedIdentifier;
+            }
+
+            type = SQLBaseType.getBaseType(identifier);
+            if (type == null) {
+                this.pushError("Erwartet wird ein Datentyp. Gefunden wurde: " + identifier);
+            }
+            node.baseType = type;
             this.nextToken();
-            node.parameters = [];
-            //@ts-ignore
-            while (this.tt == TokenType.integerConstant) {
-                node.parameters.push(<number>this.cct.value);
+
+            if (this.tt == TokenType.leftBracket) {
                 this.nextToken();
+                node.parameters = [];
                 //@ts-ignore
-                if (this.tt != TokenType.comma) break;
-                this.nextToken();
-                //@ts-ignore
-                if (this.tt != TokenType.integerConstant) {
-                    this.pushError("Erwartet wird eine ganze Zahl, gefunden wurde: " + this.cct.value);
-                    break;
+                while (this.tt == TokenType.integerConstant) {
+                    node.parameters.push(<number>this.cct.value);
+                    this.nextToken();
+                    //@ts-ignore
+                    if (this.tt != TokenType.comma) break;
+                    this.nextToken();
+                    //@ts-ignore
+                    if (this.tt != TokenType.integerConstant) {
+                        this.pushError("Erwartet wird eine ganze Zahl, gefunden wurde: " + this.cct.value);
+                        break;
+                    }
+                }
+
+                if (type != null && node.parameters.length > type.parameterDescriptions.length) {
+                    this.pushError("Der Datentyp " + type.toString() + " hat höchstens " + type.parameterDescriptions.length + " Parameter.");
+                }
+
+                this.expect(TokenType.rightBracket, true);
+            }
+
+            if (identifier != null && node.parameters == null) {
+                switch (identifier.toLocaleLowerCase()) {
+                    case "char":
+                        node.parameters = [1];
+                        break;
+                    case "varchar":
+                        node.parameters = [1];
+                        this.pushError("Hinter dem Datentyp varchar wird zwingend eine Längenangabe in Klammern erwaretet, also z.B. varchar(30)", "error", identifierPos)
+                        break;
                 }
             }
 
-            if (type != null && node.parameters.length > type.parameterDescriptions.length) {
-                this.pushError("Der Datentyp " + type.toString() + " hat höchstens " + type.parameterDescriptions.length + " Parameter.");
-            }
-
-            this.expect(TokenType.rightBracket, true);
         }
 
-        if (identifier != null && node.parameters == null) {
-            switch (identifier.toLocaleLowerCase()) {
-                case "char":
-                    node.parameters = [1];
-                    break;
-                case "varchar":
-                    node.parameters = [1];
-                    this.pushError("Hinter dem Datentyp varchar wird zwingend eine Längenangabe in Klammern erwaretet, also z.B. varchar(30)", "error", identifierPos)
-                    break;
-            }
-        }
 
 
         // primary key autoincrement
         // references table(column)
         // not null
-        if(this.tt != TokenType.comma){
+        if (this.tt != TokenType.comma) {
             this.addCompletionHintHere(false, false, ["primary key", "references", "not null"]);
         }
 
@@ -1442,7 +1476,7 @@ export class Parser {
                     if (!this.expect(TokenType.keywordKey, true)) {
                         this.addCompletionHintHere(false, false, ["key"]);
                     } else {
-                        if(!this.comesToken(TokenType.comma)){
+                        if (!this.comesToken(TokenType.comma)) {
                             this.addCompletionHintHere(false, false, ["autoincrement, \n"])
                         }
                     }
@@ -1959,7 +1993,7 @@ export class Parser {
             //@ts-ignore
             let comesKeywordAs: boolean = (this.tt == TokenType.keywordAs);
             if (comesKeywordAs || this.tt == TokenType.identifier) {
-                if(comesKeywordAs) this.nextToken();
+                if (comesKeywordAs) this.nextToken();
                 if (this.expect(TokenType.identifier, false)) {
                     node.alias = <string>this.cct.value;
                     this.nextToken();

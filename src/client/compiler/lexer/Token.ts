@@ -57,6 +57,7 @@ export enum TokenType {
     keywordDatabase,
     keywordUnion,
     keywordView,
+    keywordEnum,
 
     keywordOr,
     keywordAnd,
@@ -229,6 +230,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordDatabase]: "database",
     [TokenType.keywordUnion]: "union",
     [TokenType.keywordView]: "view",
+    [TokenType.keywordEnum]: "enum",
 
 
     [TokenType.keywordAnd]: "and",
@@ -417,6 +419,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "database": TokenType.keywordDatabase,
     "union": TokenType.keywordUnion,
     "view": TokenType.keywordView,
+    "enum": TokenType.keywordEnum,
 
     "or": TokenType.keywordOr,
     "and": TokenType.keywordAnd,
