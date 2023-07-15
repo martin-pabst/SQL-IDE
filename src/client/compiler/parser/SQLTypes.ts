@@ -17,6 +17,8 @@ export abstract class SQLType {
 
     abstract getBaseTypeName(): string;
 
+    abstract getSQLiteType(): string;
+
 }
 
 export class SQLBaseType extends SQLType {
@@ -64,6 +66,10 @@ export class SQLBaseType extends SQLType {
 
     toString(): string {
         return this.name;
+    }
+
+    getSQLiteType(): string {
+        return this.toString();
     }
 
     static getBaseType(name: string) {
@@ -185,6 +191,10 @@ export class SQLDerivedType extends SQLType {
 
     getBaseTypeName(): string {
         return this.baseType.name;
+    }
+
+    getSQLiteType(): string {
+        return this.baseType.getSQLiteType();
     }
 
 

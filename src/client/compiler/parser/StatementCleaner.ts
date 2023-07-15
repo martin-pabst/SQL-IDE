@@ -106,7 +106,7 @@ export class StatementCleaner {
 
     cleanColumnDef(column: CreateTableColumnNode): string {
 
-        let type = column.baseType.toString();
+        let type = column.baseType.getSQLiteType();
         if (type == "int" && column.isAutoIncrement) {
             type = "integer";
         }
