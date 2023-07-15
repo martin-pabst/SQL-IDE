@@ -1355,13 +1355,13 @@ export class Parser {
         let type: SQLBaseType;
 
         if (this.cct.tt == TokenType.keywordEnum) {
+            this.nextToken();
 
             if(this.expect(TokenType.leftBracket, true)){
-                this.nextToken();
     
                 let constants: ConstantNode[] = [];
                 //@ts-ignore
-                while(this.cct.tt != TokenType.rightBracket && !this.isEnd()){
+                while(!this.comesToken(TokenType.rightBracket, true) && !this.isEnd()){
     
                     let constant = this.parseConstant();
                     if(constant != null) constants.push(constant);

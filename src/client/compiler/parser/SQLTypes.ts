@@ -1,7 +1,7 @@
 import { TokenType } from "../lexer/Token.js";
 
-type CheckFunction = (columnIdentifier: string, parameterValues: number[]) => string;
-type OutputFunction = (value: any, parameterValues: number[]) => string;
+type CheckFunction = (columnIdentifier: string, parameterValues: any[]) => string;
+type OutputFunction = (value: any, parameterValues: any[]) => string;
 
 export abstract class SQLType {
 
@@ -170,6 +170,71 @@ export class SQLBaseType extends SQLType {
         }
     }
 
+
+}
+
+class SQLNumberEnumType extends SQLBaseType {
+    
+    constructor(public values: string[]){
+        super("enum", [], 
+        (ci, pv) => `check(${ci} in (${(<string[]>pv).join(', ')}))`,
+        (v: string, pv) => v,
+        ["decimal", "integer", "double", "float"]
+        )
+    }
+    
+    getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType {
+        return operator == TokenType.concatenation ? SQLBaseType.getBaseType('double') : null;
+    }
+    
+    getUnaryResultType(operator: TokenType): SQLType {
+        return null;
+    }
+    
+    getBinaryResult(operator: TokenType, value1: any, value2: any) {
+        return value1 + value2;
+    }
+    
+    toString(): string {
+        return "double";
+    }
+    
+    getBaseTypeName(): string {
+        return "enum";
+    }
+
+}
+
+
+class SQLTextEnumType extends SQLBaseType {
+    
+    constructor(public values: string[]){
+        super("enum", [], 
+        (ci, pv) => `check(${ci} in (${(<string[]>pv).map(v => '"' + v + '"').join(', ')}))`,
+        (v: string, pv) => v,
+        ["text", "varchar", "char"]
+        )
+    }
+    
+    getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType {
+        return operator == TokenType.concatenation ? SQLBaseType.getBaseType('text') : null;
+    }
+    
+    getUnaryResultType(operator: TokenType): SQLType {
+        return null;
+    }
+    
+    getBinaryResult(operator: TokenType, value1: any, value2: any) {
+        return value1 + value2;
+    }
+    
+    toString(): string {
+        return "text";
+    }
+    
+    getBaseTypeName(): string {
+        return "enum";
+    }
 
 }
 
