@@ -169,6 +169,7 @@ body .monaco-editor-hover .monaco-tokenized-source {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    height: 100%;
 }
 
 .bitteWarten {
