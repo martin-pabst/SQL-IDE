@@ -1,5 +1,5 @@
 import { ColumnStructure, TableStructure } from "../../tools/DatabaseTools.js";
-import { SQLType, SQLBaseType, SQLDerivedType } from "./SQLTypes.js";
+import { SQLType, SQLBaseType, SQLDerivedType, SQLTextEnumType, SQLNumberEnumType } from "./SQLTypes.js";
 
 
 export class Column {
@@ -25,7 +25,24 @@ export class Column {
             parameterValues = commaSeparatedParameters.split(',').map(v => parseInt(v.trim()));           
         }
 
-        let type: SQLType = SQLBaseType.getBaseType(baseTypeIdentifier);
+        let type: SQLType;
+        
+        if(baseTypeIdentifier.indexOf('Enum') >= 0){
+            switch(baseTypeIdentifier){
+                case "textEnum":
+                    type = new SQLTextEnumType(cs.enumValues);
+                    break;
+                case "realEnum":
+                    type = new SQLNumberEnumType(cs.enumValues.map(v => Number.parseFloat(v)));
+                    break;
+                case "integerEnum":
+                    type = new SQLNumberEnumType(cs.enumValues.map(v => Number.parseInt(v)));
+                    break;
+            }
+        } else {
+            type = SQLBaseType.getBaseType(baseTypeIdentifier);
+        }
+        
         if(parameterValues.length > 0 && type != null){
             type = new SQLDerivedType(<SQLBaseType>type, parameterValues);
         }

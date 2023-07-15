@@ -78,6 +78,7 @@ export class DatabaseExplorer {
             }
 
             let type = column.type == null ? "" : column.type.toString();
+
             let notNull: string = column.notNull ? '<div class="jo_dbnotnull">not null</div>' : "";
             let defaultValue: string = column.defaultValue ? `<div class="jo_dbdefault">default ${column.defaultValue}</div>` : "";
             let autoincrement: string = column.isAutoIncrement ? `<div class="jo_dbautoincrement">autoincrement</div>` : "";

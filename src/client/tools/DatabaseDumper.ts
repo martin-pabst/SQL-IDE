@@ -70,6 +70,7 @@ export class DatabaseDumper {
         let cs: ColumnStructure = {
             name: columnIdentifier,
             completeTypeSQL: type,
+            enumValues: [],
             defaultValue: cti.defaultValue,
             isPrimaryKey: cti.isPrimaryKey,
             isAutoIncrement: cti.isAutoIncrement,

@@ -25,6 +25,7 @@ export type ColumnStructure = {
 
     typeLengths?: number[]; // for varchar(5), ...
     completeTypeSQL: string;
+    enumValues: string[];
 
     references?: ColumnStructure;
     referencesRawData?: any[];
@@ -280,7 +281,7 @@ export class DatabaseTool {
         let index = 0;
         for (let i = 0; i < tables[0].values.length; i++) {
             let tableName = tables[0].values[i][0];
-            let tableSQL = tables[0].values[i][1];
+            let tableSQL = <string>tables[0].values[i][1];
 
             let tableStructure: TableStructure = {
                 name: tableName,
@@ -314,11 +315,23 @@ export class DatabaseTool {
                 let dflt_value: string = columnArray1[4];
                 let isPrimaryKey: boolean = columnArray1[5] != 0;
 
+                let enumValues: string[] = [];
+
+                if(type.indexOf("Enum") >= 0){
+                    let rs = `"${name}" ${type} .* check\\("${name}" in \\((.*)\\)\\)`;
+                    let regEx = new RegExp(rs);
+                    let match = tableSQL.match(regEx);
+                    if(match != null){
+                        enumValues = match[1].split(", ");
+                    }
+                }
+
                 let columnStructure: ColumnStructure = {
                     name: name,
                     isPrimaryKey: isPrimaryKey,
                     isAutoIncrement: isPrimaryKey && tableSQL.toLowerCase().indexOf("autoincrement") >= 0,
                     completeTypeSQL: type,
+                    enumValues: enumValues,
                     table: tableStructure,
                     typeLengths: [],
                     defaultValue: dflt_value,

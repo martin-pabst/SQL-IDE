@@ -4,7 +4,7 @@ import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "..
 import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode, CreateViewNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
-import { SQLBaseType, SQLType } from "./SQLTypes.js";
+import { SQLBaseType, SQLNumberEnumType, SQLTextEnumType, SQLType } from "./SQLTypes.js";
 
 export type SQLStatement = {
     ast: ASTNode,
@@ -1173,6 +1173,13 @@ export class Parser {
                     this.parsePrimaryKeyTerm(primaryKeyAlreadyDefined, node);
                     primaryKeyAlreadyDefined = true;
                     break;
+                case TokenType.keywordKey:   //   KEY `CountryCode` (`CountryCode`),
+                    this.nextToken();
+                    this.comesToken(TokenType.identifier, true);
+                    this.comesToken(TokenType.leftBracket, true);
+                    this.comesToken(TokenType.identifier, true);
+                    this.comesToken(TokenType.rightBracket, true);
+                    break;
                 case TokenType.keywordUnique:
                     this.parseUniqueTerm(node);
                     break;
@@ -1371,14 +1378,21 @@ export class Parser {
                 }
     
                 if(constants.length > 0){
-                    type = SQLBaseType.fromConstantType(constants[0].constantType);
+                    switch(constants[0].constantType){
+                        case TokenType.integerConstant:
+                        case TokenType.floatingPointConstant:
+                            type = new SQLNumberEnumType(constants.map(c => c.constant));
+                            break;
+                        default:
+                            type = new SQLTextEnumType(constants.map(c => "" + c.constant));
+                            break;
+                    }
                 } else {
-                    type = SQLBaseType.getBaseType('text');
+                    type = new SQLTextEnumType([]);
                 }
     
-                let values = constants.map( cn => cn.constant);
-    
-                type.checkFunction = (ci, pv) => `check(${ci} in (${values})})`                
+                node.baseType = type;
+
             } 
 
 

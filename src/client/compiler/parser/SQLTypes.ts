@@ -107,6 +107,9 @@ export class SQLBaseType extends SQLType {
 
         let bt2: SQLBaseType = type2 instanceof SQLBaseType ? type2 : type2["baseType"];
 
+        if(bt2 instanceof SQLTextEnumType) bt2 = SQLBaseType.getBaseType('text');
+        if(bt2 instanceof SQLNumberEnumType) bt2 = SQLBaseType.getBaseType('double');
+
         return this.canCastToList.indexOf(bt2.name) >= 0 || this.name == bt2.name;
 
     }
@@ -118,6 +121,9 @@ export class SQLBaseType extends SQLType {
         if (map == null) return null;
 
         let bt2: SQLBaseType = secondType instanceof SQLBaseType ? secondType : secondType["baseType"];
+
+        if(bt2 instanceof SQLTextEnumType) bt2 = SQLBaseType.getBaseType('text');
+        if(bt2 instanceof SQLNumberEnumType) bt2 = SQLBaseType.getBaseType('double');
 
         return map.get(bt2);
 
@@ -173,18 +179,33 @@ export class SQLBaseType extends SQLType {
 
 }
 
-class SQLNumberEnumType extends SQLBaseType {
+export class SQLNumberEnumType extends SQLBaseType {
     
-    constructor(public values: string[]){
-        super("enum", [], 
-        (ci, pv) => `check(${ci} in (${(<string[]>pv).join(', ')}))`,
+    isInteger: boolean = true;
+    numericBinaryOperators: TokenType[] = [TokenType.plus, TokenType.minus, TokenType.multiplication, TokenType.division, TokenType.modulo];
+    comparisonOperators: TokenType[] = [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual];
+
+
+    constructor(public values: number[]){
+        super("NumberEnum", [], 
+        (ci, pv) => `check(${ci} in (${values.join(', ')}))`,
         (v: string, pv) => v,
         ["decimal", "integer", "double", "float"]
         )
+
+        for(let v of values){
+            if(Math.abs(Math.round(v) - v) > 0.00000001) this.isInteger = false;
+        }
+
+        this.name = this.isInteger ? "integerEnum" : "floatEnum";
     }
     
     getBinaryResultType(operator: TokenType, secondType: SQLType): SQLType {
-        return operator == TokenType.concatenation ? SQLBaseType.getBaseType('double') : null;
+        if(this.numericBinaryOperators.indexOf(operator) >= 0){
+            return this.isInteger ? SQLBaseType.getBaseType('integer') : SQLBaseType.getBaseType('double');
+        } else {
+            return SQLBaseType.getBaseType('boolean');
+        }
     }
     
     getUnaryResultType(operator: TokenType): SQLType {
@@ -196,21 +217,25 @@ class SQLNumberEnumType extends SQLBaseType {
     }
     
     toString(): string {
-        return "double";
+        return "enum (" + this.values.join(", ") + ")";
     }
     
     getBaseTypeName(): string {
         return "enum";
     }
 
+    getSQLiteType(): string {
+        return this.isInteger ? "integerEnum" : "realEnum";
+    }
+
 }
 
 
-class SQLTextEnumType extends SQLBaseType {
+export class SQLTextEnumType extends SQLBaseType {
     
     constructor(public values: string[]){
-        super("enum", [], 
-        (ci, pv) => `check(${ci} in (${(<string[]>pv).map(v => '"' + v + '"').join(', ')}))`,
+        super("textEnum", [], 
+        (ci, pv) => `check(${ci} in (${values.map(v => "'" + v + "'").join(', ')}))`,
         (v: string, pv) => v,
         ["text", "varchar", "char"]
         )
@@ -229,11 +254,15 @@ class SQLTextEnumType extends SQLBaseType {
     }
     
     toString(): string {
-        return "text";
+        return "enum (" + this.values.join(", ") + ")";
     }
     
     getBaseTypeName(): string {
         return "enum";
+    }
+
+    getSQLiteType(): string {
+        return "textEnum";
     }
 
 }
@@ -323,7 +352,7 @@ var tinyTextType = new SQLBaseType("tinyText", [], (ci, pv) => "", (v: string, p
 var mediumTextType = new SQLBaseType("mediumText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 var longTextType = new SQLBaseType("longText", [], (ci, pv) => "", (v: string, pv) => v, textTypes);
 
-let floatTypes = ["decimal", "numeric", "double", "real", "float"];
+let floatTypes = ["decimal", "numeric", "double", "real", "float", "floatEnum"];
 
 var decimalType = new SQLBaseType("decimal", ["Gesamtzahl der Stellen", "Nachkommastellen"], (ci, pv) => "",
     (v: number, pv) => { let vk = Math.trunc(v); let nk = v - vk; return "" + vk + (pv[1] > 0 ? "." + Math.round(nk * tens[pv[1]]) : "") },
@@ -333,7 +362,7 @@ var doubleType = new SQLBaseType("double", ["Gesamtzahl der Stellen", "Nachkomma
 var realType = new SQLBaseType("real", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 var floatType = new SQLBaseType("float", [], (ci, pv) => "", (v: number, pv) => "" + v, floatTypes);
 
-let inttypes = ["int", "integer", "tinyint", "smallint", "mediumint", "bigint"];
+let inttypes = ["int", "integer", "tinyint", "smallint", "mediumint", "bigint", "integerEnum"];
 let numberTypes = inttypes.concat(floatTypes);
 
 var intType = new SQLBaseType("int", ["Maximale Anzahl der Stellen"], (ci, pv) => `check(round(${ci}) = ${ci})`, (v: number, pv) => "" + Math.round(v), numberTypes);

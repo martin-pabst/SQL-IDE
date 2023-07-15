@@ -72,9 +72,9 @@ export class StatementCleaner {
             st += ",\n   " + ast.foreignKeyInfoList.map(fki => this.cleanForeignKeyInfo(fki)).join(",\n   ");
         }
 
-        let pkc = ast.combinedPrimaryKeyColumns.slice().map(s => s.toLocaleLowerCase());
+        let pkc = ast.combinedPrimaryKeyColumns.slice(); //.map(s => s.toLocaleLowerCase());
         for (let column of ast.columnList) {
-            let c = column.identifier.toLocaleLowerCase();
+            let c = column.identifier;
             if (column.isAutoIncrement && pkc.indexOf(c) >= 0) {
                 pkc.splice(pkc.indexOf(c), 1);
             }
