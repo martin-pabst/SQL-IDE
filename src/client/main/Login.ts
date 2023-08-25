@@ -159,31 +159,36 @@ export class Login {
                     currentWorkspaceId: this.main.currentWorkspace?.id
                 }
 
-                ajax('logout', logoutRequest, () => {
-                    // window.location.href = 'index.html';
-                    this.main.networkManager.sendUpdateUserSettings(() => {});
+                this.main.networkManager.sendUpdateUserSettings(() => {
 
-                    jQuery('#login').show();
-                    this.main.waitOverlay.hide();
-                    jQuery('#login-message').empty();
-                    this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                    this.main.projectExplorer.fileListPanel.clear();
-                    this.main.projectExplorer.workspaceListPanel.clear();
-
-                    this.main.databaseExplorer.clear();
-                    this.main.resultsetPresenter.clear();
-
-                    if (this.main.user.is_teacher) {
-                        this.main.teacherExplorer.removePanels();
-                        this.main.teacherExplorer = null;
-                    }
-
-
-                    this.main.currentWorkspace = null;
-                    this.main.user = null;
-
+                    ajax('logout', logoutRequest, () => {
+                        // window.location.href = 'index.html';
+    
+                        jQuery('#login').show();
+                        this.main.waitOverlay.hide();
+                        jQuery('#login-message').empty();
+                        this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
+                        this.main.projectExplorer.fileListPanel.clear();
+                        this.main.projectExplorer.workspaceListPanel.clear();
+    
+                        this.main.databaseExplorer.clear();
+                        this.main.resultsetPresenter.clear();
+    
+                        if (this.main.user.is_teacher) {
+                            this.main.teacherExplorer.removePanels();
+                            this.main.teacherExplorer = null;
+                        }
+    
+    
+                        this.main.currentWorkspace = null;
+                        this.main.user = null;
+    
+    
+                    });
+    
 
                 });
+
             }, true);
 
         });
