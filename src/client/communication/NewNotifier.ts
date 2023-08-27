@@ -4,7 +4,7 @@ import { Main } from "../main/Main.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ajax, ajaxAsync, csrfToken } from "./AjaxHelper.js";
-import { DatabaseChangedSSEMessage, GetNewStatementsRequest, GetNewStatementsResponse, GetWebSocketTokenResponse, LongPollingListenerResponse, RegisterDatabaseSSEListenerRequest, RegisterLongPollingListenerRequest, WebSocketRequestConnect, WebSocketRequestDisconnect, WebSocketRequestGetNewStatements, WebSocketResponse } from "./Data.js";
+import { DatabaseChangedSSEMessage, GetNewStatementsRequest, GetNewStatementsResponse, RegisterDatabaseSSEListenerRequest } from "./Data.js";
 import jQuery from "jquery";
 import { SSEManager } from "./SSEManager.js";
 
@@ -44,8 +44,15 @@ export class NewNotifier {
             } else {
                 request.registerOrUnregister = "unregister";
                 ajaxAsync("servlet/registerDatabaseSSEListener", request);
+                SSEManager.unsubscribe("onOpen");
             }
         })
+
+        SSEManager.subscribe("onOpen", () => {            
+            request.registerOrUnregister = "register";
+            ajaxAsync("servlet/registerDatabaseSSEListener", request);
+        })
+        
 
     }
 
