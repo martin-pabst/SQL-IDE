@@ -32,7 +32,7 @@ export class StatementCleaner {
             statementHeader += `(${ast.columnList.map(c => this.escapeIdentifier(c.identifier)).join(", ")})`;
         }
 
-        statementHeader += '\nvalues\n';
+        statementHeader += '\nvalues';
 
         let st = "";
 
