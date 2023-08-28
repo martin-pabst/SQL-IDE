@@ -527,7 +527,10 @@ export class ProjectExplorer {
 
         let callbackAfterDatabaseFetched = (error: string) => {
             this.main.waitOverlay.show("Bitte warten, initialisiere Datenbank ...");
-            this.initializeDatabaseTool(error, w, callback)
+            if (error != null) {
+                alert(error);
+            }    
+            this.initializeDatabaseTool(w, callback)
         };
 
         if (w.database == null) {
@@ -540,11 +543,7 @@ export class ProjectExplorer {
 
     }
 
-    initializeDatabaseTool(error: string, w: Workspace, callback?: () => void) {
-        if (error != null) {
-            alert(error);
-            return;
-        }
+    initializeDatabaseTool(w: Workspace, callback?: () => void) {
 
         let dbTool = this.main.getDatabaseTool();
 

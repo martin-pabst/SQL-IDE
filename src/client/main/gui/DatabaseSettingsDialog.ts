@@ -24,44 +24,49 @@ export class DatabaseSettingsDialog {
                 <div class="jo_ds_settings_caption">Name der Datenbank:</div><div><input class="dialog-input jo_databasename" value="Neue Datenbank"></input></div>
                 </div>
 
+                <div class="jo_ds_settings_caption"> Eigentümer/in: <span class='jo_ds_settings_owner' style='font-weight: normal' ></span></div>
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
-                Zugriffscodes für andere Benutzer:
-                </div>
-                                
-                <div>
-                    <table class="jo_ds_secret_table">
-                    <tr>
-                        <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read"></td><td id="copySecretTdread"></td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
-                    <tr>
-                        <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write"></td><td id="copySecretTdwrite"></td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
-                    </tr>
-                    <tr>
-                        <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td id="copySecretTdddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
-                    </tr>
-                    </table>
-                </div>
-
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
-                Beschreibung:
+                    Beschreibung:
                 </div>
                 <div>
-                <textarea class="jo_ds_settings_description" maxlength="5000"></textarea>
+                    <textarea class="jo_ds_settings_description" maxlength="5000"></textarea>
                 </div>
 
+                <div id="jo_ds_ownerSettings">
                 <div class="jo_ds_settings_caption" style="margin-top: 20px">
-                Datenbank freigeben als Vorlage für andere Benutzer:
-                </div>
+                    Zugriffscodes für andere Benutzer:
+                    </div>
+                                    
+                    <div>
+                        <table class="jo_ds_secret_table">
+                        <tr>
+                            <td>Nur Lesen:</td><td class="jo_ds_secret jo_ds_secret_read"></td><td id="copySecretTdread"></td><td><button class="jo_small_button jo_button_code_read">Neuen Code generieren</button></td>
+                        <tr>
+                            <td>Lesen und schreiben:</td><td class="jo_ds_secret jo_ds_secret_write"></td><td id="copySecretTdwrite"></td><td><button class="jo_small_button jo_button_code_write">Neuen Code generieren</button></td>
+                        </tr>
+                        <tr>
+                            <td>Lesen, schreiben und Struktur verändern:</td><td class="jo_ds_secret jo_ds_secret_ddl"></td><td id="copySecretTdddl"></td><td><button class="jo_small_button jo_button_code_ddl">Neuen Code generieren</button></td>
+                        </tr>
+                        </table>
+                    </div>
 
-                <fieldset id="jo_ds_publishedTo">
-                    <input type="radio" id="b0" name="publishedFilter" value="0" checked="checked"><label for="b0">Keine Freigabe</label>
-                    <input type="radio" id="b1" name="publishedFilter" value="1"><label for="b1">Freigabe für meine Klasse(n)</label>
-                    <input type="radio" id="b2" name="publishedFilter" value="2" style="visibility: none"><label id="lb2" for="b2" style="visibility: none">Freigabe für meine Schule</label>
-                    <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für alle Schulen</label>
-                </fieldset>
 
-                <div>
-                    <input type="checkbox" id="jo_upload_db" name="jo_upload_db">
-                    <label for="jo_upload_db">Aktuellen Zustand der Datenbank als Vorlage hochladen</label>
+                    <div class="jo_ds_settings_caption" style="margin-top: 20px">
+                    Datenbank freigeben als Vorlage für andere Benutzer:
+                    </div>
+
+                    <fieldset id="jo_ds_publishedTo">
+                        <input type="radio" id="b0" name="publishedFilter" value="0" checked="checked"><label for="b0">Keine Freigabe</label>
+                        <input type="radio" id="b1" name="publishedFilter" value="1"><label for="b1">Freigabe für meine Klasse(n)</label>
+                        <input type="radio" id="b2" name="publishedFilter" value="2" style="visibility: none"><label id="lb2" for="b2" style="visibility: none">Freigabe für meine Schule</label>
+                        <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für alle Schulen</label>
+                    </fieldset>
+
+                    <div>
+                        <input type="checkbox" id="jo_upload_db" name="jo_upload_db">
+                        <label for="jo_upload_db">Aktuellen Zustand der Datenbank als Vorlage hochladen</label>
+                    </div>
                 </div>
             </div>
 
@@ -142,8 +147,16 @@ export class DatabaseSettingsDialog {
     setValues(){
         jQuery('.jo_databasename').val(this.workspace.name);
         this.main.networkManager.getDatabaseSettings(this.workspace.id, (response) => {
+
+            let ownerText: string = response.owner;
+            if(!response.userIsOwner && response.secrets != null) ownerText += " (hat aber keinen mit der Datenbank verbundenen Workspace)";
+
+            jQuery('.jo_ds_settings_owner').text(ownerText);
+
             ["read", "write", "ddl"].forEach(kind => {
-                jQuery('.jo_ds_secret_' + kind).text(response.secrets[kind]);
+                let secret: string = "---";
+                if(response.secrets != null) secret = response.secrets[kind];
+                jQuery('.jo_ds_secret_' + kind).text(secret);
             });
             if(this.main.user.is_admin){
                 jQuery('#b3').css('visibility', 'visible');
@@ -159,6 +172,18 @@ export class DatabaseSettingsDialog {
             jQuery('#jo_upload_db').prop('checked', response.publishedTo != 0);
 
             jQuery('.jo_ds_settings_description').val(this.workspace.database.description);
+
+            if(response.secrets == null){
+                this.$dialog.find('input, textarea').attr('readonly', '').css('background-color', '#888');
+                this.$dialog.find('#jo_ds_ownerSettings').hide();
+                this.$dialog.find('#jo_ds_save_button').hide();
+            } else {
+                this.$dialog.find('input, textarea').removeAttr('readonly').css('background-color', '#fff');;
+                this.$dialog.find('#jo_ds_ownerSettings').show();
+                this.$dialog.find('#jo_ds_save_button').show();
+            }
+
+
         })
     }
 

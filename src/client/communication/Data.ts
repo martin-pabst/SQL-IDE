@@ -638,6 +638,8 @@ export type GetDatabaseSettingsResponse = {
     workspaceId: number,
     secrets: Secrets,
     publishedTo: number,
+    owner: string,
+    userIsOwner: boolean,
     error: string
 }
 

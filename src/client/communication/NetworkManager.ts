@@ -366,7 +366,7 @@ export class NetworkManager {
                         callback(null);
                         return;
                     } else {
-                        this.fetchTemplate(workspace.id, (template) => {
+                        this.fetchTemplate(workspace.id, (template, error) => {
                             if (template != null) {
                                 cacheManager.saveTemplateToCache(workspace.database.based_on_template_id, template);
                                 // @ts-ignore
@@ -374,7 +374,8 @@ export class NetworkManager {
                                 callback(null);
                                 return;
                             } else {
-                                callback("Konnte das Template nicht laden.");
+                                workspace.database.templateDump = null;
+                                callback(error);
                                 return;
                             }
                         })
@@ -389,7 +390,7 @@ export class NetworkManager {
     }
 
 
-    fetchTemplate(workspaceId: number, callback: (template: Uint8Array) => void) {
+    fetchTemplate(workspaceId: number, callback: (template: Uint8Array, error?: string) => void) {
         let request: GetTemplateRequest = {
             workspaceId: workspaceId
         }
@@ -409,8 +410,7 @@ export class NetworkManager {
                 callback(new Uint8Array(response));
             },
             error: function (jqXHR, message) {
-                alert("Konnte das Template nicht laden.");
-                callback(null);
+                callback(null, "Konnte das Template nicht laden.");
             }
         });
 
