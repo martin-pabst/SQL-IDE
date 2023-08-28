@@ -180,8 +180,10 @@ export class Editor {
         this.editor.onDidChangeModel((event) => {
 
             let element: HTMLDivElement = <any>$element.find('.monaco-editor')[0];
-            element.removeEventListener("wheel", mouseWheelListener);
-            element.addEventListener("wheel", mouseWheelListener, { passive: false });
+            if(element != null){
+                element.removeEventListener("wheel", mouseWheelListener);
+                element.addEventListener("wheel", mouseWheelListener, { passive: false });
+            }
 
             if (this.main.getCurrentWorkspace() == null) return;
 
