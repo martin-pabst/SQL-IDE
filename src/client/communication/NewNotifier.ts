@@ -26,7 +26,11 @@ export class NewNotifier {
 
         this.workspace = workspace;
         
-        if(workspace == null) return;
+        if(workspace == null){
+            SSEManager.unsubscribe("onOpen");
+            return;
+        } 
+        
         this.database = workspace.database;
 
         let request: RegisterDatabaseSSEListenerRequest = { workspaceId: workspace.id, registerOrUnregister: "register" }

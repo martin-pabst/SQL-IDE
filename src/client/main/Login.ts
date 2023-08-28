@@ -155,6 +155,8 @@ export class Login {
 
             this.main.networkManager.sendUpdates(() => {
 
+                this.main.notifier.connect(null);
+
                 let logoutRequest: LogoutRequest = {
                     currentWorkspaceId: this.main.currentWorkspace?.id
                 }
