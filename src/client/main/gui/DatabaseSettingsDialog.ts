@@ -130,6 +130,8 @@ export class DatabaseSettingsDialog {
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
             newName, published_to, newDescription,
              () => {
+                this.workspace.database.description = newDescription;
+                this.workspace.name = newName;
                  if($('#jo_upload_db').prop('checked')){
                     new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");                    
                  }
