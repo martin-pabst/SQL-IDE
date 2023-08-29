@@ -6,6 +6,7 @@ import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import { ajax } from "../../communication/AjaxHelper.js";
 import jQuery from "jquery";
+import { TemplateUploader } from "../../tools/TemplateUploader.js";
 
 export type Action = (identifier: string) => void;
 
@@ -151,6 +152,25 @@ export class MainMenu {
                             {
                                 identifier: "Export als Binärdump (.sqLite-File)...", action: () => {
                                     new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());
+                                }
+                            },
+                            {
+                                identifier: "Aktuellen Zustand als Vorlage hochladen...", action: () => {
+                                    let currentWorkspace = this.main.currentWorkspace;
+                                    if(currentWorkspace == null){
+                                        alert('Es ist kein Workspace ausgewählt.');
+                                        return;
+                                    }
+                                    if(currentWorkspace.database.owner_id != this.main.user.id){
+                                        alert('Die Datenbank gehört einer anderen Benutzerin/einem anderen Benutzer. Sie kann daher nicht als Vorlage hochgeladen werden.');
+                                        return;
+                                    }
+                                    if(currentWorkspace.database.published_to == 0){
+                                        alert('Die Datenbank ist noch nicht für andere Benutzer/innen veröffentlicht, daher kann sie nicht als Vorlage hochgeladen werden. \nDie Möglichkeit zum Veröffentlichen finden Sie unter Datenbank->Einstellungen.');
+                                        return;
+                                    }
+                                    new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate", 
+                                    () => {alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.')});
                                 }
                             },
 

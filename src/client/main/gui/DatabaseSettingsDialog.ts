@@ -63,9 +63,12 @@ export class DatabaseSettingsDialog {
                         <input type="radio" id="b3" name="publishedFilter" value="3" style="visibility: none"><label id="lb3" for="b3" style="visibility: none">Freigabe für alle Schulen</label>
                     </fieldset>
 
-                    <div>
-                        <input type="checkbox" id="jo_upload_db" name="jo_upload_db">
-                        <label for="jo_upload_db">Aktuellen Zustand der Datenbank als Vorlage hochladen</label>
+                    <div class="jo_ds_settings_caption" style="margin-top: 5px">
+                    Wichtiger Hinweis:
+                    </div>
+                    <div style="font-weight: normal">
+                    Beim erstmaligen Freigeben wird der aktuelle Zustand der Datenbank als Vorlage für andere Benutzer/innen hochgeladen und bereitgestellt. Änderungen, die danach 
+                    in der Datenbank vorgenommen werden, werden nur dann in die Vorlage integriert, wenn explizit "Datenbank -> Aktuellen Zustand als Vorlage hochladen" aufgerufen wird.
                     </div>
                 </div>
             </div>
@@ -82,46 +85,45 @@ export class DatabaseSettingsDialog {
         let that = this;
         this.$dialog.css('visibility', 'visible');
 
-        if(!this.main.user.is_teacher){
+        if (!this.main.user.is_teacher) {
             jQuery('#b2').next().remove();
             jQuery('#b2').remove();
         }
 
-        if(!this.main.user.is_admin){
+        if (!this.main.user.is_admin) {
             jQuery('#b3').next().remove();
             jQuery('#b3').remove();
         }
 
         jQuery('#jo_ds_cancel_button').on('click', () => { this.showMainWindow(); });
-        jQuery('#jo_ds_save_button').on('click', () => { 
+        jQuery('#jo_ds_save_button').on('click', () => {
             this.saveNameAndPublishedTo();
-         })
+        })
 
         this.setValues();
 
         ["read", "write", "ddl"].forEach(kind => {
             jQuery('.jo_button_code_' + kind).on('pointerdown', () => {
                 that.main.networkManager.setNewSecret(that.workspace.id, kind, (secret) => {
-                    jQuery('.jo_ds_secret_'+kind).text(secret);
+                    jQuery('.jo_ds_secret_' + kind).text(secret);
                 })
             })
             let $copyButton = jQuery('<button class="jo_small_button jo_copy_secret_button jo_active">Kopieren</button>')
             jQuery('#copySecretTd' + kind).append($copyButton);
             $copyButton.on('pointerdown', () => {
-                copyTextToClipboard(jQuery('.jo_ds_secret_'+kind).text());
+                copyTextToClipboard(jQuery('.jo_ds_secret_' + kind).text());
             })
         })
 
-        jQuery('#jo_ds_publishedTo>input').on('change', (e) => {$('#jo_upload_db').prop('checked', !((<HTMLInputElement>jQuery('#b0')[0]).checked))});
 
     }
 
-    saveNameAndPublishedTo(){
+    saveNameAndPublishedTo() {
         let published_to = 0;
-        jQuery('#jo_ds_publishedTo').find('input').each( (n, element) => {
+        jQuery('#jo_ds_publishedTo').find('input').each((n, element) => {
             let $element = jQuery(element);
             //@ts-ignore
-            if(<HTMLInputElement>element.checked){
+            if (<HTMLInputElement>element.checked) {
                 published_to = Number.parseInt(<string>$element.attr('value'));
             }
         })
@@ -133,48 +135,51 @@ export class DatabaseSettingsDialog {
         this.workspace.panelElement.$htmlFirstLine.find('.jo_filename').text(newName);
         this.workspace.saved = false;
 
-        this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
+        let database = this.workspace.database;
+
+        this.main.networkManager.setNameAndPublishedTo(this.workspace.id,
             newName, published_to, newDescription,
-             () => {
-                this.workspace.database.description = newDescription;
+            () => {
                 this.workspace.name = newName;
-                 if($('#jo_upload_db').prop('checked')){
-                    new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");                    
-                 }
-                 this.showMainWindow(); 
-                })
+                if (database.published_to == 0 && published_to > 0) {
+                    new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");
+                }
+                database.published_to = published_to;
+                database.description = newDescription;
+                this.showMainWindow();
+            })
     }
 
-    setValues(){
+    setValues() {
         jQuery('.jo_databasename').val(this.workspace.database.name);
         this.main.networkManager.getDatabaseSettings(this.workspace.id, (response) => {
 
             let ownerText: string = response.owner;
-            if(!response.userIsOwner && response.secrets != null) ownerText += " (hat aber keinen mit der Datenbank verbundenen Workspace)";
+            if (!response.userIsOwner && response.secrets != null) ownerText += " (hat aber keinen mit der Datenbank verbundenen Workspace)";
 
             jQuery('.jo_ds_settings_owner').text(ownerText);
 
             ["read", "write", "ddl"].forEach(kind => {
                 let secret: string = "---";
-                if(response.secrets != null) secret = response.secrets[kind];
+                if (response.secrets != null) secret = response.secrets[kind];
                 jQuery('.jo_ds_secret_' + kind).text(secret);
             });
-            if(this.main.user.is_admin){
+            if (this.main.user.is_admin) {
                 jQuery('#b3').css('visibility', 'visible');
                 jQuery('#lb3').css('visibility', 'visible');
             }
-            if(this.main.user.is_schooladmin){
+            if (this.main.user.is_schooladmin) {
                 jQuery('#b2').css('visibility', 'visible');
                 jQuery('#lb2').css('visibility', 'visible');
             }
             // jQuery('#jo_ds_publishedTo input').attr('checked', '');
-            jQuery('#b'+response.publishedTo).prop('checked', true);
+            jQuery('#b' + response.publishedTo).prop('checked', true);
 
             jQuery('#jo_upload_db').prop('checked', response.publishedTo != 0);
 
             jQuery('.jo_ds_settings_description').val(this.workspace.database.description);
 
-            if(response.secrets == null){
+            if (response.secrets == null) {
                 this.$dialog.find('input, textarea').attr('readonly', '').css('background-color', '#888');
                 this.$dialog.find('#jo_ds_ownerSettings').hide();
                 this.$dialog.find('#jo_ds_save_button').hide();
