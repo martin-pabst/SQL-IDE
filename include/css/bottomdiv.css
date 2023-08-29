@@ -63,7 +63,7 @@
 }
 
 .jo_tabs {
-    overflow: visible;
+    /* overflow: visible; */
     height: calc(100% - 30px);
 }
 
@@ -121,6 +121,7 @@
 }
 
 .jo_panelEntry {
+    box-sizing: border-box;
     width: 100%;
     display: flex;
     flex-direction: row;

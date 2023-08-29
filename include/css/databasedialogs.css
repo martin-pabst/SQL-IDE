@@ -15,7 +15,7 @@
 .jo_templateListEntry {
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: calc(100% - 10px);
     padding: 2px 5px;
     border-bottom: 1px solid gray;
     user-select: none;
@@ -36,9 +36,6 @@
     background-color: var(--file-active-hover);
 }
 
-.jo_templateList {
-    padding: 10px;
-}
 
 .jo_tle_secondline {
     font-size: 60%;
@@ -90,4 +87,15 @@
     background-color: #59ca85 !important;
     border: none;
     margin: 5px 20px;    
+}
+
+.jo_createDatabaseFromTemplateTab {
+    position: relative;
+    height: 100%;
+}
+
+.jo_templatelist {
+    padding: 10px;
+    height: 400px;
+    overflow: auto;
 }

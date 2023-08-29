@@ -19,7 +19,7 @@ export class DatabaseSettingsDialog {
 
         this.$dialog.append(jQuery(
             `<div class="jo_ds_heading">Datenbank-Einstellungen</div>
-            <div style="width: 100%; margin-left: 10px">
+            <div style="width: 100%; padding-left: 10px; box-sizing: border-box">
                 <div class="jo_ds_settings" style="margin-left: 0px">
                 <div class="jo_ds_settings_caption">Name der Datenbank:</div><div><input class="dialog-input jo_databasename" value="Neue Datenbank"></input></div>
                 </div>
