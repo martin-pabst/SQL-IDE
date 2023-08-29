@@ -231,10 +231,16 @@ export class ProjectExplorer {
 
         this.workspaceListPanel.renameCallback =
             (workspace: Workspace, newName: string) => {
-                newName = newName.substr(0, 80);
+                newName = newName.substring(0, 80);
                 workspace.name = newName;
                 workspace.saved = false;
                 that.main.networkManager.sendUpdates();
+
+                // if user owns databaes: rename it, too
+                if(workspace.database.owner_id == workspace.owner_id){
+                    workspace.database.name = newName;
+                    that.main.networkManager.setNameAndPublishedTo(workspace.id, newName, workspace.database.published_to, workspace.database.description, () => {})
+                }
                 return newName;
             }
 

@@ -131,6 +131,7 @@ export class DatabaseSettingsDialog {
 
         this.workspace.name = newName;
         this.workspace.panelElement.$htmlFirstLine.find('.jo_filename').text(newName);
+        this.workspace.saved = false;
 
         this.main.networkManager.setNameAndPublishedTo(this.workspace.id, 
             newName, published_to, newDescription,
@@ -145,7 +146,7 @@ export class DatabaseSettingsDialog {
     }
 
     setValues(){
-        jQuery('.jo_databasename').val(this.workspace.name);
+        jQuery('.jo_databasename').val(this.workspace.database.name);
         this.main.networkManager.getDatabaseSettings(this.workspace.id, (response) => {
 
             let ownerText: string = response.owner;
