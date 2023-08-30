@@ -281,36 +281,39 @@ export class SymbolResolver {
         }
 
         let table = node.symbolTable.findTable(node.tableIdentifier);
-        if (table == null) this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
-
-        for (let i = 0; i < node.columnIdentifiers.length; i++) {
-            let ci = node.columnIdentifiers[i];
-            let ciPos = node.columnIdentifierPositions[i];
-            let value = node.values[i];
-
-            if (ci == null) continue;
-            let column = table.columns.find(c => c.identifier == ci);
-
-            if (column == null) {
-                this.pushError(ci + " ist kein Bezeichner einer Spalte der Tabelle " + node.tableIdentifier + ".", "error", ciPos);
+        if (table == null){
+            this.pushError("Die Tabelle " + node.tableIdentifier + " ist nicht bekannt.", "error", node.tableIdentifierPosition);
+        } else {
+            for (let i = 0; i < node.columnIdentifiers.length; i++) {
+                let ci = node.columnIdentifiers[i];
+                let ciPos = node.columnIdentifierPositions[i];
+                let value = node.values[i];
+    
+                if (ci == null) continue;
+                let column = table.columns.find(c => c.identifier == ci);
+    
+                if (column == null) {
+                    this.pushError(ci + " ist kein Bezeichner einer Spalte der Tabelle " + node.tableIdentifier + ".", "error", ciPos);
+                }
+    
+                if (value == null) continue;
+                let symbolTable = this.pushNewSymbolTable(node.valuePosBegin[i], node.valuePosEnd[i]);
+                symbolTable.storeTableSymbols(table);
+                this.resolveTerm(value);
+                this.symbolTableStack.pop();
+    
             }
-
-            if (value == null) continue;
-            let symbolTable = this.pushNewSymbolTable(node.valuePosBegin[i], node.valuePosEnd[i]);
-            symbolTable.storeTableSymbols(table);
-            this.resolveTerm(value);
-            this.symbolTableStack.pop();
-
+    
+            if (node.whereNodeBegin != null) {
+                let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
+                symbolTable.storeTableSymbols(table);
+            }
+    
+            if (node.whereNode != null) {
+                this.resolveTerm(node.whereNode);
+            }
         }
 
-        if (node.whereNodeBegin != null) {
-            let symbolTable = this.pushNewSymbolTable(node.whereNodeBegin, node.whereNodeEnd);
-            symbolTable.storeTableSymbols(table);
-        }
-
-        if (node.whereNode != null) {
-            this.resolveTerm(node.whereNode);
-        }
         this.symbolTableStack.pop();
 
     }
