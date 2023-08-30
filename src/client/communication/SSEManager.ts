@@ -1,7 +1,7 @@
 import { ajaxAsync, csrfToken } from "./AjaxHelper.js";
 
 
-type SSEEventType = "doFileUpdate" | "broadcastDatabaseChange" | "onOpen";
+type SSEEventType = "doFileUpdate" | "broadcastDatabaseChange" | "onOpen" | "keepAlive";
 
 type SSECallbackMethod = (data: any) => Promise<any>;
 
@@ -45,6 +45,8 @@ export class SSEManager {
                     ajaxAsync("/servlet/sseKeepAlive?keepAliveToken=" + ssm.data, "");
                     return;
                 }
+
+                if(ssm.eventType == "keepAlive") return;
 
                 if(ssm.eventType == "close"){
                     SSEManager.close();
