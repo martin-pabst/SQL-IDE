@@ -1,8 +1,4 @@
-import { csrfToken } from "../AjaxHelper";
-import { BasePushClientManager, PushEventType, PushMessageHandler, ServerSentMessage } from "./BasePushClientManager.js";
-import { PushClientLongPollingStrategy } from "./PushClientLongPollingStrategy";
-import { PushClientStrategy } from "./PushClientStrategy";
-import { PushClientWebsocketStrategy } from "./PushClientWebsocketStrategy";
+import { BasePushClientManager, PushEventType, PushMessageHandler } from "./BasePushClientManager.js";
 
 
 export class PushClientManager extends BasePushClientManager {
@@ -21,7 +17,7 @@ export class PushClientManager extends BasePushClientManager {
 
     public static getInstance(): PushClientManager {
         if(PushClientManager.instance == null){
-            PushClientManager.instance = new PushClientManager();
+            PushClientManager.instance = new PushClientManager("");
         }
         return PushClientManager.instance;
     }

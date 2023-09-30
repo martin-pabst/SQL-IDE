@@ -1,4 +1,3 @@
-import { csrfToken } from "../AjaxHelper";
 import { PushClientLongPollingStrategy } from "./PushClientLongPollingStrategy";
 import { PushClientStrategy } from "./PushClientStrategy";
 import { PushClientWebsocketStrategy } from "./PushClientWebsocketStrategy";
@@ -31,7 +30,7 @@ export class BasePushClientManager {
     }
 
 
-    protected constructor(){
+    protected constructor(public baseURL: string){
         this.strategies = [
             new PushClientWebsocketStrategy(this),
             new PushClientLongPollingStrategy(this)
