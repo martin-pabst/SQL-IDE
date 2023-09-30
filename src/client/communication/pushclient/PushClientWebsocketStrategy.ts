@@ -12,6 +12,8 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     openedTimestamp: number;
 
+    currentTimer: any;
+
     constructor(manager: BasePushClientManager) {
         super("websocket strategy", manager);
     }
@@ -58,6 +60,10 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
                 this.manager.onMessage(msg);
             }
 
+            if(this.currentTimer != null){
+                clearTimeout(this.currentTimer);
+            }
+
             this.doPing();
 
         } catch (ex){
@@ -67,10 +73,12 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
     }
 
     doPing(){
-        setTimeout(() => {
+        this.currentTimer = setTimeout(() => {
             if(!this.isClosed){
                 this.websocket.send("ping");
                 this.doPing();
+            } else {
+                this.currentTimer = null;
             }            
         }, 25000);
 

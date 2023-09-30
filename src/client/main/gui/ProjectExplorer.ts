@@ -539,6 +539,8 @@ export class ProjectExplorer {
             this.initializeDatabaseTool(w, callback)
         };
 
+        if(w == null) return;
+
         if (w.database == null) {
             this.main.waitOverlay.show("Bitte warten, hole Datenbank vom Server ...");
 

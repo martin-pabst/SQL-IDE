@@ -340,6 +340,7 @@ export class NetworkManager {
             if (response.success) {
 
                 workspace.database = WDatabase.fromDatabaseData(response.database, response.version)
+                workspace.databaseId = workspace.database.id;
 
                 if (workspace.database.based_on_template_id == null) {
                     callback(null);

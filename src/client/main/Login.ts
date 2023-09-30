@@ -156,6 +156,8 @@ export class Login {
                 this.main.projectExplorer.onHomeButtonClicked();
             }
 
+            PushClientManager.getInstance().close();
+
             this.main.networkManager.sendUpdates(() => {
 
                 this.main.notifier.connect(null);
