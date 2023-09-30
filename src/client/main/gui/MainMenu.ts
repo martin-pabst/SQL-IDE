@@ -5,7 +5,7 @@ import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import { ajax } from "../../communication/AjaxHelper.js";
-import jQuery from "jquery";
+
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
 
 export type Action = (identifier: string) => void;

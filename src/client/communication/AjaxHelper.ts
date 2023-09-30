@@ -1,6 +1,6 @@
 import { LoginRequest, PerformanceData } from "./Data.js";
-import jQuery from 'jquery';
-import { SSEManager } from "./SSEManager.js";
+import { NewNotifier } from "./NewNotifier.js";
+import { PushClientManager } from "./pushclient/PushClientManager.js";
 
 export class PerformanceCollector {
     static performanceData: PerformanceData[] = [];
@@ -71,7 +71,6 @@ export function ajax(url: string, request: any, successCallback: (response: any)
             if(response["csrfToken"] != null)
             {
                 csrfToken = response["csrfToken"];
-                SSEManager.open(csrfToken);
             }
 
             showNetworkBusy(false);
@@ -144,7 +143,6 @@ export async function ajaxAsync(url: string, data: any): Promise<any>{
 
         if(obj["token"] != null){
             csrfToken = obj["token"];
-            SSEManager.open(csrfToken);
         }
 
         if(obj == null){

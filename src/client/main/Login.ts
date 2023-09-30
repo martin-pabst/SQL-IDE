@@ -5,7 +5,8 @@ import { Helper } from "./gui/Helper.js";
 import { userInfo } from "os";
 import { UserMenu } from "./gui/UserMenu.js";
 import { escapeHtml } from "../tools/StringTools.js";
-import jQuery from "jquery";
+import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
+
 
 export class Login {
 
@@ -79,6 +80,8 @@ export class Login {
                 if (!response.success) {
                     jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');
                 } else {
+
+                    PushClientManager.getInstance().open();
 
                     // We don't do this anymore for security reasons - see AjaxHelper.ts
                     // Alternatively we now set a long expiry interval for cookie.

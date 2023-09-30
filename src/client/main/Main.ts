@@ -27,7 +27,7 @@ import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { checkIfMousePresent } from "../tools/HtmlTools.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
-import jQuery from "jquery";
+
 import { NewNotifier } from "../communication/NewNotifier.js";
 
 export class Main implements MainBase {

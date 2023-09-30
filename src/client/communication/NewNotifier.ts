@@ -1,12 +1,9 @@
-import { Module } from "../compiler/parser/Module.js";
-import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { Main } from "../main/Main.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ajax, ajaxAsync, csrfToken } from "./AjaxHelper.js";
-import { DatabaseChangedSSEMessage, GetNewStatementsRequest, GetNewStatementsResponse, RegisterDatabaseSSEListenerRequest } from "./Data.js";
-import jQuery from "jquery";
-import { SSEManager } from "./SSEManager.js";
+import { DatabaseChangedSSEMessage as DatabaseChangedPushMessage, GetNewStatementsRequest, GetNewStatementsResponse, RegisterDatabaseSSEListenerRequest as RegisterPushClientForDatabaseRequest } from "./Data.js";
+import { PushClientManager } from "./pushclient/PushClientManager.js";
 
 export class NewNotifier {
 
@@ -20,23 +17,23 @@ export class NewNotifier {
     async connect(workspace: Workspace) {
 
         if(this.workspace != null){
-            let unregisterRequest: RegisterDatabaseSSEListenerRequest = { workspaceId: this.workspace.id, registerOrUnregister: "unregister" }
-            await ajaxAsync("servlet/registerDatabaseSSEListener", unregisterRequest);
+            let unregisterRequest: RegisterPushClientForDatabaseRequest = { workspaceId: this.workspace.id, registerOrUnregister: "unregister" }
+            await ajaxAsync("servlet/registerPushClientForDatabase", unregisterRequest);
         }
 
         this.workspace = workspace;
         
         if(workspace == null){
-            SSEManager.unsubscribe("onOpen");
+            PushClientManager.unsubscribe("onOpen");
             return;
         } 
         
         this.database = workspace.database;
 
-        let request: RegisterDatabaseSSEListenerRequest = { workspaceId: workspace.id, registerOrUnregister: "register" }
-        ajaxAsync("servlet/registerDatabaseSSEListener", request);
+        let request: RegisterPushClientForDatabaseRequest = { workspaceId: workspace.id, registerOrUnregister: "register" }
+        ajaxAsync("servlet/registerPushClientForDatabase", request);
 
-        SSEManager.subscribe("broadcastDatabaseChange", (data: DatabaseChangedSSEMessage) => {
+        PushClientManager.subscribe("broadcastDatabaseChange", (data: DatabaseChangedPushMessage) => {
             if(data.databaseId == this.workspace.databaseId){
                 if (data.rollbackToVersion != null) {
                     this.main.getHistoryViewer().rollbackLocal(data.rollbackToVersion);
@@ -47,14 +44,14 @@ export class NewNotifier {
                 }
             } else {
                 request.registerOrUnregister = "unregister";
-                ajaxAsync("servlet/registerDatabaseSSEListener", request);
-                SSEManager.unsubscribe("onOpen");
+                ajaxAsync("servlet/registerPushClientForDatabase", request);
+                PushClientManager.unsubscribe("onOpen");
             }
         })
 
-        SSEManager.subscribe("onOpen", () => {            
+        PushClientManager.subscribe("onOpen", () => {            
             request.registerOrUnregister = "register";
-            ajaxAsync("servlet/registerDatabaseSSEListener", request);
+            ajaxAsync("servlet/registerPushClientForDatabase", request);
         })
         
 

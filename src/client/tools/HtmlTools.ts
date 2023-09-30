@@ -1,5 +1,5 @@
 import { escapeHtml } from "./StringTools.js";
-import jQuery from "jquery";
+
 
 export function makeEditable(elementWithText: JQuery<HTMLElement>,
     elementToReplace: JQuery<HTMLElement>,

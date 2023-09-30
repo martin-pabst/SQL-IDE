@@ -10,7 +10,7 @@ import { Workspace } from "../../workspace/Workspace.js";
 import { defineVscSQL } from "./VSCSql.js";
 import { MainBase } from "../MainBase.js";
 import { Helper } from "./Helper.js";
-import jQuery from "jquery";
+
 
 export class Editor {
 

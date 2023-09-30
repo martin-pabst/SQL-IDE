@@ -1,7 +1,7 @@
 import { MainBase } from "../MainBase.js";
 import { Table, Column } from "../../compiler/parser/SQLTable.js";
 import { DatabaseStructure } from "../../tools/DatabaseTools.js";
-import jQuery from "jquery";
+
 
 export class DatabaseExplorer {
 

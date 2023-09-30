@@ -1,7 +1,6 @@
 import { Formatter } from "../main/gui/Formatter.js";
 import { ThemeManager } from "../main/gui/ThemeManager.js";
 import { MainEmbedded } from "./MainEmbedded.js";
-import jQuery from "jquery";
 
 import '/include/css/editor.css';
 import '/include/css/bottomdiv.css';

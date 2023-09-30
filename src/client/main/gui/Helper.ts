@@ -1,5 +1,5 @@
 import { Main } from "../Main.js";
-import jQuery from "jquery";
+
 
 export type HelperDirection = "top" | "bottom" | "left" | "right";
 
@@ -70,7 +70,10 @@ export class Helper {
             return;
         }
 
-        let helperHistory = main.user.settings!.helperHistory;
+        let user = main.user;
+        if(user == null) return;
+
+        let helperHistory = user.settings!.helperHistory;
 
         let flag = id + "Done";
 

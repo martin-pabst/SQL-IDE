@@ -7,7 +7,7 @@ export default defineConfig({
       proxy:{
         '/servlet': 'http://localhost:6500',
         '/servlet/websocket': {target: 'ws://localhost:6500', ws: true},
-        '/servlet/subscriptionwebsocket': {target: 'ws://localhost:6500', ws: true},
+        '/servlet/pushWebsocket': {target: 'ws://localhost:6500', ws: true},
         '/worker': {
           rewrite: (path) => path.replace('/worker', '/dist/worker'),
           target: "http://localhost:4000"

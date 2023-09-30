@@ -9,7 +9,7 @@ import { WorkspaceData, Workspaces, ClassData, CreateWorkspaceData } from "../..
 import { dateToString } from "../../tools/StringTools.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
-import jQuery from "jquery";
+
 
 
 export class ProjectExplorer {
@@ -560,7 +560,7 @@ export class ProjectExplorer {
             () => {
                 this.main.currentWorkspace = w;
 
-                if (this.main.user.id == w.owner_id) {
+                if (this.main.user?.id == w.owner_id) {
                     this.main.user.currentWorkspace_id = w.id;
                 }
 
@@ -587,12 +587,12 @@ export class ProjectExplorer {
 
                     }
 
-                    this.main.notifier.connect(w);
-
+                    
                 } else {
                     this.setModuleActive(null);
                 }
-
+                
+                this.main.notifier.connect(w);
             },
             () => {
                 this.main.databaseExplorer.refreshAfterRetrievingDBStructure();

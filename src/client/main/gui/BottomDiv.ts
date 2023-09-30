@@ -5,7 +5,6 @@ import { Module } from "../../compiler/parser/Module.js";
 import { ErrorManager } from "./ErrorManager.js";
 import { HomeworkManager } from "./HomeworkManager.js";
 import { MainBase } from "../MainBase.js";
-import jQuery from "jquery";
 
 export class BottomDiv {
 

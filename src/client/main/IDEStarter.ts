@@ -1,5 +1,5 @@
 import { Main } from "./Main.js";
-import jQuery from "jquery";
+
 
 import '/include/css/editor.css';
 import '/include/css/editorStatic.css';

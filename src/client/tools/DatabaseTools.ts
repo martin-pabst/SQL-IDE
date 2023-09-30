@@ -1,6 +1,6 @@
 import { MainBase } from "../main/MainBase.js";
 import { WorkerSim } from "../sqljs-worker/sqljsWorkerSim.js";
-import jQuery from "jquery";
+
 
 export type DatabaseDumpType = "binaryUncompressed" | "binaryCompressed" | "other";
 

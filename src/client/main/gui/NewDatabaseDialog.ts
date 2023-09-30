@@ -7,7 +7,7 @@ import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { AccordionElement } from "./Accordion.js";
-import jQuery from "jquery";
+
 
 type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase" | "useDumpFile";
 

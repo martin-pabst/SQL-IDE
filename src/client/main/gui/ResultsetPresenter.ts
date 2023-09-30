@@ -9,7 +9,7 @@ import { WDatabase } from "../../workspace/WDatabase.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
-import jQuery from "jquery";
+
 
 type RuntimeError = {
     statement: SQLStatement,

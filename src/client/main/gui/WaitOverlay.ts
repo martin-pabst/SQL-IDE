@@ -1,4 +1,4 @@
-import jQuery from "jquery";
+
 export class WaitOverlay {
 
     visible: boolean = false;

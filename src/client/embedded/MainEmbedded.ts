@@ -23,7 +23,6 @@ import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 import { HistoryViewer } from "../main/gui/HistoryViewer.js";
 import { WDatabase } from "../workspace/WDatabase.js";
-import jQuery from "jquery";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,

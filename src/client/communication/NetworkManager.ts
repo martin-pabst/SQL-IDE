@@ -7,9 +7,8 @@ import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
 import { TemplateUploader } from "../tools/TemplateUploader.js";
-import jQuery from "jquery";
 import { FileTool } from "../tools/FileTool.js";
-import { SSEManager } from "./SSEManager.js";
+import { PushClientManager } from "./pushclient/PushClientManager.js";
 
 
 export class NetworkManager {
@@ -137,7 +136,7 @@ export class NetworkManager {
     }
 
     initializeSSE() {
-        SSEManager.subscribe("doFileUpdate", (data) => {
+        PushClientManager.subscribe("doFileUpdate", (data) => {
             this.sendUpdates(() => {}, true);
         })
 
