@@ -137,7 +137,15 @@ export class NetworkManager {
 
     initializeSSE() {
         PushClientManager.subscribe("doFileUpdate", (data) => {
-            this.sendUpdates(() => {}, true);
+            let oldWorkspaces = this.main.workspaceList.slice();
+            this.sendUpdates(() => {
+
+                let names = this.main.workspaceList.filter(ws => oldWorkspaces.indexOf(ws) < 0)
+                .map(ws => ws.name).join(", ");
+
+                alert(`Deine Lehrkraft hat Dir folgende Datenbank übermittelt: ${names}`);
+
+            }, true);
         })
 
 
@@ -346,7 +354,7 @@ export class NetworkManager {
                     callback(null);
                     return
                 }
-                
+
                 cacheManager.fetchTemplateFromCache(workspace.database.based_on_template_id, (templateDump: Uint8Array) => {
 
                     if (FileTool.isZipfile(templateDump)) {
@@ -395,9 +403,9 @@ export class NetworkManager {
             workspaceId: workspaceId
         }
 
-        let headers: {[key: string]: string;} = {};
-        if(csrfToken != null) headers = {"x-token-pm": csrfToken};
-    
+        let headers: { [key: string]: string; } = {};
+        if (csrfToken != null) headers = { "x-token-pm": csrfToken };
+
         $.ajax({
             type: 'POST',
             async: true,
@@ -491,12 +499,6 @@ export class NetworkManager {
                     }
                 }
             }
-        }
-
-        if (newWorkspaceNames.length > 0) {
-            let message: string = newWorkspaceNames.length > 1 ? "Folgende Workspaces hat Deine Lehrkraft Dir gesendet: " : "Folgenden Workspace hat Deine Lehrkraft Dir gesendet: ";
-            message += newWorkspaceNames.join(", ");
-            alert(message);
         }
 
         this.main.projectExplorer.workspaceListPanel.sortElements();
