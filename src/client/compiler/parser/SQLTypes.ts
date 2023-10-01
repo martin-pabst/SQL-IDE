@@ -173,6 +173,8 @@ export class SQLBaseType extends SQLType {
                 return value1 == value2;
             case TokenType.notEqual:
                 return value1 != value2;
+            case TokenType.modulo:
+                return value1 % value2;
         }
     }
 

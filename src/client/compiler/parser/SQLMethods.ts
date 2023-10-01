@@ -29,6 +29,10 @@ export class SQLMethodStore {
     }
 
     constructor(){
+        this.pushOneParameterMethod("abs" ,"float", "float");
+        this.pushOneParameterMethod("sin" ,"float", "float");
+        this.pushOneParameterMethod("cos" ,"float", "float");
+        this.pushOneParameterMethod("tan" ,"float", "float");
         this.pushOneParameterMethod("max" ,"integer", "integer");
         this.pushOneParameterMethod("max" ,"float", "float");
         this.pushOneParameterMethod("max" ,"date", "date");
@@ -46,10 +50,14 @@ export class SQLMethodStore {
         this.pushOneParameterMethod("sum" ,"float", "float");
         this.pushOneParameterMethod("sum" ,"integer", "integer");
         this.pushOneParameterMethod("concat" ,"text", "text");
+        this.pushOneParameterMethod("upper" ,"text", "text");
+        this.pushOneParameterMethod("lower" ,"text", "text");
+        this.pushOneParameterMethod("length" ,"integer", "text");
 
         let countMethod = new SQLMethod("count", true, "integer", [new SQLMethodParameter("spalte", "text")]);
         countMethod.acceptsStarParameter = true;
         this.methods.push(countMethod);
+
     }
     
     getMethods(identifier: string){
