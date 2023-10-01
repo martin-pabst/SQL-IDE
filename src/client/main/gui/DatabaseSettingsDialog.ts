@@ -90,7 +90,7 @@ export class DatabaseSettingsDialog {
             jQuery('#b2').remove();
         }
 
-        if (!this.main.user.is_admin) {
+        if (!(this.main.user.is_admin || this.main.user.username == 'DB-Vorlagen')) {
             jQuery('#b3').next().remove();
             jQuery('#b3').remove();
         }
@@ -164,7 +164,7 @@ export class DatabaseSettingsDialog {
                 if (response.secrets != null) secret = response.secrets[kind];
                 jQuery('.jo_ds_secret_' + kind).text(secret);
             });
-            if (this.main.user.is_admin) {
+            if (this.main.user.is_admin || this.main.user.username == 'DB-Vorlagen') {
                 jQuery('#b3').css('visibility', 'visible');
                 jQuery('#lb3').css('visibility', 'visible');
             }

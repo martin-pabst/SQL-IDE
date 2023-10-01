@@ -212,6 +212,7 @@ export class NewDatabaseDialog {
 
             projectExplorer.workspaceListPanel.addElement(accordionElement, true);
 
+            w.panelElement = accordionElement;
             w.renderSettingsButton(accordionElement);
 
             projectExplorer.workspaceListPanel.sortElements();

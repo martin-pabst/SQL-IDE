@@ -20,6 +20,8 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     open(): void {
 
+        console.log(`Opening ${this.name}`);
+
         this.isClosed = false;
 
         try {
@@ -76,7 +78,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     doPing(){
         this.currentTimer = setTimeout(() => {
-            if(!this.isClosed){
+            if(!this.isClosed && this.websocket.readyState == this.websocket.OPEN){
                 this.websocket.send("ping");
                 this.doPing();
             } else {
