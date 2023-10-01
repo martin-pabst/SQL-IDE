@@ -236,7 +236,7 @@ export class ProjectExplorer {
                 workspace.saved = false;
                 that.main.networkManager.sendUpdates();
 
-                // if user owns databaes: rename it, too
+                // if user owns database: rename it, too
                 if(workspace.database.owner_id == workspace.owner_id){
                     workspace.database.name = newName;
                     that.main.networkManager.setNameAndPublishedTo(workspace.id, newName, workspace.database.published_to, workspace.database.description, () => {})
