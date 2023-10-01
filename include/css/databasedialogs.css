@@ -95,7 +95,8 @@
 }
 
 .jo_templatelist {
-    padding: 10px;
+    border: 1px solid #808080;
+    margin: 0 10px;
     height: 250px;
     overflow: auto;
 }
