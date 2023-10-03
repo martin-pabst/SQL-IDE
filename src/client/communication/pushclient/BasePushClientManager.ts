@@ -44,12 +44,20 @@ export class BasePushClientManager {
     open(){
         if(this.currentStrategy == null){
             this.currentStrategy = this.strategies[0];
+            console.log(`Opening ${this.currentStrategy.name}`);
             this.currentStrategy.open();
         }
     }
 
-    onMessage(message: ServerSentMessage){
-        this.eventTypeToSubscriberInfoMap.get(message.eventType)?.handler(message.data);
+    onMessage(messages: ServerSentMessage[]){
+
+        for(let message of messages){            
+            if(message.eventType == "keepAlive") return;
+    
+            this.eventTypeToSubscriberInfoMap.get(message.eventType)?.handler(message.data);
+        }
+
+
     }
 
     onStrategyFailed(failedStrategy: PushClientStrategy){
@@ -63,6 +71,7 @@ export class BasePushClientManager {
         if(this.currentStrategy != null){
                 text += `=> Trying ${this.currentStrategy.name} in 3 seconds...`;
             setTimeout(() => {
+                console.log(`Opening ${this.currentStrategy.name}`);
                 this.currentStrategy.open();                
             }, 3000);
         } else {

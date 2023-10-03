@@ -20,8 +20,6 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     open(): void {
 
-        console.log(`Opening ${this.name}`);
-
         this.isClosed = false;
 
         try {
@@ -59,7 +57,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
     
             this.websocket.onmessage = (event) => {
                 if(event.data == "pong") return;
-                const msg: ServerSentMessage = JSON.parse(event.data);
+                const msg: ServerSentMessage[] = JSON.parse(event.data);
                 this.manager.onMessage(msg);
             }
 
@@ -78,7 +76,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     doPing(){
         this.currentTimer = setTimeout(() => {
-            if(!this.isClosed && this.websocket.readyState == this.websocket.OPEN){
+            if(!this.isClosed){
                 this.websocket.send("ping");
                 this.doPing();
             } else {
