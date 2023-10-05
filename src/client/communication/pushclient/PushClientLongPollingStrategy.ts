@@ -10,6 +10,9 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
     shortestTimeoutMs: number = 60000;   // 60 s
     timeOpened: number = null;
 
+    abortController: AbortController;
+
+
 
     constructor(manager: BasePushClientManager) {
         super("long-polling strategy", manager);
@@ -19,6 +22,9 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
     open(): void {
 
         this.isClosed = false;
+
+        this.abortController = new AbortController();
+
         this.timeOpened = performance.now();
 
         let headers: [string, string][] = [["content-type", "text/json"]];
@@ -29,6 +35,7 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
 
         try {
             fetch("/servlet/registerLongpollingListener", {
+                signal: this.abortController.signal,
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({})
@@ -36,9 +43,6 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
 
                 if (response.status != 200) {
                     console.log(`Long-polling listener got http-status: ${response.status} (${response.statusText})`);
-                }
-
-                if(response.status != 200){
                     let timeMs = Math.round(performance.now() - this.timeOpened) - 4000;
                     if (timeMs < this.shortestTimeoutMs) this.shortestTimeoutMs = timeMs;
                 }
@@ -62,6 +66,8 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
             }).catch((reason) => {
                 console.log(`Long-polling listener failed due to reason: ${reason}`);
                 this.reopen(10000, false);
+            }).finally(() => {
+                this.abortController = null;
             })
 
         } catch (ex) {
@@ -72,7 +78,9 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
 
     reopen(timeout: number = 500, silently: boolean = true) {
         if (this.isClosed) return;
-        console.log(`Reopen long-polling listener in ${timeout / 1000} seconds...`);
+        if(timeout > 500){
+            console.log(`Reopen long-polling listener in ${timeout / 1000} seconds...`);
+        }
         setTimeout(() => {
             if (this.isClosed) return;
             this.open();
@@ -83,6 +91,8 @@ export class PushClientLongPollingStrategy extends PushClientStrategy {
 
     async close() {
         this.isClosed = true;
+        this.abortController?.abort();
+
         let headers: [string, string][] = [["content-type", "text/json"]];
 
         headers.push(["x-token-pm", this.csrfToken]);
