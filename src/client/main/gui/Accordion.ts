@@ -760,6 +760,15 @@ export class AccordionPanel {
         return this.elements.filter((element) => element.path.join("/").startsWith(path));
     }
 
+    pathStartsWith(path: string[], pathStart: string[]){
+        if(path.length < pathStart.length) return false;
+        for(let i = 0; i < pathStart.length; i++){
+            if(path[i] != pathStart[i]) return false;
+        }
+
+        return true;
+    }
+
     renameElement(element: AccordionElement, callback?: () => void) {
         let that = this;
         let $div = element.$htmlFirstLine.find('.jo_filename');
@@ -768,8 +777,29 @@ export class AccordionPanel {
         this.dontSortElements = true;
         makeEditable($div, $div, (newText: string) => {
             if (element.externalElement != null) newText = that.renameCallback(element.externalElement, newText);
+            let oldName = element.name;
             element.name = newText;
             $div.html(element.name);
+
+            if(element.isFolder){
+                
+                let oldPath = element.path.slice().concat([oldName]);
+
+                let movedElements: AccordionElement[] = [];
+
+                for(let e of this.elements){
+
+                    if(this.pathStartsWith(e.path, oldPath)){
+                        e.path[oldPath.length - 1] = element.name;
+                        movedElements.push(e);
+                    }
+
+                }
+
+                if(movedElements.length > 0) this.moveCallback(movedElements);
+
+            }
+
             if (callback != null) callback();
             that.sortElements();
             $div[0].scrollIntoView();
