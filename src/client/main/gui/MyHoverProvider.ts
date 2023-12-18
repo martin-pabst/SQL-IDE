@@ -6,38 +6,18 @@ import { Module } from "../../compiler/parser/Module.js";
 export class MyHoverProvider {
 
     private static keywordDescriptions: { [keyword: string]: string } = {
-        "print": "Die Anweisung ```print``` gibt eine Zeichenkette aus.",
-        "new": "Das Schlüsselwort ```new``` bewirkt die Instanzierung (\"Erschaffung\") eines neuen Objektes einer Klasse.",
-        "println": "Die Anweisung ```println``` gibt eine Zeichenkette gefolgt von einem Zeilenumbruch aus.",
-        "while": "```\nwhile (Bedingung) {Anweisungen}\n```  \nbewirkt die Wiederholung der Anweisungen solange ```Bedingung == true``` ist.",
-        "for": "```\nfor(Startanweisung;Solange-Bedingung;Nach_jeder_Wiederholung){Anweisungen}\n```  \n"
-            + "führt zunächst die Startanweisung aus und wiederholt dann die Anweisungen solange ```Bedingung == true``` ist. Am Ende jeder wiederholung wird Nach_jeder_Wiederholung ausgeführt.",
-        "if": "```\nif(Bedingung){Anweisungen_1} else {Anweisungen_2}\n```  \nwertet die Bedingung aus und führt Anweisungen_1 nur dann aus, wenn die Bedingung ```true``` ergibt, Anweisungen_2 nur dann, wenn die Bedingung ```false``` ergibt.  \nDer ```else```-Teil kann auch weggelassen werden.",
-        "else": "```\nif(Bedingung){Anweisungen_1} else {Anweisungen_2}\n```  \nwertet die Bedingung aus und führt Anweisungen_1 nur dann aus, wenn die Bedingung ```true``` ergibt, Anweisungen_2 nur dann, wenn die Bedingung ```false``` ergibt.",
-        "switch": "```\nswitch(Selektor){ case Wert_1: Anweisungen_1; break; case Wert_2: Anweisungen_2; break; default: Default-Anweisungen } \n```  \nwertet den Selektor-Term aus und führt abhängig vom Termwert Anweisungen_1, Anweisungen_2, ... aus. Entspricht der Termwert keinem der Werte Wert_1, Wert_2, ..., so werden die Default-Anweisungen ausgeführt.",
+        "select": "```\nselect spalte1, spalte2, ..., spalteN from tabelle where <Bedingung>\n``` \nsucht alle Zeilen der Tabelle, die der Bedingung genügen (**Selektion**) und gibt davon die angegebenen Spalten aus (**Projektion**). Das Ergebnis der ```select```-Anweisung ist wieder eine Tabelle. \n ",
+        "from": "```\nselect spalte1, spalte2, ..., spalteN from tabelle where <Bedingung>\n``` \nsucht alle Zeilen der Tabelle, die der Bedingung genügen (**Selektion**) und gibt davon die angegebenen Spalten aus (**Projektion**). Das Ergebnis der ```select```-Anweisung ist wieder eine Tabelle. \n ",
+        "where": "```\n... where <Bedingung>\n``` \nHinter ```where``` steht immer eine Bedingung, d.h. ein Term mit booleschem Wert (```true``` oder ```false```). Die Anweisung wird für alle Zeilen ausgeführt, die der Bedingung genügen, d.h. für die der Term den Wert ```true``` ergibt. \n ",
+        "delete": "```\ndelete from tabelle where <Bedingung>\n``` \nlöscht alle Zeilen der Tabelle, die der Bedingung genügen. \n ",
+        "insert": "```\ninsert (spalte1, spalte2, ..., spalteN) into tabelle values (Wert1, ..., WertN), (Wert1, ..., WertN), ... \n``` \nFügt Datensätze in eine Tabelle ein. Die Werte ```wert1, ..., wertN``` müssen den angegebenen Spalten ```Spalte1, ..., SpalteN``` entsprechen.\n ",
+        "values": "```\ninsert (spalte1, spalte2, ..., spalteN) into tabelle values (Wert1, ..., WertN), (Wert1, ..., WertN), ... \n``` \nFügt Datensätze in eine Tabelle ein. Die Werte ```wert1, ..., wertN``` müssen den angegebenen Spalten ```Spalte1, ..., SpalteN``` entsprechen.\n ",
+        "update": "```\nupdate tabelle set Spalte1 = Wert1, Spalte2 = Wert2, ..., SpalteN = WertN where <Bedingung> \n``` \nÄndert in allen Datensätze der Tabelle, die der Bedingung genügen, die Werte in den angegebenen Spalten ```Spalte1, ..., SpalteN```.\n ",
         "%": "```\na % b\n```  \n (sprich: 'a modulo b') berechnet den **Rest** der ganzzahligen Division a/b.",
-        "==": "```\na == b\n```  \nergibt genau dann ```true```, wenn ```a``` und ```b``` gleich sind.  \nSind a und b **Objekte**, so ergibt ```a == b``` nur dann ```true```, wenn ```a``` und ```b``` auf das **identische** Objekt zeigen.  \n```==``` nennt man **Vergleichsoperator**.",
+        "=": "```\na = b\n```  \nergibt genau dann ```true```, wenn ```a``` und ```b``` gleich sind.  \n```=``` nennt man **Vergleichsoperator**. \n\n**Tipp:** In SQL gibt es auch einen **Ungleich-Operator**: ```<>```",
         "<=": "```\na <= b\n```  \nergibt genau dann ```true```, wenn der Wert von ```a``` kleiner oder gleich dem Wert von ```b``` ist.",
         ">=": "```\na <= b\n```  \nergibt genau dann ```true```, wenn der Wert von ```a``` größer oder gleich dem Wert von ```b``` ist.",
-        "!=": "```\na != b\n```  \nergibt genau dann ```true```, wenn ```a``` und ```b``` **un**gleich sind.  \nSind ```a``` und ```b``` **Objekte**, so ergibt ```a != b``` dann ```true```, wenn ```a``` und ```b``` **nicht** auf das **identische** Objekt zeigen.  \n```!=``` nennt man **Ungleich-Operator**.",
-        "+=": "```\na += b\n(Kurzschreibweise für a = a + b)\n```  \nbewirkt, dass der Wert von ```a``` um den Wert von ```b``` **erhöht** wird. Das Ergebnis wird in die Variable ```a``` geschrieben.",
-        "-=": "```\na -= b\n(Kurzschreibweise für a = a - b)\n```  \nbewirkt, dass der Wert von ```a``` um den Wert von ```b``` **erniedrigt** wird. Das Ergebnis wird in die Variable ```a``` geschrieben.",
-        "*=": "```\na *= b\n(Kurzschreibweise für a = a * b)\n```  \nbewirkt, dass der Wert von ```a``` mit dem Wert von ```b``` **multipliziert** wird. Das Ergebnis wird in die Variable ```a``` geschrieben.",
-        "/=": "```\na /= b\n(Kurzschreibweise für a = a / b)\n```  \nbewirkt, dass der Wert von ```a``` durch den Wert von ```b``` **dividiert** wird. Das Ergebnis wird in die Variable ```a``` geschrieben.",
-        "++": "```\na++\n(Kurzschreibweise für a = a + 1)\n```  \nbewirkt, dass der Wert von ```a``` um eins erhöht wird.",
-        "--": "```\na--\n(Kurzschreibweise für a = a - 1)\n```  \nbewirkt, dass der Wert von ```a``` um eins eniedrigt wird.",
-        "=": "```\na = Term\n```  \nberechnet den Wert des Terms und weist ihn der Variablen ```a``` zu.  \n**Vorsicht:**  \nVerwechsle ```=```(**Zuweisungsoperator**) nicht mit ```==```(**Vergleichsoperator**)!",
-        "!": "```\n!a\n```  \nergibt genau dann ```true```, wenn ```a``` ```false``` ergibt.  \n```!``` spricht man '**nicht**'.",
-        "public": "```\npublic\n```  \nAttribute und Methoden, die als ```public``` deklariert werden, sind überall (auch außerhalb der Klasse) sichtbar.",
-        "private": "```\nprivate\n```  \nAttribute und Methoden, die als ```private``` deklariert werden, sind nur innerhalb von Methoden derselben Klasse sichtbar.",
-        "protected": "```\nprotected\n```  \nAttribute und Methoden, die als ```protected``` deklariert werden, sind nur innerhalb von Methoden derselben Klasse oder innerhalb von Methoden von Kindklassen sichtbar.",
-        "return": "```\nreturn Term\n```  \nbewirkt, dass die Methode verlassen wird und der Wert des Terms an die aufrufende Stelle zurückgegeben wird.",
-        "break": "```\nbreak;\n```  \ninnerhalb einer Schleife bewirkt, dass die Schleife sofort verlassen und mit den Anweisungen nach der Schleife fortgefahren wird.  \n"+
-        "```break``` innerhalb einer ```switch```-Anweisung bewirkt, dass der Block der ```switch```-Anweisung verlassen wird.",
-        "class": "```\nclass\n```  \nMit dem Schlüsselwort ```class``` werden Klassen definiert.",
-        "extends": "```\nextends\n```  \n```class A extends B { ... }``` bedeutet, dass die Klasse A Unterklasse der Klasse B ist.",
-        "implements": "```\nimplements\n```  \n```class A implements B { ... }``` bedeutet, dass die Klasse A das Interface B implementiert, d.h., dass sie alle Methoden besitzen muss, die in B definiert sind.",
-        "this": "```\nthis\n```  \nInnerhalb einer Methodendefinition bezeichnet das Schlüsselwor ```this``` immer dasjenige Objekt, für das die Methode gerade ausgeführt wird.",
+        "<>": "```\na <> b\n```  \nergibt genau dann ```true```, wenn ```a``` und ```b``` **un**gleich sind.  \n```<>``` nennt man **Ungleich-Operator**.",
 
     }
 
