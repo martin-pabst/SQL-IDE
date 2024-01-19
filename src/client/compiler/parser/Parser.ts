@@ -2188,7 +2188,8 @@ export class Parser {
                         rightBracketPosition: rightBracketPosition,
                         operands: parameters.nodes,
                         identifier: identifier1,
-                        commaPositions: parameters.commaPositions
+                        commaPositions: parameters.commaPositions,
+                        distinctBeforeParameters: parameters.distinctBeforeParameters
                     }
                 } else {
                     term = {
@@ -2294,13 +2295,14 @@ export class Parser {
     }
 
 
-    parseMethodCallParameters(): { rightBracketPosition: TextPosition, nodes: TermNode[], commaPositions: TextPosition[] } {
+    parseMethodCallParameters(): { rightBracketPosition: TextPosition, nodes: TermNode[], commaPositions: TextPosition[], distinctBeforeParameters: boolean } {
         // Assumption: current token is (        
         this.nextToken();
+        let distinctBeforeParameters = this.comesToken(TokenType.keywordDistinct, true);
         if (this.tt == TokenType.rightBracket) {
             let rightBracketPosition = this.getCurrentPosition();
             this.nextToken();
-            return { rightBracketPosition: rightBracketPosition, nodes: [], commaPositions: [] };
+            return { rightBracketPosition: rightBracketPosition, nodes: [], commaPositions: [], distinctBeforeParameters: distinctBeforeParameters };
         }
 
         let parameters: TermNode[] = [];
@@ -2339,7 +2341,7 @@ export class Parser {
         let position = this.getCurrentPosition();
         let rightBracketFound = this.expect(TokenType.rightBracket, true);
 
-        return { rightBracketPosition: rightBracketFound ? position : null, nodes: parameters, commaPositions: commaPositions };
+        return { rightBracketPosition: rightBracketFound ? position : null, nodes: parameters, commaPositions: commaPositions, distinctBeforeParameters: distinctBeforeParameters };
 
     }
 
@@ -2369,7 +2371,8 @@ export class Parser {
                         rightBracketPosition: parameters.rightBracketPosition,
                         operands: parameters.nodes,
                         identifier: identifier,
-                        commaPositions: parameters.commaPositions
+                        commaPositions: parameters.commaPositions,
+                        distinctBeforeParameters: parameters.distinctBeforeParameters
                     }
                 }
                 // else {

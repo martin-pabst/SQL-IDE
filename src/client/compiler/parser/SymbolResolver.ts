@@ -594,8 +594,10 @@ export class SymbolResolver {
 
             return node.sqlType;
         } else {
-
-            methods = methods.filter(m => m.parameters.length == node.operands.length);
+            let isCountMethod = node.identifier.toLocaleLowerCase() == "count";
+            if(!isCountMethod){
+                methods = methods.filter(m => m.parameters.length == node.operands.length);
+            }
             if (node.operands.length == 1 && node.operands[0].type == TokenType.allColumns) {
                 methods = methods.filter(m => m.acceptsStarParameter);
                 node.sqlType = methods[0].returnType;
@@ -624,7 +626,7 @@ export class SymbolResolver {
                         break;
                     }
                 }
-                if (found) {
+                if (found || isCountMethod) {
                     node.sqlType = method.returnType;
                     return node.sqlType;
                 }

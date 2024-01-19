@@ -257,7 +257,8 @@ export type MethodcallNode = {
     rightBracketPosition: TextPosition,
     identifier: string,
     operands: TermNode[],
-    commaPositions: TextPosition[]
+    commaPositions: TextPosition[],
+    distinctBeforeParameters: boolean
 }
 
 export type UnaryOpNode = {
