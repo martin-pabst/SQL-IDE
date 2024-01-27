@@ -500,8 +500,13 @@ export class Parser {
         }
 
         this.nextToken(); // skip 'set'
+
+        // SET DATABASE Collation "German"  ( -> OpenOffice)
+        if(this.comesToken(TokenType.keywordDatabase)){
+            this.nextToken();
+        } 
         this.expect(TokenType.identifier, true);
-        this.expect(TokenType.equal, true);
+        this.comesToken(TokenType.equal, true);   // skip = if present
         this.expect([TokenType.identifier, TokenType.stringConstant, TokenType.integerConstant, TokenType.charConstant, TokenType.booleanConstant, TokenType.floatingPointConstant], true);
 
         node.endPosition = this.getCurrentPosition();
@@ -1025,6 +1030,7 @@ export class Parser {
                 return this.parseCreateTable();
             case TokenType.keywordView:
                 return this.parseCreateView();
+            case TokenType.keywordSchema:
             default:
                 this.nextToken();
                 this.pushError("Nach 'create' wird 'table' erwartet.");

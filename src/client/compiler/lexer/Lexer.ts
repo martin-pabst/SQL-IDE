@@ -413,7 +413,22 @@ export class Lexer {
             if (char == "\\") {
                 let escapeChar = EscapeSequenceList[this.nextChar];
                 if (escapeChar == null) {
-                    this.pushError('Die Escape-Sequenz \\' + this.nextChar + ' gibt es nicht.', 2);
+                    if(this.nextChar == 'u'){       // Unicode escape sequences (for OpenOffice)
+                        let hex: string = "";
+                        this.next(); // skip \
+                        this.next(); // skip u
+                        while ("abcdef0123456789".indexOf(this.currentChar) >= 0 && hex.length < 4) {
+                            hex += this.currentChar;
+                            if(hex.length < 4) this.next();
+                        }
+                        if (hex.length < 4) {
+                            this.pushError('Unbekanntes Unicode-Zeichen: u' + hex, 1 + hex.length);
+                        } else {
+                            char = String.fromCodePoint(parseInt(hex, 16));
+                        }
+                    } else {
+                        this.pushError('Die Escape-Sequenz \\' + this.nextChar + ' gibt es nicht.', 2);
+                    }
                 } else {
                     char = escapeChar;
                     this.next();
