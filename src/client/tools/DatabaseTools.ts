@@ -249,7 +249,7 @@ export class DatabaseTool {
             let values = result[0]?.values;
             let types: ("table"|"view")[] = values?.map(value => value[2]);
 
-            values?.forEach(value => sql1 += `PRAGMA table_info(${value[0]});\nPRAGMA foreign_key_list(${value[0]});\nselect count(*) from ${value[0]};\n\n`)
+            values?.forEach(value => sql1 += `PRAGMA table_info("${value[0]}");\nPRAGMA foreign_key_list("${value[0]}");\nselect count(*) from "${value[0]}";\n\n`)
 
             if (sql1 != "") {
                 this.executeQuery(sql1, (result1) => {
@@ -260,7 +260,11 @@ export class DatabaseTool {
 
                     callback(that.databaseStructure);
 
-                }, (error) => { console.log(error)});
+                }, (error) => { 
+                    console.log(error);
+                    that.databaseStructure = { tables: [] };
+                    callback(that.databaseStructure);
+                });
             } else {
                 that.databaseStructure = { tables: [] };
                 callback(that.databaseStructure);
