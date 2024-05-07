@@ -460,6 +460,27 @@ export class SymbolResolver {
         if (node == null) return null;
 
         switch (node.type) {
+
+            case TokenType.keywordBetween:
+                let firstOperand = this.resolveTerm(node.firstOperand);
+                let secondOperand = this.resolveTerm(node.secondOperand);
+                let thirdOperand = this.resolveTerm(node.thirdOperand);
+
+                if(firstOperand == null || secondOperand == null || thirdOperand == null) return null;
+
+                if(!firstOperand.canCastTo(SQLBaseType.getBaseType("double"))){
+                    this.pushError("Hier wird eine Zahl erwartet.", "error", node.firstOperand.position);
+                    return null;
+                }                
+                if(!secondOperand.canCastTo(SQLBaseType.getBaseType("double"))){
+                    this.pushError("Hier wird eine Zahl erwartet.", "error", node.secondOperand.position);
+                    return null;
+                }                
+                if(!thirdOperand.canCastTo(SQLBaseType.getBaseType("double"))){
+                    this.pushError("Hier wird eine Zahl erwartet.", "error", node.thirdOperand.position);
+                }        
+                return SQLBaseType.getBaseType("boolean");        
+                break;
             case TokenType.binaryOp:
                 if ([TokenType.keywordIn, TokenType.keywordNotIn].indexOf(node.operator) >= 0) {
                     return this.resolveNotIn(node);

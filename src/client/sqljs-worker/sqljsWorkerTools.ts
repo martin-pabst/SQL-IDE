@@ -2,6 +2,15 @@ export function createDb1(SQL, buffer) {
 
     var db = new SQL.Database(buffer);
 
+    db.create_function("month", function(inputText){
+        var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
+        let match = inputText.match(dateformat);
+        if (match){
+            return Number(match[1]);
+        }
+        return -1;
+    })
+
     db.create_function("isDate", function (inputText) {
 
         if (inputText == null) return true;
@@ -116,8 +125,8 @@ export function createDb1(SQL, buffer) {
         return inputText.match(timeformat) != null;
     });
 
-    db.create_function("concat", function () {
-        console.log("Hier!");
+    db.create_function("concat", function (arg) {
+        console.log("Hier1");
         if (arguments == null) return "";
         let erg = "";
         for(let i = 0; i < arguments.length; i++){
