@@ -22,6 +22,7 @@ export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
         [TokenType.keywordOr], [TokenType.keywordAnd],
+        [TokenType.keywordBetween],
         [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual, TokenType.keywordLike],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo],
         [TokenType.keywordIn, TokenType.keywordNotIn]
@@ -2096,6 +2097,10 @@ export class Parser {
 
         let first = true;
 
+        if(this.tt == TokenType.keywordBetween){
+            return this.parseBetween(left);
+        }
+
         while (first || operators.indexOf(this.tt) >= 0) {
 
             let operator: TokenType = this.tt;
@@ -2125,6 +2130,27 @@ export class Parser {
         return left;
 
     }
+    
+    parseBetween(left: TermNode): TermNode {
+        let position = this.getCurrentPosition();
+        this.nextToken(); // skip "between"
+        let secondOperand = this.parseTermBinary(2);
+        if(this.expect(TokenType.keywordAnd, true)){
+
+            let thirdOperand = this.parseTermBinary(2);
+
+            return {
+                type: TokenType.keywordBetween,
+                position: position,
+                firstOperand: left,
+                secondOperand: secondOperand, 
+                thirdOperand: thirdOperand
+            }
+
+        }
+
+        return null;
+    }
 
 
     // -, not, this, super, a.b.c[][].d, a.b(), b() (== this.b()), super.b(), super()
@@ -2148,7 +2174,7 @@ export class Parser {
                 }
             case TokenType.minus:
                 // case TokenType.not:
-                position = position;
+                position = this.position;
                 let tt1 = this.tt;
                 this.nextToken();
                 term = this.parseUnary();
@@ -2159,7 +2185,7 @@ export class Parser {
                     operand: term,
                     operator: tt1
                 };
-
+                
             case TokenType.integerConstant:
             case TokenType.charConstant:
             case TokenType.floatingPointConstant:

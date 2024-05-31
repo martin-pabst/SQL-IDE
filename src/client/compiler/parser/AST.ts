@@ -10,7 +10,7 @@ export type ASTNode =
     export type StatementNode = SelectNode | UpdateNode | InsertNode | CreateTableNode | CreateViewNode |
             DeleteNode | DropTableNode | AlterTableNode | CreateIndexNode | OmittedStatementNode;
 
-    export type TermNode = BinaryOpNode | UnaryOpNode | MethodcallNode | 
+    export type TermNode = BetweenNode | BinaryOpNode | UnaryOpNode | MethodcallNode | 
     ConstantNode | IdentifierNode | DotNode | SelectNode | BracketsNode | StarAttributeNode | SelectNode | ListNode;
 
     export type TableOrSubqueryNode = SubqueryNode | JoinNode | TableNode;
@@ -279,6 +279,18 @@ export type BinaryOpNode = {
     firstOperand: TermNode,
     secondOperand: TermNode
 }
+
+export type BetweenNode = {
+    type: TokenType.keywordBetween,
+    position: TextPosition,
+    sqlType?: SQLType,
+
+    firstOperand: TermNode,
+    secondOperand: TermNode
+    thirdOperand: TermNode
+}
+
+
 
 export type JoinNode = {
     type: TokenType.keywordJoin,

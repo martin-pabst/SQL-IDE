@@ -94,15 +94,17 @@ export class ProjectExplorer {
 
         this.fileListPanel.deleteCallback =
             (module: Module, callbackIfSuccessful: () => void) => {
-                that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, (error: string) => {
-                    if (error == null) {
-                        that.main.currentWorkspace.moduleStore.removeModule(module);
-                        callbackIfSuccessful();
-                    } else {
-                        alert('Der Server ist nicht erreichbar!');
-
-                    }
-                });
+                if(module && module.file && that?.main?.networkManager){
+                    that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, (error: string) => {
+                        if (error == null) {
+                            that.main.currentWorkspace.moduleStore.removeModule(module);
+                            callbackIfSuccessful();
+                        } else {
+                            alert('Der Server ist nicht erreichbar!');
+    
+                        }
+                    });
+                }
             }
 
         this.fileListPanel.contextMenuProvider = (accordionElement: AccordionElement) => {

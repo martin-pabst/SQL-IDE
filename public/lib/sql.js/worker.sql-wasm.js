@@ -313,9 +313,6 @@ function onModuleReady(SQL) {
         }        );
 
 
-
-
-
         return db;
     }
 

@@ -53,10 +53,17 @@ export class SQLMethodStore {
         this.pushOneParameterMethod("upper" ,"text", "text");
         this.pushOneParameterMethod("lower" ,"text", "text");
         this.pushOneParameterMethod("length" ,"integer", "text");
+        this.pushOneParameterMethod("month" , "integer","date");
+        this.pushOneParameterMethod("day" , "integer","date");
+        this.pushOneParameterMethod("year" , "integer","date");
 
         let countMethod = new SQLMethod("count", true, "integer", [new SQLMethodParameter("spalte", "text")]);
         countMethod.acceptsStarParameter = true;
         this.methods.push(countMethod);
+
+        let strftimeMethod = new SQLMethod("strftime", false, "text", [new SQLMethodParameter("formatstring", "text"), new SQLMethodParameter("date", "date")]);
+        strftimeMethod.acceptsStarParameter = true;
+        this.methods.push(strftimeMethod);
 
     }
     
