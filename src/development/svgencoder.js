@@ -1,51 +1,50 @@
-// var fs = require('fs');
 import * as fs from 'fs';
 var quotes = getQuotes();
 var externalQuotesValue = 'single';
 var symbols = /[\r\n%#()<>?\[\\\]^`{|}]/g;
-let path = './include/icons';
-let filenameToURLMap = {};
-let filenames = [];
+var path = './include/icons';
+var filenameToURLMap = {};
+var filenames = [];
 fs.readdir(path, function (err, items) {
     console.log('Converting ' + items.length + ' files...');
-    let iconCss = "";
+    var iconCss = "";
     for (var i = 0; i < items.length; i++) {
-        let filename = items[i];
+        var filename = items[i];
         if (filename.endsWith('.svg')) {
             var contents = fs.readFileSync(path + "/" + filename, 'utf8');
-            let url = getUrl(contents);
+            var url = getUrl(contents);
             filenames.push(filename);
             filenameToURLMap[filename] = url;
             iconCss += getCss(filename, url);
         }
     }
-    fs.writeFile('./css/icons.css', iconCss, () => {
+    fs.writeFile('./include/css/icons.css', iconCss, function () {
         console.log('Done!');
     });
     //replaceUrls(filenameToURLMap);
 });
 function replaceUrls(filenameToURLMap) {
-    let path = './css';
+    var path = './css';
     fs.readdir(path, function (err, items) {
         console.log('Replacing urls in css-files...');
         for (var i = 0; i < items.length; i++) {
-            let filename = items[i];
+            var filename = items[i];
             if (filename.endsWith('.css') && filename != "icons.css") {
                 var contents = fs.readFileSync(path + "/" + filename, 'utf8');
                 var newContents = replaceUrlsInString(contents, filenameToURLMap);
                 if (newContents != null && newContents != contents) {
-                    fs.writeFile(path + '/' + filename, newContents, () => { });
+                    fs.writeFile(path + '/' + filename, newContents, function () { });
                 }
             }
         }
     });
 }
 function replaceUrlsInString(contents, filenameToURLMap) {
-    let regEx = /(url\(.*\);) ?(\/\*img\(.*\)\*\/)/g;
+    var regEx = /(url\(.*\);) ?(\/\*img\(.*\)\*\/)/g;
     return contents.replace(regEx, function (match, g1, g2) {
-        let filename = g2.replace("/*img(", "").replace(")*/", "");
+        var filename = g2.replace("/*img(", "").replace(")*/", "");
         // console.log(filename);
-        let url = filenameToURLMap[filename];
+        var url = filenameToURLMap[filename];
         if (url != null) {
             return url + "; " + g2;
         }
@@ -55,12 +54,12 @@ function replaceUrlsInString(contents, filenameToURLMap) {
     });
 }
 function getUrl(contents) {
-    let namespaced = addNameSpace(contents);
-    let escaped = encodeSVG(namespaced);
-    return `url(${quotes.level1}data:image/svg+xml,${escaped}${quotes.level1})`;
+    var namespaced = addNameSpace(contents);
+    var escaped = encodeSVG(namespaced);
+    return "url(".concat(quotes.level1, "data:image/svg+xml,").concat(escaped).concat(quotes.level1, ")");
 }
 function getCss(filename, url) {
-    let resultCss = 'background-image: ' + url + ';';
+    var resultCss = 'background-image: ' + url + ';';
     resultCss = '.img_' + filename.replace('.svg', '') + ' {\n' +
         '   width: 16px;\n   height: 16px;\n   background-repeat: no-repeat;\n   ' +
         resultCss + "\n}\n\n";
@@ -70,7 +69,7 @@ function getCss(filename, url) {
 //----------------------------------------
 function addNameSpace(data) {
     if (data.indexOf('http://www.w3.org/2000/svg') < 0) {
-        data = data.replace(/<svg/g, `<svg xmlns=${quotes.level2}http://www.w3.org/2000/svg${quotes.level2}`);
+        data = data.replace(/<svg/g, "<svg xmlns=".concat(quotes.level2, "http://www.w3.org/2000/svg").concat(quotes.level2));
     }
     return data;
 }
@@ -91,8 +90,8 @@ function encodeSVG(data) {
 // Get quotes for levels
 //----------------------------------------
 function getQuotes() {
-    const double = `"`;
-    const single = `'`;
+    var double = "\"";
+    var single = "'";
     return {
         level1: externalQuotesValue === 'double' ? double : single,
         level2: externalQuotesValue === 'double' ? single : double

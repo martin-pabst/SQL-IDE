@@ -26,6 +26,6 @@
                 "${workspaceRoot}/src/development/svgencoder.js"
             ],
             "cwd": "${workspaceRoot}"
-        }
+        },
     ]
 }
