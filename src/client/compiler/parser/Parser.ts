@@ -2200,7 +2200,7 @@ export class Parser {
                 let isStringConstant = this.tt == TokenType.stringConstant;
                 this.nextToken();
 
-                if (isStringConstant) return this.parseDotOrArrayChains(term);
+                if (isStringConstant) return this.parseDotChains(term);
 
                 return term;
             case TokenType.identifier: // attribute of current class or local variable
@@ -2377,11 +2377,11 @@ export class Parser {
 
     }
 
-    parseDotOrArrayChains(term: TermNode): TermNode {
+    parseDotChains(term: TermNode): TermNode {
 
         if (term == null) return null;
 
-        while (this.comesToken([TokenType.dot, TokenType.leftSquareBracket])) {
+        while (this.comesToken([TokenType.dot])) {
             if (this.tt == TokenType.dot) {
 
                 this.nextToken();
