@@ -82,7 +82,12 @@ export type UserData = {
     currentWorkspace_id?: number,
     settings?: UserSettings,
     password?: string,
-    is_testuser?: boolean
+    is_testuser?: boolean,
+
+    vidis_sub?: string,
+    vidis_klasse?: string,
+    vidis_akronym?: string
+
 }
 
 export type GetUserDataRequest = {

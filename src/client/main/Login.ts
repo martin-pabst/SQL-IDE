@@ -10,14 +10,23 @@ import { PushClientManager } from "../communication/pushclient/PushClientManager
 
 export class Login {
 
+    loggedInWithVidis: boolean = false;
 
     constructor(private main: Main) {
 
     }
 
-    initGUI() {
+    loginWithVidis() {
+        this.loggedInWithVidis = true;
+        jQuery('#login').hide();
+        jQuery('#main').css('visibility', 'visible');
 
-        let that = this;
+        jQuery('#bitteWartenText').html('Bitte warten ...');
+        jQuery('#bitteWarten').css('display', 'flex');
+        this.sendLoginRequest();
+    }
+
+    initGUI() {
 
         let $loginSpinner = jQuery('#login-spinner>img');
 
@@ -69,82 +78,8 @@ export class Login {
                 loginHappened = false;
             }, 1000);
 
-            let loginRequest: LoginRequest = {
-                username: <string>jQuery('#login-username').val(),
-                password: <string>jQuery('#login-password').val(),
-                language: 1
-            }
 
-            ajax('login', loginRequest, (response: LoginResponse) => {
-
-                if (!response.success) {
-                    jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');
-                } else {
-
-                    PushClientManager.getInstance().open();
-
-                    // We don't do this anymore for security reasons - see AjaxHelper.ts
-                    // Alternatively we now set a long expiry interval for cookie.
-                    // credentials.username = loginRequest.username;
-                    // credentials.password = loginRequest.password;
-
-                    jQuery('#login').hide();
-
-                    this.main.waitOverlay.show('Bitte warten...');
-
-                    let user: UserData = response.user;
-                    if (user.settings == null || user.settings.helperHistory == null) {
-                        user.settings = {
-                            helperHistory: {
-                            },
-                            viewModes: null,
-                            classDiagram: null
-                        }
-                    }
-
-                    this.main.waitForGUICallback = () => {
-
-                        that.main.mainMenu.initGUI(user);
-
-                        that.main.waitOverlay.hide();
-                        $loginSpinner.hide();
-                        jQuery('#menupanel-username').html(escapeHtml(user.rufname) + " " + escapeHtml(user.familienname));
-
-                        new UserMenu(that.main).init();
-
-                        if (user.is_teacher) {
-                            that.main.initTeacherExplorer(response.classdata);
-                        }
-
-                        that.main.user = user;
-
-                        that.main.restoreWorkspaces(response.workspaces);
-                        that.main.workspacesOwnerId = user.id;
-
-                        that.main.networkManager.initializeTimer();
-
-                        that.main.projectExplorer.fileListPanel.setFixed(!user.is_teacher);
-                        that.main.projectExplorer.workspaceListPanel.setFixed(!user.is_teacher);
-
-                        that.main.viewModeController.initViewMode();
-                        that.main.bottomDiv.hideHomeworkTab();
-
-                        that.main.networkManager.initializeSSE();
-
-                    }
-
-                    if (this.main.startupComplete == 0) {
-                        this.main.waitForGUICallback();
-                        this.main.waitForGUICallback = null;
-                    }
-
-                }
-
-            }, (errorMessage: string) => {
-                jQuery('#login-message').html('Login gescheitert: ' + errorMessage);
-                jQuery('#login-spinner>img').hide();
-            }
-            );
+            this.sendLoginRequest();
 
         });
 
@@ -171,24 +106,29 @@ export class Login {
                     ajax('logout', logoutRequest, () => {
                         // window.location.href = 'index.html';
     
-                        jQuery('#login').show();
-                        this.main.waitOverlay.hide();
-                        jQuery('#login-message').empty();
-                        this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                        this.main.projectExplorer.fileListPanel.clear();
-                        this.main.projectExplorer.workspaceListPanel.clear();
-    
-                        this.main.databaseExplorer.clear();
-                        this.main.resultsetPresenter.clear();
-    
-                        if (this.main.user.is_teacher) {
-                            this.main.teacherExplorer.removePanels();
-                            this.main.teacherExplorer = null;
-                        }
-    
-    
-                        this.main.currentWorkspace = null;
-                        this.main.user = null;
+                        if(this.loggedInWithVidis){
+                            window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
+                        } else {
+                            jQuery('#login').show();
+                            this.main.waitOverlay.hide();
+                            jQuery('#login-message').empty();
+                            this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
+                            this.main.projectExplorer.fileListPanel.clear();
+                            this.main.projectExplorer.workspaceListPanel.clear();
+        
+                            this.main.databaseExplorer.clear();
+                            this.main.resultsetPresenter.clear();
+        
+                            if (this.main.user.is_teacher) {
+                                this.main.teacherExplorer.removePanels();
+                                this.main.teacherExplorer = null;
+                            }
+        
+        
+                            this.main.currentWorkspace = null;
+                            this.main.user = null;
+                        }        
+
     
     
                     });
@@ -203,5 +143,90 @@ export class Login {
 
     }
 
+
+    sendLoginRequest(){
+
+        let that = this;
+        let $loginSpinner = jQuery('#login-spinner>img');
+        $loginSpinner.show();
+
+        let loginRequest: LoginRequest = {
+            username: <string>jQuery('#login-username').val(),
+            password: <string>jQuery('#login-password').val(),
+            language: 1
+        }
+
+        ajax('login', loginRequest, (response: LoginResponse) => {
+
+            if (!response.success) {
+                jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');
+            } else {
+
+                PushClientManager.getInstance().open();
+
+                // We don't do this anymore for security reasons - see AjaxHelper.ts
+                // Alternatively we now set a long expiry interval for cookie.
+                // credentials.username = loginRequest.username;
+                // credentials.password = loginRequest.password;
+
+                jQuery('#login').hide();
+
+                this.main.waitOverlay.show('Bitte warten...');
+
+                let user: UserData = response.user;
+                if (user.settings == null || user.settings.helperHistory == null) {
+                    user.settings = {
+                        helperHistory: {
+                        },
+                        viewModes: null,
+                        classDiagram: null
+                    }
+                }
+
+                this.main.waitForGUICallback = () => {
+
+                    that.main.mainMenu.initGUI(user);
+
+                    that.main.waitOverlay.hide();
+                    $loginSpinner.hide();
+                    jQuery('#menupanel-username').html(escapeHtml(user.rufname) + " " + escapeHtml(user.familienname));
+
+                    new UserMenu(that.main).init();
+
+                    if (user.is_teacher) {
+                        that.main.initTeacherExplorer(response.classdata);
+                    }
+
+                    that.main.user = user;
+
+                    that.main.restoreWorkspaces(response.workspaces);
+                    that.main.workspacesOwnerId = user.id;
+
+                    that.main.networkManager.initializeTimer();
+
+                    that.main.projectExplorer.fileListPanel.setFixed(!user.is_teacher);
+                    that.main.projectExplorer.workspaceListPanel.setFixed(!user.is_teacher);
+
+                    that.main.viewModeController.initViewMode();
+                    that.main.bottomDiv.hideHomeworkTab();
+
+                    that.main.networkManager.initializeSSE();
+
+                }
+
+                if (this.main.startupComplete == 0) {
+                    this.main.waitForGUICallback();
+                    this.main.waitForGUICallback = null;
+                }
+
+            }
+
+        }, (errorMessage: string) => {
+            jQuery('#login-message').html('Login gescheitert: ' + errorMessage);
+            jQuery('#login-spinner>img').hide();
+        }
+        );
+
+    }
 
 }

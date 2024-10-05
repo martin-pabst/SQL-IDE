@@ -24,11 +24,12 @@ import { TextPosition } from "../compiler/lexer/Token.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
-import { checkIfMousePresent } from "../tools/HtmlTools.js";
+import { checkIfMousePresent, getCookieValue } from "../tools/HtmlTools.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
 
 import { NewNotifier } from "../communication/NewNotifier.js";
+import { setCookie } from "../tools/HttpTools.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -143,7 +144,21 @@ export class Main implements MainBase {
         checkIfMousePresent();
 
         this.login = new Login(this);
-        this.login.initGUI();
+
+        let singleUseToken1 = location.search.split('singleUseToken=')[1];
+        if(singleUseToken1){
+            setCookie("singleUseToken", singleUseToken1, 3);
+        }
+
+        let singleUseToken: string | undefined = getCookieValue("singleUseToken");
+
+        if(singleUseToken){
+            this.login.initGUI();
+            this.login.loginWithVidis();    
+        } else {
+            this.login.initGUI();
+        }
+
 
         this.databaseTool = new DatabaseTool(this);
         this.databaseExplorer = new DatabaseExplorer(this, jQuery(".jo_db_tree"));

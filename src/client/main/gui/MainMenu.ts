@@ -177,6 +177,26 @@ export class MainMenu {
                         ]
                     }
                 },
+                {
+                    identifier: "Hilfe", subMenu:
+                    {
+                        items: [
+                            {
+                                identifier: "Über die Online-IDE...",
+                                link: "https://www.learnj.de/doku.php?id=javaonline:ueber"
+                            },
+                            {
+                                identifier: "Impressum...",
+                                link: "https://www.learnj.de/doku.php?id=ide:impressum"
+                            },
+                            {
+                                identifier: "Datenschutzerklärung...",
+                                link: "https://www.learnj.de/doku.php?id=ide:datenschutzerklaerung"
+                            }
+
+                        ]
+                    }
+                }
 
             ]
         };
