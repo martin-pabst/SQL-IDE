@@ -6,6 +6,7 @@ import { userInfo } from "os";
 import { UserMenu } from "./gui/UserMenu.js";
 import { escapeHtml } from "../tools/StringTools.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
+import { AutoLogout } from "./AutoLogout.js";
 
 
 export class Login {
@@ -13,7 +14,7 @@ export class Login {
     loggedInWithVidis: boolean = false;
 
     constructor(private main: Main) {
-
+        new AutoLogout(this);
     }
 
     loginWithVidis() {
@@ -85,66 +86,70 @@ export class Login {
 
         jQuery('#buttonLogout').on('click', () => {
 
-            this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
-
-            if (this.main.workspacesOwnerId != this.main.user.id) {
-                this.main.projectExplorer.onHomeButtonClicked();
-            }
-
-            PushClientManager.getInstance().close();
-
-            this.main.networkManager.sendUpdates(() => {
-
-                this.main.notifier.connect(null);
-
-                let logoutRequest: LogoutRequest = {
-                    currentWorkspaceId: this.main.currentWorkspace?.id
-                }
-
-                this.main.networkManager.sendUpdateUserSettings(() => {
-
-                    ajax('logout', logoutRequest, () => {
-                        // window.location.href = 'index.html';
-    
-                        if(this.loggedInWithVidis){
-                            window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
-                        } else {
-                            jQuery('#login').show();
-                            this.main.waitOverlay.hide();
-                            jQuery('#login-message').empty();
-                            this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                            this.main.projectExplorer.fileListPanel.clear();
-                            this.main.projectExplorer.workspaceListPanel.clear();
-        
-                            this.main.databaseExplorer.clear();
-                            this.main.resultsetPresenter.clear();
-        
-                            if (this.main.user.is_teacher) {
-                                this.main.teacherExplorer.removePanels();
-                                this.main.teacherExplorer = null;
-                            }
-        
-        
-                            this.main.currentWorkspace = null;
-                            this.main.user = null;
-                        }        
-
-    
-    
-                    });
-    
-
-                });
-
-            }, true);
-
+            this.logout();
         });
 
 
     }
 
+    logout() {
+        this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
 
-    sendLoginRequest(){
+        if (this.main.workspacesOwnerId != this.main.user.id) {
+            this.main.projectExplorer.onHomeButtonClicked();
+        }
+
+        PushClientManager.getInstance().close();
+
+        this.main.networkManager.sendUpdates(() => {
+
+            this.main.notifier.connect(null);
+
+            let logoutRequest: LogoutRequest = {
+                currentWorkspaceId: this.main.currentWorkspace?.id
+            }
+
+            this.main.networkManager.sendUpdateUserSettings(() => {
+
+                ajax('logout', logoutRequest, () => {
+                    // window.location.href = 'index.html';
+
+                    if (this.loggedInWithVidis) {
+                        window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
+                    } else {
+                        jQuery('#login').show();
+                        this.main.waitOverlay.hide();
+                        jQuery('#login-message').empty();
+                        this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
+                        this.main.projectExplorer.fileListPanel.clear();
+                        this.main.projectExplorer.workspaceListPanel.clear();
+
+                        this.main.databaseExplorer.clear();
+                        this.main.resultsetPresenter.clear();
+
+                        if (this.main.user.is_teacher) {
+                            this.main.teacherExplorer.removePanels();
+                            this.main.teacherExplorer = null;
+                        }
+
+
+                        this.main.currentWorkspace = null;
+                        this.main.user = null;
+                    }
+
+
+
+                });
+
+
+            });
+
+        }, true);
+
+    }
+
+
+    sendLoginRequest() {
 
         let that = this;
         let $loginSpinner = jQuery('#login-spinner>img');
