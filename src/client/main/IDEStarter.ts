@@ -11,8 +11,14 @@ import '/include/css/databaseExplorer.css';
 import '/include/css/dialog.css';
 import '/include/css/databasedialogs.css';
 
+import jQuery from 'jquery';
 
 jQuery(function () {
+
+    setTimeout(() => {
+        jQuery(jQuery('vidis-login')[0].shadowRoot).find('.entry-button-label').text('Anmelden mit VIDIS (Test)')
+    }, 500);
+
 
     let main = new Main();
 
