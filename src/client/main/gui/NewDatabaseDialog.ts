@@ -47,8 +47,17 @@ export class NewDatabaseDialog {
                     <div class="jo_ds_settings">
                        <div class="jo_ds_settings_caption">Vorlage suchen:</div><div><input class="dialog-input jo_templatename"></input></div>
                     </div>
-                    <div class="jo_scrollable jo_templatelist"></div>
-                 </div>
+                    <div class="jo_templateListDiv">
+                        <div class="jo_templateListOuter">
+                            <div class="jo_templateListCaption">Vorlagen anderer Nutzer:</div> 
+                            <div class="jo_scrollable jo_templatelist jo_templatelist_others"></div>
+                        </div>
+                        <div class="jo_templateListOuter">
+                            <div class="jo_templateListCaption">Eigene Datenbank als Vorlage:</div> 
+                            <div class="jo_scrollable jo_templatelist jo_templatelist_mine"></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="jo_createDatabaseUseExistingTab">
                     <div class="jo_createDatabaseDescription">Wenn Du die Datenbank einer anderen Nutzerin/eines anderen Nutzers mitnutzen möchtest, brauchst Du einen Zugriffscode von ihr/ihm. Er ist unter Datenbank->Einstellungen zu finden.            
                     </div>
@@ -73,11 +82,16 @@ export class NewDatabaseDialog {
 
         makeTabs(this.$dialog);
 
-        let $templatelist = jQuery('.jo_templatelist');
+        let $templatelist_others = jQuery('.jo_templatelist_others');
+        let $templatelist_mine = jQuery('.jo_templatelist_mine');
+
+        let myUserId = this.main.user.id;
+
         this.main.networkManager.fetchTemplateList((templatelist) => {
             templatelist.sort((t1, t2) => {
                 return t1.name.localeCompare(t2.name);
             })
+            
             templatelist.forEach(tle => {
 
                 let $tle = jQuery('<div class="jo_templateListEntry"></div>')
@@ -86,19 +100,26 @@ export class NewDatabaseDialog {
                 $tle.data('templateId', tle.id);
                 $tle.data('name', tle.name);
 
-                $templatelist.append($tle);
+                if(tle.ownerId == myUserId){
+                    $templatelist_mine.append($tle);
+                } else {
+                    $templatelist_others.append($tle);
+                }
                 tle.$tle = <JQuery<HTMLDivElement>>$tle;
 
                 $tle.on('pointerdown', () => {
-                    $templatelist.find('.jo_templateListEntry').removeClass('jo_active');
+                    $templatelist_others.find('.jo_templateListEntry').removeClass('jo_active');
+                    $templatelist_mine.find('.jo_templateListEntry').removeClass('jo_active');
                     $tle.addClass('jo_active');
                 })
 
             })
+
             let $templateName = <JQuery<HTMLInputElement>>jQuery('.jo_templatename');
             $templateName.on('input', () => {
                 let s = <string>$templateName.val();
-                $templatelist.find('.jo_templateListEntry').hide();
+                $templatelist_others.find('.jo_templateListEntry').hide();
+                $templatelist_mine.find('.jo_templateListEntry').hide();
                 templatelist.forEach(tle => {
                     let tleString = tle.name + tle.ownerName + (tle.description ? tle.description : "");
                     if (tleString.indexOf(s) >= 0) tle.$tle.show();

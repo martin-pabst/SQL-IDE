@@ -615,6 +615,7 @@ export type TemplateListEntry = {
     published_to: number,
     description: string,
     ownerName: string,
+    ownerId: number,
     $tle: JQuery<HTMLDivElement>
 }
 

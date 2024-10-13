@@ -94,9 +94,27 @@
     height: 100%;
 }
 
+.jo_templateListDiv {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    height: 350px;
+}
+
+.jo_templateListOuter {
+    height: 100%;
+    margin: 0 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .jo_templatelist {
     border: 1px solid #808080;
-    margin: 0 10px;
-    height: 250px;
     overflow: auto;
+}
+
+.jo_templateListCaption {
+    font-weight: bold;
+    margin-bottom: 2px;
 }
