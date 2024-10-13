@@ -75,6 +75,9 @@ export class NewDatabaseDialog {
 
         let $templatelist = jQuery('.jo_templatelist');
         this.main.networkManager.fetchTemplateList((templatelist) => {
+            templatelist.sort((t1, t2) => {
+                return t1.name.localeCompare(t2.name);
+            })
             templatelist.forEach(tle => {
 
                 let $tle = jQuery('<div class="jo_templateListEntry"></div>')
