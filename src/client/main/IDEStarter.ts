@@ -15,9 +15,9 @@ import jQuery from 'jquery';
 
 jQuery(function () {
 
-    setTimeout(() => {
-        jQuery(jQuery('vidis-login')[0].shadowRoot).find('.entry-button-label').text('Anmelden mit VIDIS (Test)')
-    }, 500);
+    // setTimeout(() => {
+    //     jQuery(jQuery('vidis-login')[0].shadowRoot).find('.entry-button-label').text('Anmelden mit VIDIS (Test)')
+    // }, 500);
 
 
     let main = new Main();
