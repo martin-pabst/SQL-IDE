@@ -1,5 +1,5 @@
 import { ajax } from "../communication/AjaxHelper.js";
-import { LoginRequest, LoginResponse, LogoutRequest, UserData } from "../communication/Data.js";
+import { getUserDisplayName, LoginRequest, LoginResponse, LogoutRequest, UserData } from "../communication/Data.js";
 import { Main } from "./Main.js";
 import { Helper } from "./gui/Helper.js";
 import { userInfo } from "os";
@@ -190,11 +190,13 @@ export class Login {
 
                 this.main.waitForGUICallback = () => {
 
+                    let user: UserData = response.user;
+
                     that.main.mainMenu.initGUI(user);
 
                     that.main.waitOverlay.hide();
                     $loginSpinner.hide();
-                    jQuery('#menupanel-username').html(escapeHtml(user.rufname) + " " + escapeHtml(user.familienname));
+                    jQuery('#menupanel-username').html(getUserDisplayName(user));
 
                     new UserMenu(that.main).init();
 

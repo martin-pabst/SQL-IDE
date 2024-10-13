@@ -90,6 +90,13 @@ export type UserData = {
 
 }
 
+export function getUserDisplayName(user: {username: string, familienname: string, rufname: string}): string {
+    if(user.familienname?.length > 0 && user.rufname?.length > 0){
+        return user.rufname + " " + user.familienname;
+    }
+    return user.username;
+}
+
 export type GetUserDataRequest = {
 
 }
