@@ -132,6 +132,12 @@ export class StatementCleaner {
             let c: string = fki.referencesColumn;
             if (fki.referencesTable) c = this.escapeIdentifier(fki.referencesTable) + "(" + this.escapeIdentifier(c) + ")";
             st += " references " + c;
+            if(fki.onDelete){
+                st += " on delete " + fki.onDelete;
+            }
+            if(fki.onUpdate){
+                st += " on update " + fki.onUpdate;
+            }
         }
         if (column.collate != null) {
             let collate = column.collate.toLocaleLowerCase();

@@ -769,6 +769,9 @@ export class Parser {
             switch (this.tt) {
                 //@ts-ignore
                 case TokenType.keywordCascade:
+                    fki[kind] = <string>this.cct.value;
+                    this.nextToken();
+                    break;
                 //@ts-ignore
                 case TokenType.keywordRestrict:
                     fki[kind] = <string>this.cct.value;
