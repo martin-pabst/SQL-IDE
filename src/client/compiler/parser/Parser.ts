@@ -2053,8 +2053,8 @@ export class Parser {
                         position: columnTerm.position
                     }
                     columns.push(column);
-                    if (this.comesToken(TokenType.keywordAs)) {
-                        this.nextToken();
+                    if (this.comesToken(TokenType.keywordAs) || this.comesToken(TokenType.identifier)) {
+                        this.skip(TokenType.keywordAs);
                         if (this.expect(TokenType.identifier, false)) {
                             column.alias = "" + this.cct.value;
                         }
