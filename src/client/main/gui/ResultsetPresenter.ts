@@ -5,6 +5,7 @@ import { Table } from "../../compiler/parser/SQLTable.js";
 import { SQLType } from "../../compiler/parser/SQLTypes.js";
 import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
 import { QueryResult } from "../../tools/DatabaseTools.js";
+import { downloadFile } from "../../tools/HtmlTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
@@ -42,12 +43,13 @@ export class ResultsetPresenter {
     constructor(private main: MainBase, private $bottomDiv: JQuery<HTMLElement>) {
 
         this.$paginationDiv = <any>$bottomDiv.find('.jo_pagination');
+        const $exportCsvButton = jQuery('<div class="jo_button jo_active img_export-csv-dark"></div>')
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
         this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto"></span>/<span class="jo_pagination_all"></span></div>');
         this.$arrowRight = jQuery('<div class="jo_button img_arrow-right-dark jo_active"></div>');
 
         this.$paginationDiv.empty();
-        this.$paginationDiv.append(this.$arrowLeft, this.$infoDiv, this.$arrowRight);
+        this.$paginationDiv.append($exportCsvButton, this.$arrowLeft, this.$infoDiv, this.$arrowRight);
 
         this.$paginationDiv.hide();
 
@@ -82,6 +84,10 @@ export class ResultsetPresenter {
             }
         })
 
+        $exportCsvButton.on('click', () => {
+            this.exportCSV();
+        })
+
     }
 
     public addWriteQueryListener(listener: WriteQueryListener) {
@@ -91,6 +97,17 @@ export class ResultsetPresenter {
     private activateButtons() {
         this.$arrowLeft.toggleClass('jo_active', this.paginationFrom > 1);
         this.$arrowRight.toggleClass('jo_active', this.paginationFrom < this.paginationAll - this.paginationSize + 1);
+    }
+
+    exportCSV(){
+        let file: string = "";
+        // file += table.columns.map(c => c.identifier).join("; ") + "\n";
+        if(this.result){
+            file += this.result.columns.map(c => `"${c}"`).join(",") + "\n";
+            file += this.result.values.map(line => line.map(c => `"${c}"`).join(",")).join("\n");
+        }
+        downloadFile("\ufeff" + file, "results.csv", false);
+
     }
 
     executeSelectedStatements() {
