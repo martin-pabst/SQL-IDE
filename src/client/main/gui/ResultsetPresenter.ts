@@ -43,13 +43,22 @@ export class ResultsetPresenter {
 
         this.$paginationDiv = <any>$bottomDiv.find('.jo_pagination');
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
-        this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto">0001-1000</span>/<span class="jo_pagination_all">5000</span></div>');
+        this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto"></span>/<span class="jo_pagination_all"></span></div>');
         this.$arrowRight = jQuery('<div class="jo_button img_arrow-right-dark jo_active"></div>');
 
         this.$paginationDiv.empty();
         this.$paginationDiv.append(this.$arrowLeft, this.$infoDiv, this.$arrowRight);
 
         this.$paginationDiv.hide();
+
+        const resultTab =  <any>$bottomDiv.find('.jo_resultTab');
+        resultTab.on('myshow', (e) => {
+            this.$paginationDiv.show();
+        })
+
+        resultTab.on('myhide', (e) => {
+            this.$paginationDiv.hide();
+        })
 
         let mousePointer = (window.PointerEvent ? "pointer" : "mouse") + 'up';
 

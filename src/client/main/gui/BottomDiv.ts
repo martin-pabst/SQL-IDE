@@ -1,7 +1,5 @@
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
-import { Workspace } from "../../workspace/Workspace.js";
-import { Module } from "../../compiler/parser/Module.js";
 import { ErrorManager } from "./ErrorManager.js";
 import { HomeworkManager } from "./HomeworkManager.js";
 import { MainBase } from "../MainBase.js";

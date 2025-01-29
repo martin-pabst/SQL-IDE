@@ -486,7 +486,7 @@ export class MainEmbedded implements MainBase {
             $bottomDiv.prepend($filesDiv);
             new EmbeddedSlider($filesDiv, false, false, () => { });
         }
-        makeTabs($bottomDivInner);
+        // makeTabs($bottomDivInner);
         $div.append($bottomDiv);
 
         $div.addClass('joe_javaOnlineDiv');
