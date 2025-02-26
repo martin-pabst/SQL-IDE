@@ -5,6 +5,7 @@ import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, Table
 import { Module } from "./Module.js";
 import { Column } from "./SQLTable.js";
 import { SQLBaseType, SQLNumberEnumType, SQLTextEnumType, SQLType } from "./SQLTypes.js";
+import { truncateSync } from "fs";
 
 export type SQLStatement = {
     ast: ASTNode,
@@ -282,7 +283,9 @@ export class Parser {
             return ret;
         }
 
-        return token.indexOf(this.tt) >= 0;
+        let found = token.indexOf(this.tt) >= 0;
+        if(found && skip) this.nextToken;
+        return found;
 
     }
 
@@ -672,6 +675,9 @@ export class Parser {
                     break;
                 case TokenType.keywordConstraint:
                     this.parseAddConstraint(node);
+                    break;
+                default:
+                    this.parseAddColumn(node);
                     break;
             }
         } while (this.tt == TokenType.comma);

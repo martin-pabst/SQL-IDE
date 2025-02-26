@@ -411,6 +411,8 @@ charType.addBinaryOperation(TokenType.keywordLike, charType, booleanType);
 charType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 
+booleanType.addBinaryOperation(TokenType.equal, booleanType, booleanType);
+
 let numericBinaryOperators: TokenType[] = [TokenType.plus, TokenType.minus, TokenType.multiplication, TokenType.division, TokenType.modulo];
 let comparisonOperators: TokenType[] = [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual];
 
