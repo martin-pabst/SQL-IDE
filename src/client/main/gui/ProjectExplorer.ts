@@ -9,6 +9,7 @@ import { WorkspaceData, Workspaces, ClassData, CreateWorkspaceData } from "../..
 import { dateToString } from "../../tools/StringTools.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
+import { WDatabase } from "../../workspace/WDatabase.js";
 
 
 
@@ -534,11 +535,14 @@ export class ProjectExplorer {
         this.workspaceListPanel.select(w, false, scrollIntoView);
 
         let callbackAfterDatabaseFetched = (error: string) => {
-            this.main.waitOverlay.show("Bitte warten, initialisiere Datenbank ...");
             if (error != null) {
                 alert(error);
-            }    
-            this.initializeDatabaseTool(w, callback)
+                this.main.waitOverlay.hide();
+                if(callback != null) callback();
+            } else {
+                this.main.waitOverlay.show("Bitte warten, initialisiere Datenbank ...");
+                this.initializeDatabaseTool(w, callback)
+            }
         };
 
         if(w == null) return;
@@ -554,6 +558,11 @@ export class ProjectExplorer {
     }
 
     initializeDatabaseTool(w: Workspace, callback?: () => void) {
+
+        if(!w.database){
+            if(callback) callback();
+            return;
+        }
 
         let dbTool = this.main.getDatabaseTool();
 

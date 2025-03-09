@@ -392,6 +392,8 @@ export class NetworkManager {
             } else {
                 callback("Netzwerkfehler!");
             }
+        }, (errormessage: string) => {
+            callback("Netzwerkfehler: " + errormessage);
         });
 
 
