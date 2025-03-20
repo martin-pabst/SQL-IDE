@@ -295,7 +295,7 @@ export class DatabaseTool {
                 type: types[i]
             }
 
-            tableNameToStructureMap.set(tableName, tableStructure);
+            tableNameToStructureMap.set(tableName.toLocaleLowerCase(), tableStructure);
 
             this.databaseStructure.tables.push(tableStructure);
 
@@ -363,7 +363,7 @@ export class DatabaseTool {
         for (let ts of this.databaseStructure.tables) {
             for (let cs of ts.columns) {
                 if (cs.referencesRawData != null) {
-                    let table = tableNameToStructureMap.get(cs.referencesRawData[2]);
+                    let table = tableNameToStructureMap.get(cs.referencesRawData[2]?.toLocaleLowerCase());
                     // SQlite doesn't remove foreign key references to columns of a dropped table
                     if(table == null) continue;
                     let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[4].toLocaleLowerCase());
