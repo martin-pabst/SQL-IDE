@@ -845,7 +845,7 @@ export class Parser {
 
         let index = { index_name: "", column: "", unique: unique }
         if (this.tt == TokenType.identifier) {
-            index.index_name = <string>this.cct.value;
+            index.index_name = <string>this.cct.value + '_idx';
             this.nextToken();
         } else {
             this.pushError("Erwartet wird der Bezeichner des Index.");
