@@ -1,6 +1,6 @@
 import { AccordionPanel, AccordionElement } from "./Accordion.js";
 import { Main } from "../Main.js";
-import { ClassData, UserData, CRUDUserRequest, CRUDClassRequest, GetWorkspacesResponse, GetWorkspacesRequest, Workspaces } from "../../communication/Data.js";
+import { ClassData, UserData, CRUDUserRequest, CRUDClassRequest, GetWorkspacesResponse, GetWorkspacesRequest, Workspaces, getUserDisplayName } from "../../communication/Data.js";
 import { ajax } from "../../communication/AjaxHelper.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Helper } from "./Helper.js";
@@ -129,6 +129,9 @@ export class TeacherExplorer {
         this.studentPanel.clear();
 
         userDataList.sort((a, b) => {
+            if(a.vidis_akronym && b.vidis_akronym){
+                return getUserDisplayName(a) > getUserDisplayName(b) ? 1 : -1;
+            }
             if (a.familienname > b.familienname) return 1;
             if (b.familienname > a.familienname) return -1;
             if (a.rufname > b.rufname) return 1;
@@ -138,8 +141,8 @@ export class TeacherExplorer {
 
         for (let ud of userDataList) {
             let ae: AccordionElement = {
-                name: ud.familienname + ", " + ud.rufname,
-                sortName: ud.familienname + " " + ud.rufname,
+                name: getUserDisplayName(ud, true),
+                sortName: ud.vidis_akronym ? getUserDisplayName(ud) : ud.familienname + " " + ud.rufname,
                 externalElement: ud,
                 isFolder: false,
                 path: []

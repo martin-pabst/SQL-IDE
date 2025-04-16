@@ -7,6 +7,7 @@ import { UserMenu } from "./gui/UserMenu.js";
 import { escapeHtml } from "../tools/StringTools.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
 import { AutoLogout } from "./AutoLogout.js";
+import { setCookie } from "../tools/HttpTools.js";
 
 
 export class Login {
@@ -17,14 +18,14 @@ export class Login {
         new AutoLogout(this);
     }
 
-    loginWithVidis() {
+    loginWithVidis(singleUseToken: string) {
         this.loggedInWithVidis = true;
         jQuery('#login').hide();
         jQuery('#main').css('visibility', 'visible');
 
         jQuery('#bitteWartenText').html('Bitte warten ...');
         jQuery('#bitteWarten').css('display', 'flex');
-        this.sendLoginRequest();
+        this.sendLoginRequest(singleUseToken);
     }
 
     initGUI() {
@@ -149,7 +150,7 @@ export class Login {
     }
 
 
-    sendLoginRequest() {
+    sendLoginRequest(singleUseToken?: string) {
 
         let that = this;
         let $loginSpinner = jQuery('#login-spinner>img');
@@ -161,7 +162,7 @@ export class Login {
             language: 1
         }
 
-        ajax('login', loginRequest, (response: LoginResponse) => {
+        ajax('login' + (singleUseToken ? ('?singleUseToken=' + singleUseToken) : ''), loginRequest, (response: LoginResponse) => {
 
             if (!response.success) {
                 jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');

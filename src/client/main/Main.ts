@@ -153,8 +153,9 @@ export class Main implements MainBase {
         let singleUseToken: string | undefined = getCookieValue("singleUseToken");
 
         if(singleUseToken){
+            setCookie("singleUseToken", "", 0);
             this.login.initGUI();
-            this.login.loginWithVidis();    
+            this.login.loginWithVidis(singleUseToken);    
         } else {
             this.login.initGUI();
         }
