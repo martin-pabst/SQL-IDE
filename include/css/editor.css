@@ -129,21 +129,6 @@ body .monaco-editor-hover .monaco-tokenized-source {
     100%   {filter: opacity(0)}
 }
 
-.jo_parenthesis_warning>.jo_warning_light {
-    background-image: url("assets/graphics/Warnlampe_css.png");
-    position: absolute;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    background-size: contain;
-    background-repeat: no-repeat;
-    top: 0;
-    left: 0;
-    animation-name: jo_warning_lamp;
-    animation-duration: 800ms;
-    animation-iteration-count: infinite;
-}
-
 .bitteWarten>div>div, .bitteWartenProgress {
     font-size: 32px;
     color: white;

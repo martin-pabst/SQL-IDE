@@ -638,7 +638,6 @@ export class ProjectExplorer {
         } else {
             this.main.getMonacoEditor().updateOptions({ readOnly: false });
             this.main.getMonacoEditor().setModel(m.model);
-            if (this.main.getBottomDiv() != null) this.main.getBottomDiv().errorManager.showParenthesisWarning(m.bracketError);
 
             if (m.file.text_before_revision != null) {
                 this.main.bottomDiv.homeworkManager.showHomeWorkRevisionButton();

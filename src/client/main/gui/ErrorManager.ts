@@ -11,8 +11,6 @@ export class ErrorManager {
     oldErrorDecorations: string[] = [];
     $errorDiv: JQuery<HTMLElement>;
 
-    $bracket_warning: JQuery<HTMLElement>;
-
     minimapColor: {[key: string]:string } = {};
 
     lightBulbOnClickFunctionList: {class: string, onClickFunction: () => void, title: string}[] = [];
@@ -22,25 +20,11 @@ export class ErrorManager {
         this.minimapColor["warning"] = "#cca700";
         this.minimapColor["info"] = "#75beff";
 
-        this.$bracket_warning = $mainDiv.find(".jo_parenthesis_warning");
-
-        this.$bracket_warning.attr('title', 'Klammeralarm!');
-        this.$bracket_warning.children().attr('title', 'Klammeralarm!');
-
         let that = this;
         $mainDiv.find(".jo_pw_undo").on("click", () => {
             let editor = that.main.getMonacoEditor();
             editor.trigger(".", "undo", {});
         }).attr('title', 'Undo');
-    }
-
-    showParenthesisWarning(error: string){
-        if(error != null){
-            this.$bracket_warning.css("visibility", "visible");
-            this.$bracket_warning.find(".jo_pw_heading").text(error);
-        } else {
-            this.$bracket_warning.css("visibility", "hidden");
-        }
     }
 
     showErrors(workspace: Workspace): Map<Module, number> {

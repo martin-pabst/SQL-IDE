@@ -459,9 +459,6 @@ export class MainEmbedded implements MainBase {
         $editorDiv.append(this.$monacoDiv, this.$hintDiv, this.$databaseResetButton);
         this.$monacoDiv.append(this.$codeResetButton);
 
-        let $bracketErrorDiv = this.makeBracketErrorDiv();
-        $editorDiv.append($bracketErrorDiv);
-
         // $topDiv.append($editorDiv);
 
         this.$codeResetButton.hide();
@@ -616,16 +613,6 @@ export class MainEmbedded implements MainBase {
         return jQuery(waitHtml);
     }
 
-    makeBracketErrorDiv(): JQuery<HTMLElement> {
-        return jQuery(`
-        <div class="jo_parenthesis_warning" title="Klammerwarnung!" style="bottom: 55px">
-        <div class="jo_warning_light"></div>
-        <div class="jo_pw_heading">{ }</div>
-        <div title="Letzten Schritt rückgängig" 
-            class="jo_pw_undo img_undo jo_button jo_active"></div>
-        </div>
-        `);
-    }
 
     makeCodeResetModalWindow($parent: JQuery<HTMLElement>): JQuery<HTMLElement> {
         let $window = jQuery(
