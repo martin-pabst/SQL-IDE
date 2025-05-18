@@ -22,7 +22,7 @@ import { WriteQueryManager } from "./WriteQueryManager.js";
 import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 import { HistoryViewer } from "../main/gui/HistoryViewer.js";
-import { WDatabase } from "../workspace/WDatabase.js";
+import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -30,7 +30,8 @@ type JavaOnlineConfig = {
     withErrorList?: boolean,
     withBottomPanel?: boolean,
     id?: string,
-    databaseURL?: string
+    databaseURL?: string,
+    enableFileAccess?: boolean
 }
 
 export class MainEmbedded implements MainBase {
@@ -158,7 +159,7 @@ export class MainEmbedded implements MainBase {
                 this.initialTemplateDump = loadableDb.binDump;
                 this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
                 this.initDatabase();
-            }).catch((error: string)=>{
+            }).catch((error: string) => {
                 alert('Fehler beim Landen der Datenbank: ' + error)
             })
         } else {
@@ -167,9 +168,16 @@ export class MainEmbedded implements MainBase {
 
         this.semicolonAngel = new SemicolonAngel(this);
 
+        if (this.config.enableFileAccess) {
+            //@ts-ignore
+            window.sql_ide_access = new OnlineIDEAccessImpl();
+            OnlineIDEAccessImpl.registerIDE(this);
+        }
+
+
     }
 
-    initDatabase(){
+    initDatabase() {
         this.resetDatabase(() => {
             this.initScripts();
 
@@ -234,9 +242,9 @@ export class MainEmbedded implements MainBase {
             this.config.withErrorList = false;
         }
 
-        if(this.config.databaseURL != null){
+        if (this.config.databaseURL != null) {
             ['http:', 'https:'].forEach(protocol => {
-                if(this.config.databaseURL.startsWith(protocol) && !this.config.databaseURL.startsWith(protocol + "://")){
+                if (this.config.databaseURL.startsWith(protocol) && !this.config.databaseURL.startsWith(protocol + "://")) {
                     this.config.databaseURL = this.config.databaseURL.replace(protocol, protocol + "//");
                 }
             })
