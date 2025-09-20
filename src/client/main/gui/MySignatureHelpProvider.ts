@@ -1,5 +1,5 @@
-import { Module, MethodCallPosition } from "../../compiler/parser/Module.js";
-import { Main } from "../Main.js";
+import * as monaco from 'monaco-editor';
+import { MethodCallPosition, Module } from "../../compiler/parser/Module.js";
 import { MainBase } from "../MainBase.js";
 
 

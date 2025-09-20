@@ -3,6 +3,7 @@ import { Error } from "../../compiler/lexer/Lexer.js";
 import { Module } from "../../compiler/parser/Module.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
+import * as monaco from 'monaco-editor'
 
 
 export class ErrorManager {
@@ -63,31 +64,31 @@ export class ErrorManager {
                     case "info": linesDecorationsClassName = 'jo_revealInfoLine'; borderLeftClass = "jo_borderLeftInfo"; break;
                 }
 
-                if (error.quickFix != null) {
-                    let quickFix = error.quickFix;
-                    let lightBulbClass = "lb_" + Math.trunc(Math.random() * 1000000);
-                    linesDecorationsClassName = 'jo_yellowLightBulb ' + borderLeftClass + " " + lightBulbClass;
+                // if (error.quickFix != null) {
+                //     let quickFix = error.quickFix;
+                //     let lightBulbClass = "lb_" + Math.trunc(Math.random() * 1000000);
+                //     linesDecorationsClassName = 'jo_yellowLightBulb ' + borderLeftClass + " " + lightBulbClass;
 
-                    this.lightBulbOnClickFunctionList.push({class: '.' + lightBulbClass, 
-                    onClickFunction: () => {
+                //     this.lightBulbOnClickFunctionList.push({class: '.' + lightBulbClass, 
+                //     onClickFunction: () => {
 
-                        let edits = quickFix.editsProvider(m.model.uri);
-                        editor.executeEdits("", edits.map((edit) => {
-                            let r = edit.edit.range;
-                            return {
-                                range: new monaco.Range(r.startLineNumber, r.startColumn, r.endLineNumber, r.endColumn),
-                                text: edit.edit.text,
-                                forceMoveMarkers: true
-                            }
-                        }
-                        ));
+                //         let edits = quickFix.editsProvider(m.model.uri);
+                //         editor.executeEdits("", edits.map((edit) => {
+                //             let r = edit.edit.range;
+                //             return {
+                //                 range: new monaco.Range(r.startLineNumber, r.startColumn, r.endLineNumber, r.endColumn),
+                //                 text: edit.edit.text,
+                //                 forceMoveMarkers: true
+                //             }
+                //         }
+                //         ));
 
-                    },
-                    title: quickFix.title
-                })
+                //     },
+                //     title: quickFix.title
+                // })
 
 
-                }
+                // }
 
                 this.processError(error, m, $errorList);
 

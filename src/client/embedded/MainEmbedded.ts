@@ -1,28 +1,28 @@
+import * as monaco from 'monaco-editor';
 import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
-import { Module, File } from "../compiler/parser/Module.js";
+import { Module } from "../compiler/parser/Module.js";
+import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { ActionManager } from "../main/gui/ActionManager.js";
 import { BottomDiv } from "../main/gui/BottomDiv.js";
-import { Editor } from "../main/gui/Editor.js";
-import { ProgramControlButtons } from "../main/gui/ProgramControlButtons.js";
-import { RightDiv } from "../main/gui/RightDiv.js";
-import { MainBase } from "../main/MainBase.js";
-import { Workspace } from "../workspace/Workspace.js";
-import { JOScript } from "./EmbeddedStarter.js";
-import { makeDiv, makeTabs, openContextMenu } from "../tools/HtmlTools.js";
-import { EmbeddedSlider } from "./EmbeddedSlider.js";
-import { EmbeddedFileExplorer } from "./EmbeddedFileExplorer.js";
-import { TextPosition } from "../compiler/lexer/Token.js";
-import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
-import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
-import { DatabaseTool } from "../tools/DatabaseTools.js";
 import { DatabaseExplorer } from "../main/gui/DatabaseExplorer.js";
-import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
-import { WaitOverlay } from "../main/gui/WaitOverlay.js";
-import { WriteQueryManager } from "./WriteQueryManager.js";
-import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
-import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
+import { Editor } from "../main/gui/Editor.js";
 import { HistoryViewer } from "../main/gui/HistoryViewer.js";
+import { ProgramControlButtons } from "../main/gui/ProgramControlButtons.js";
+import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
+import { RightDiv } from "../main/gui/RightDiv.js";
+import { WaitOverlay } from "../main/gui/WaitOverlay.js";
+import { MainBase } from "../main/MainBase.js";
+import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
+import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
+import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { makeTabs, openContextMenu } from "../tools/HtmlTools.js";
+import { Workspace } from "../workspace/Workspace.js";
+import { EmbeddedFileExplorer } from "./EmbeddedFileExplorer.js";
+import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
+import { EmbeddedSlider } from "./EmbeddedSlider.js";
+import { JOScript } from "./EmbeddedStarter.js";
+import { WriteQueryManager } from "./WriteQueryManager.js";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,

@@ -1,10 +1,8 @@
-import { Editor } from "./Editor.js";
+import * as monaco from 'monaco-editor';
+import { TokenType } from "../../compiler/lexer/Token.js";
 import { CompletionHint, Module } from "../../compiler/parser/Module.js";
 import { Symbol, SymbolTable } from "../../compiler/parser/SymbolTable.js";
-import { Main } from "../Main.js";
-import { TokenType } from "../../compiler/lexer/Token.js";
 import { MainBase } from "../MainBase.js";
-import { Column, Table } from "../../compiler/parser/SQLTable.js";
 
 export class MyCompletionItemProvider implements monaco.languages.CompletionItemProvider {
 
@@ -55,14 +53,14 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     provideCompletionItemsIntern(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, 
         token: monaco.CancellationToken): monaco.languages.CompletionList {
 
-        setTimeout(() => {
-            //@ts-ignore
-            let sw = this.main.getMonacoEditor()._contentWidgets["editor.widget.suggestWidget"].widget;
-            if (this.first) {
-                sw.toggleDetails();
-                this.first = false;
-            }
-        }, 500);
+        // setTimeout(() => {
+        //     //@ts-ignore
+        //     let sw = this.main.getMonacoEditor()._contentWidgets["editor.widget.suggestWidget"].widget;
+        //     if (this.first) {
+        //         sw.toggleDetails();
+        //         this.first = false;
+        //     }
+        // }, 500);
 
         let module: Module =
             this.main.getCurrentWorkspace().getModuleByMonacoModel(model);

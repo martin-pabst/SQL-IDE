@@ -1,4 +1,4 @@
-import { NetworkManager } from "../../communication/NetworkManager.js";
+import * as monaco from 'monaco-editor';
 import { TokenType } from "../../compiler/lexer/Token.js";
 import { SQLStatement } from "../../compiler/parser/Parser.js";
 import { Table } from "../../compiler/parser/SQLTable.js";

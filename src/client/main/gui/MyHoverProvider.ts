@@ -1,5 +1,6 @@
 import { Editor } from "./Editor.js";
 import { Module } from "../../compiler/parser/Module.js";
+import * as monaco from 'monaco-editor'
 
 
 

@@ -1,7 +1,7 @@
-import { Main } from "../../main/Main.js";
+import * as monaco from 'monaco-editor';
+import { MainBase } from "../../main/MainBase.js";
 import { TextPosition } from "../lexer/Token";
 import { Module } from "./Module";
-import { MainBase } from "../../main/MainBase.js";
 
 type SemicolonPosition = {
     position: TextPosition;

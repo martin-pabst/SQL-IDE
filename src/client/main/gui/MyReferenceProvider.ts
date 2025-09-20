@@ -1,7 +1,6 @@
 import { Module } from "../../compiler/parser/Module.js";
-import { Main } from "../Main.js";
-import { Editor } from "./Editor.js";
 import { MainBase } from "../MainBase.js";
+import * as monaco from 'monaco-editor';
 
 export class MyReferenceProvider implements monaco.languages.ReferenceProvider {
 

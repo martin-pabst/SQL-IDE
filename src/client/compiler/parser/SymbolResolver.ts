@@ -1,13 +1,13 @@
 import { DatabaseTool } from "../../tools/DatabaseTools.js";
+import { isDate, isDateTime, isTime } from "../../tools/StringTools.js";
+import { Error, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { CompletionHint, Module } from "./Module.js";
-import { Symbol, SymbolTable } from "./SymbolTable.js";
-import { AlterTableNode, ASTNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
-import { Error, ErrorLevel, QuickFix } from "../lexer/Lexer.js";
+import { AlterTableNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
+import { Module } from "./Module.js";
+import { SQLMethodStore } from "./SQLMethods.js";
 import { Column, Table } from "./SQLTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
-import { SQLMethodStore } from "./SQLMethods.js";
-import { isDate, isDateTime, isTime } from "../../tools/StringTools.js";
+import { SymbolTable } from "./SymbolTable.js";
 
 
 export class SymbolResolver {
@@ -84,12 +84,11 @@ export class SymbolResolver {
 
     }
 
-    pushError(text: string, errorLevel: ErrorLevel = "error", position: TextPosition, quickFix?: QuickFix) {
+    pushError(text: string, errorLevel: ErrorLevel = "error", position: TextPosition) {
         // if (position == null) position = Object.assign({}, this.position);
         this.errorList.push({
             text: text,
             position: position,
-            quickFix: quickFix,
             level: errorLevel
         });
     }

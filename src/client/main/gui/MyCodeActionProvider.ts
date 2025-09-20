@@ -1,6 +1,5 @@
-import { QuickFix } from "../../compiler/lexer/Lexer.js";
-import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
+import * as monaco from 'monaco-editor'
 
 export class MyCodeActionProvider implements monaco.languages.CodeActionProvider {
 
@@ -9,21 +8,22 @@ export class MyCodeActionProvider implements monaco.languages.CodeActionProvider
     }
 
     provideCodeActions(model: monaco.editor.ITextModel, range: monaco.Range, context: monaco.languages.CodeActionContext, token: monaco.CancellationToken): monaco.languages.CodeActionList | Promise<monaco.languages.CodeActionList> {
-        const actions = context.markers.map(error => {
-            let quickFix: QuickFix = <any>error.relatedInformation;
-            if (quickFix == null) return null;
+        const actions = [];
+        // const actions = context.markers.map(error => {
+        //     let quickFix: QuickFix = <any>error.relatedInformation;
+        //     if (quickFix == null) return null;
 
-            let codeAction: monaco.languages.CodeAction = {
-                title: quickFix.title,
-                diagnostics: [error],
-                kind: "quickfix",
-                edit: {
-                    edits: quickFix.editsProvider(model.uri)
-                },
-                isPreferred: true
-            };
-            return codeAction;
-        });
+        //     let codeAction: monaco.languages.CodeAction = {
+        //         title: quickFix.title,
+        //         diagnostics: [error],
+        //         kind: "quickfix",
+        //         edit: {
+        //             edits: quickFix.editsProvider(model.uri)
+        //         },
+        //         isPreferred: true
+        //     };
+        //     return codeAction;
+        // });
         return {
             actions: actions,
             dispose: () => { }

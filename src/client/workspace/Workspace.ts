@@ -5,6 +5,7 @@ import { DatabaseSettingsDialog } from "../main/gui/DatabaseSettingsDialog.js";
 import { Main } from "../main/Main.js";
 import { MainBase } from "../main/MainBase.js";
 import { WDatabase } from "./WDatabase.js";
+import * as monaco from 'monaco-editor'
 
 
 export class Workspace {

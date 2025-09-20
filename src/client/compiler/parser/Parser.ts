@@ -1,11 +1,9 @@
-import { param, timers } from "jquery";
-import { Error, QuickFix, ErrorLevel } from "../lexer/Lexer.js";
+import * as monaco from 'monaco-editor';
+import { Error, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, Token, TokenList, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { ASTNode, BracketsNode, SelectNode, TermNode, TableOrSubqueryNode, TableNode, SubqueryNode, GroupByNode, OrderByNode, LimitNode, IdentifierNode, DotNode, ListNode, ColumnNode, InsertNode, ConstantNode, UnaryOpNode, CreateTableNode, CreateTableColumnNode, ForeignKeyInfo, UpdateNode, DeleteNode, DropTableNode, AlterTableNode, AlterTableKind, OmittedStatementNode, CreateViewNode } from "./AST.js";
+import { AlterTableNode, ASTNode, BracketsNode, ColumnNode, ConstantNode, CreateTableColumnNode, CreateTableNode, CreateViewNode, DeleteNode, DropTableNode, ForeignKeyInfo, GroupByNode, IdentifierNode, InsertNode, LimitNode, ListNode, OmittedStatementNode, OrderByNode, SelectNode, TableNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
 import { Module } from "./Module.js";
-import { Column } from "./SQLTable.js";
 import { SQLBaseType, SQLNumberEnumType, SQLTextEnumType, SQLType } from "./SQLTypes.js";
-import { truncateSync } from "fs";
 
 export type SQLStatement = {
     ast: ASTNode,
@@ -169,12 +167,11 @@ export class Parser {
 
     }
 
-    pushError(text: string, errorLevel: ErrorLevel = "error", position?: TextPosition, quickFix?: QuickFix) {
+    pushError(text: string, errorLevel: ErrorLevel = "error", position?: TextPosition) {
         if (position == null) position = Object.assign({}, this.position);
         this.errorList.push({
             text: text,
             position: position,
-            quickFix: quickFix,
             level: errorLevel
         });
     }
@@ -202,27 +199,27 @@ export class Parser {
                 }
             }
 
-            let quickFix: QuickFix = null;
+            // let quickFix: QuickFix = null;
             if (tt == TokenType.semicolon && this.lastToken.position.line < this.cct.position.line &&
                 !this.isOperatorOrDot(this.lastToken.tt)
             ) {
-                quickFix = {
-                    title: 'Strichpunkt hier einfügen',
-                    editsProvider: (uri) => {
-                        return [{
-                            resource: uri,
-                            edit: {
-                                range: {
-                                    startLineNumber: position.line, startColumn: position.column, endLineNumber: position.line, endColumn: position.column,
-                                    message: "",
-                                    severity: monaco.MarkerSeverity.Error
-                                },
-                                text: ";"
-                            }
-                        }
-                        ];
-                    }
-                }
+                // quickFix = {
+                //     title: 'Strichpunkt hier einfügen',
+                //     editsProvider: (uri) => {
+                //         return [{
+                //             resource: uri,
+                //             edit: {
+                //                 range: {
+                //                     startLineNumber: position.line, startColumn: position.column, endLineNumber: position.line, endColumn: position.column,
+                //                     message: "",
+                //                     severity: monaco.MarkerSeverity.Error
+                //                 },
+                //                 text: ";"
+                //             }
+                //         }
+                //         ];
+                //     }
+                // }
 
                 if (invokeSemicolonAngel) {
                     this.module.main.getSemicolonAngel().register(position, this.module);
@@ -234,10 +231,10 @@ export class Parser {
             if (Array.isArray(tt)) {
                 expectedValuesArray = tt.map(token => TokenTypeReadable[token]);
                 let expectedTokens = expectedValuesArray.join(", ");
-                this.pushError("Erwartet wird eines der folgenden: " + expectedTokens + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
+                this.pushError("Erwartet wird eines der folgenden: " + expectedTokens + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position);
             } else {
                 expectedValuesArray = [TokenTypeReadable[tt]];
-                this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position, quickFix);
+                this.pushError("Erwartet wird: " + TokenTypeReadable[tt] + " - Gefunden wurde: " + TokenTypeReadable[this.tt], "error", position);
             }
 
             // if (!Array.isArray(tt) && tt != TokenType.identifier) {

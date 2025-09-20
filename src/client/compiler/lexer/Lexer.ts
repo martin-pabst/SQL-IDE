@@ -1,4 +1,5 @@
 import { TokenList, specialCharList, TokenType, Token, EscapeSequenceList, keywordList, TextPosition, TokenTypeReadable } from "./Token.js";
+import * as monaco from 'monaco-editor'
 
 enum LexerState {
     number, identifier, stringConstant, characterConstant, multilineComment, EndoflineComment
@@ -6,17 +7,11 @@ enum LexerState {
 
 var endChar = "►"; // \u10000
 
-export type QuickFix = {
-    title: string,
-    editsProvider: (uri: monaco.Uri) => monaco.languages.WorkspaceTextEdit[]
-}
-
 export type ErrorLevel = "info" | "error" | "warning";
 
 export type Error = {
     position: TextPosition,
     text: string,
-    quickFix?: QuickFix,
     level: ErrorLevel
 }
 

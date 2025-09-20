@@ -1,5 +1,6 @@
 import { Lexer } from "../../compiler/lexer/Lexer.js";
 import { Token, TokenList, TokenType, tokenListToString } from "../../compiler/lexer/Token.js";
+import * as monaco from 'monaco-editor'
 
 export class Formatter implements monaco.languages.DocumentFormattingEditProvider,
     monaco.languages.OnTypeFormattingEditProvider {

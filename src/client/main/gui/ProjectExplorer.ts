@@ -1,15 +1,13 @@
-import { NetworkManager } from "../../communication/NetworkManager.js";
+import * as monaco from 'monaco-editor';
+import { ClassData, CreateWorkspaceData } from "../../communication/Data.js";
 import { TextPosition } from "../../compiler/lexer/Token.js";
 import { File, Module } from "../../compiler/parser/Module.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
-import { AccordionPanel, Accordion, AccordionElement, AccordionContextMenuItem } from "./Accordion.js";
-import { Helper } from "./Helper.js";
-import { WorkspaceData, Workspaces, ClassData, CreateWorkspaceData } from "../../communication/Data.js";
-import { dateToString } from "../../tools/StringTools.js";
+import { Accordion, AccordionContextMenuItem, AccordionElement, AccordionPanel } from "./Accordion.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
+import { Helper } from "./Helper.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
-import { WDatabase } from "../../workspace/WDatabase.js";
 
 
 

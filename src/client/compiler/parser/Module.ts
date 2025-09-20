@@ -1,14 +1,13 @@
+import * as monaco from 'monaco-editor';
 import { FileData } from "../../communication/Data.js";
 import { AccordionElement } from "../../main/gui/Accordion.js";
+import { Main } from "../../main/Main.js";
+import { MainBase } from "../../main/MainBase.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Error, ErrorLevel } from "../lexer/Lexer.js";
-import { TextPosition, Token, TokenType, TextPositionWithoutLength } from "../lexer/Token.js";
-import { SymbolTable } from "./SymbolTable.js";
-import { Main } from "../../main/Main.js";
-import { ASTNode } from "./AST.js";
-import { MainBase } from "../../main/MainBase.js";
-import { stringToDate } from "../../tools/StringTools.js";
+import { TextPosition, Token } from "../lexer/Token.js";
 import { SQLStatement } from "./Parser.js";
+import { SymbolTable } from "./SymbolTable.js";
 
 
 export type CompletionHint = {

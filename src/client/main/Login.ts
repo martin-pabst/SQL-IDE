@@ -1,13 +1,10 @@
+import * as monaco from 'monaco-editor';
 import { ajax } from "../communication/AjaxHelper.js";
 import { getUserDisplayName, LoginRequest, LoginResponse, LogoutRequest, UserData } from "../communication/Data.js";
-import { Main } from "./Main.js";
-import { Helper } from "./gui/Helper.js";
-import { userInfo } from "os";
-import { UserMenu } from "./gui/UserMenu.js";
-import { escapeHtml } from "../tools/StringTools.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
 import { AutoLogout } from "./AutoLogout.js";
-import { setCookie } from "../tools/HttpTools.js";
+import { Main } from "./Main.js";
+import { UserMenu } from "./gui/UserMenu.js";
 
 
 export class Login {

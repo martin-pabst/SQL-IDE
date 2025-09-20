@@ -1,17 +1,16 @@
-import { ModuleStore, File, Module } from "../compiler/parser/Module.js";
-import { Workspace } from "../workspace/Workspace.js";
-import { RightDiv } from "./gui/RightDiv.js";
-import { BottomDiv } from "./gui/BottomDiv.js";
-import { ActionManager } from "./gui/ActionManager.js";
+import * as monaco from 'monaco-editor';
 import { Compiler } from "../compiler/Compiler.js";
-import { TextPosition } from "../compiler/lexer/Token.js";
-import { ErrorManager } from "./gui/ErrorManager.js";
+import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { Workspace } from "../workspace/Workspace.js";
+import { ActionManager } from "./gui/ActionManager.js";
+import { BottomDiv } from "./gui/BottomDiv.js";
 import { DatabaseExplorer } from "./gui/DatabaseExplorer.js";
-import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
-import { WaitOverlay } from "./gui/WaitOverlay.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
+import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
+import { RightDiv } from "./gui/RightDiv.js";
+import { WaitOverlay } from "./gui/WaitOverlay.js";
 
 export interface MainBase {
     compileIfDirty();

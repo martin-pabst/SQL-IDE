@@ -1,4 +1,4 @@
-import { Main } from "../Main";
+import * as monaco from 'monaco-editor'
 
 export type Theme = {
     name: string,

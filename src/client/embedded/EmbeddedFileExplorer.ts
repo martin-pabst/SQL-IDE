@@ -2,6 +2,7 @@ import { Module, ModuleStore } from "../compiler/parser/Module.js";
 import { MainEmbedded } from "./MainEmbedded.js";
 import { openContextMenu, makeEditable } from "../tools/HtmlTools.js";
 import { JOScript, ScriptType } from "./EmbeddedStarter.js";
+import * as monaco from 'monaco-editor'
 
 type FileData = {
     type: ScriptType,
