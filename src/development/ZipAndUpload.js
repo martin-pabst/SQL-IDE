@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import {NodeSSH} from 'node-ssh';
 import { exit } from 'process';
 import  chalk  from 'chalk'
-import { promises } from 'fs';
+import { promises, rmSync } from 'fs';
 
 const ssh = new NodeSSH()
 const time = performance.now();
@@ -50,6 +50,9 @@ await ssh.execCommand('mv htdocs /home/martin/backup/program_files/sql-ide/htdoc
 await ssh.execCommand('mv ./htdocs-new htdocs', {cwd: '/var/www/sql-ide'});
 
 ssh.dispose();
+
+rmSync('intern/tmp', { recursive: true, force: true });
+
 console.log(chalk.green('Done deploying to www.sql-ide.de!'));
 
 
@@ -88,5 +91,7 @@ await ssh.execCommand('mv assets-new assets', {cwd: '/var/www/learn-sql.de/htdoc
 await ssh.execCommand('/var/www/embed.learn-sql.de/makeArchive.sh', {cwd: '/var/www/learn-sql.de/htdocs/sql-ide'});
 
 console.log(chalk.green('Done deploying to www.learn-sql.de in ' + Math.round(performance.now() - time) + ' ms!'));
+
+rmSync('intern/tmp', { recursive: true, force: true });
 
 exit();
