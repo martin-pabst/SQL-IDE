@@ -14,7 +14,7 @@ import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { MainBase } from "../main/MainBase.js";
 import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
 import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
-import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { makeTabs, openContextMenu } from "../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { EmbeddedFileExplorer } from "./EmbeddedFileExplorer.js";
@@ -23,6 +23,8 @@ import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
 import { EmbeddedSlider } from "./EmbeddedSlider.js";
 import { JOScript } from "./EmbeddedStarter.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
+
+import jQuery from "jquery";
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -160,7 +162,7 @@ export class MainEmbedded implements MainBase {
                 this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
                 this.initDatabase();
             }).catch((error: string) => {
-                alert('Fehler beim Landen der Datenbank: ' + error)
+                alert('Fehler beim Laden der Datenbank: ' + error)
             })
         } else {
             this.initDatabase();

@@ -4,13 +4,13 @@ import { SQLStatement } from "../../compiler/parser/Parser.js";
 import { Table } from "../../compiler/parser/SQLTable.js";
 import { SQLType } from "../../compiler/parser/SQLTypes.js";
 import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
-import { QueryResult } from "../../tools/DatabaseTools.js";
+import { QueryResult } from "../../sqljs-worker/DatabaseTools.js";
 import { downloadFile } from "../../tools/HtmlTools.js";
 import { WDatabase } from "../../workspace/WDatabase.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
-
+import jQuery from "jquery";
 
 type RuntimeError = {
     statement: SQLStatement,

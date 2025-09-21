@@ -1,4 +1,5 @@
 import { Main } from "../main/Main.js";
+import jQuery from "jquery";
 
 export class KeyboardTool {
     

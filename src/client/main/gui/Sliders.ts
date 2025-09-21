@@ -1,6 +1,5 @@
-import { jo_mouseDetected } from "../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
-
+import jQuery from "jquery";
 
 export class Sliders {
 

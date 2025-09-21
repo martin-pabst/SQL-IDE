@@ -1,10 +1,10 @@
-//@ts-ignore
-importScripts('../lib/sql.js/sql-wasm.js');
+import initSqlJs from 'sql.js/dist/sql-wasm'
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url' // vite magic: get url as string, let vite track the dependency
 
-//@ts-ignore
-var initsql = initSqlJs({
-    locateFile: name => (self.location + "").replace("worker/sqljs-worker.js", "") + 'lib/sql.js/' + name
-   });
+const initsql = initSqlJs({
+    locateFile: name => wasmUrl
+});
+
 var db;
 var SQL;
 
@@ -84,7 +84,7 @@ function worker(event) {
         }
 
     } catch (err) {
-        
+
         //@ts-ignore
         return postMessage({
             id: data["id"],
@@ -105,7 +105,7 @@ self.onmessage = (event) => {
             console.log(err);
             //@ts-ignore
             return postMessage({
-                id: this["data"]["id"],
+                id: (<any>this)["data"]["id"],
                 error: err["message"]
             });
         })
@@ -113,8 +113,6 @@ self.onmessage = (event) => {
         worker(event);
     }
 }
-
-
 
 function createDb(SQL, buffer) {
 
@@ -234,43 +232,42 @@ function createDb(SQL, buffer) {
         return inputText.match(timeformat) != null;
     });
 
-    db.create_function("concat", function (arg) {
+    db.create_function("concat", function () {
+        console.log("Hier!");
         if (arguments == null) return "";
         let erg = "";
-        for(let i = 0; i < arguments.length; i++){
+        for (let i = 0; i < arguments.length; i++) {
             erg += ("" + arguments[i]);
         }
         return erg;
     })
 
-    db.create_function("month", function(inputText){
+    db.create_function("month", function (inputText) {
         var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
         let match = inputText.match(dateformat);
-        if (match){
+        if (match) {
             return Number(match[1]);
         }
         return -1;
     })
 
-    db.create_function("day", function(inputText){
+    db.create_function("day", function (inputText) {
         var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
         let match = inputText.match(dateformat);
-        if (match){
+        if (match) {
             return Number(match[2]);
         }
         return -1;
     })
 
-    db.create_function("year", function(inputText){
+    db.create_function("year", function (inputText) {
         var dateformat = /^(\d{4})[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
         let match = inputText.match(dateformat);
-        if (match){
+        if (match) {
             return Number(match[1]);
         }
         return -1;
     })
 
-
     return db;
 }
-

@@ -1,9 +1,8 @@
-import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
-import { copyTextToClipboard, makeTabs } from "../../tools/HtmlTools.js";
+import { copyTextToClipboard } from "../../tools/HtmlTools.js";
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
-
+import jQuery from "jquery";
 
 export class DatabaseSettingsDialog {
 

@@ -1,4 +1,4 @@
-import { createDb1 } from "./sqljsWorkerTools.js";
+import {createDb} from './sqljsWorkerTools.js';
 
 export class WorkerSim {
 
@@ -20,7 +20,7 @@ export class WorkerSim {
         if (that.db == null) {
             that.initsql.then((SQL1) => {
                 that.SQL = SQL1;
-                that.db = createDb1(SQL1, undefined);
+                that.db = createDb(SQL1, undefined);
                 that.worker(data);
             }).catch((err) => {
                 console.log(err);
@@ -46,7 +46,7 @@ export class WorkerSim {
             switch (data && data["action"]) {
                 case "open":
                     buff = data["buffer"];
-                    this.db = createDb1(this.SQL, buff && new Uint8Array(buff));
+                    this.db = createDb(this.SQL, buff && new Uint8Array(buff));
                     //@ts-ignore
                     return this.postMessageToClient({
                         id: data["id"],
@@ -54,7 +54,7 @@ export class WorkerSim {
                     });
                 case "exec":
                     if (this.db === null) {
-                        this.db = createDb1(this.SQL, undefined);
+                        this.db = createDb(this.SQL, undefined);
                     }
                     if (!data["sql"]) {
                         throw "exec: Missing query string";
@@ -66,7 +66,7 @@ export class WorkerSim {
                     });
                 case "each":
                     if (this.db === null) {
-                        this.db = createDb1(this.SQL, undefined);
+                        this.db = createDb(this.SQL, undefined);
                     }
                     var callback = function callback(row) {
                         //@ts-ignore

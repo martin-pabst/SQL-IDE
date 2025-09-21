@@ -1,6 +1,5 @@
-import { LoginRequest, PerformanceData } from "./Data.js";
-import { NewNotifier } from "./NewNotifier.js";
-import { PushClientManager } from "./pushclient/PushClientManager.js";
+import { PerformanceData } from "./Data.js";
+import jQuery from "jquery";
 
 export class PerformanceCollector {
     static performanceData: PerformanceData[] = [];
@@ -57,7 +56,7 @@ export function ajax(url: string, request: any, successCallback: (response: any)
     let headers: {[key: string]: string;} = {};
     if(csrfToken != null) headers = {"x-token-pm": csrfToken};
 
-    $.ajax({
+    jQuery.ajax({
         type: 'POST',
         async: true,
         data: JSON.stringify(request),

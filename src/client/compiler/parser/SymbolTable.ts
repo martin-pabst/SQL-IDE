@@ -1,4 +1,4 @@
-import { DatabaseStructure } from "../../tools/DatabaseTools.js";
+import { DatabaseStructure } from "../../sqljs-worker/DatabaseTools.js";
 import { TextPosition } from "../lexer/Token.js";
 import { Table, Column } from "./SQLTable.js";
 

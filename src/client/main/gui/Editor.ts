@@ -8,6 +8,7 @@ import { MyReferenceProvider } from "./MyReferenceProvider.js";
 import { defineVscSQL } from "./VSCSql.js";
 import { MainBase } from "../MainBase.js";
 import { Helper } from "./Helper.js";
+import jQuery from "jquery";
 import * as monaco from 'monaco-editor'
 
 

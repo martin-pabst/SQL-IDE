@@ -9,7 +9,8 @@ import { CacheManager } from "./CacheManager.js";
 import { TemplateUploader } from "../tools/TemplateUploader.js";
 import { FileTool } from "../tools/FileTool.js";
 import { PushClientManager } from "./pushclient/PushClientManager.js";
-
+import pako from 'pako'
+import jQuery from "jquery";
 
 export class NetworkManager {
 
@@ -359,7 +360,6 @@ export class NetworkManager {
 
                     if (FileTool.isZipfile(templateDump)) {
                         try {
-                            // @ts-ignore
                             workspace.database.templateDump = pako.inflate(templateDump);
                         } catch (err) {
                             console.log(err);
@@ -377,7 +377,6 @@ export class NetworkManager {
                         this.fetchTemplate(workspace.id, (template, error) => {
                             if (template != null) {
                                 cacheManager.saveTemplateToCache(workspace.database.based_on_template_id, template);
-                                // @ts-ignore
                                 workspace.database.templateDump = pako.inflate(template);
                                 callback(null);
                                 return;
@@ -400,7 +399,7 @@ export class NetworkManager {
     }
 
 
-    fetchTemplate(workspaceId: number, callback: (template: Uint8Array, error?: string) => void) {
+    fetchTemplate(workspaceId: number, callback: (template: Uint8Array<ArrayBuffer>, error?: string) => void) {
         let request: GetTemplateRequest = {
             workspaceId: workspaceId
         }
@@ -408,7 +407,7 @@ export class NetworkManager {
         let headers: { [key: string]: string; } = {};
         if (csrfToken != null) headers = { "x-token-pm": csrfToken };
 
-        $.ajax({
+        jQuery.ajax({
             type: 'POST',
             async: true,
             data: JSON.stringify(request),

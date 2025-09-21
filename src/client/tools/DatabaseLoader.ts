@@ -1,11 +1,11 @@
-import { csrfToken } from "../communication/AjaxHelper.js";
 import { MainBase } from "../main/MainBase.js";
-import { DatabaseTool } from "./DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
-
+import jQuery from "jquery";
+import pako from 'pako'
 
 export type LoadableDatabase = {
-    binDump?: Uint8Array,
+    binDump?: Uint8Array<ArrayBuffer>,
     statements?: string[]
 }
 
@@ -21,10 +21,9 @@ export class DatabaseFetcher {
 
         let urlLowerCase = urlWithoutProtocol.toLocaleLowerCase();
 
-        let templateDump: Uint8Array = await this.fetchTemplateFromCache(urlWithoutProtocol);
+        let templateDump: Uint8Array<ArrayBuffer> = await this.fetchTemplateFromCache(urlWithoutProtocol);
         if (templateDump != null) {
             if (DatabaseTool.getDumpType(templateDump) == "binaryCompressed") {
-                // @ts-ignore
                 templateDump = pako.inflate(templateDump);
             }
             return { binDump: templateDump }
@@ -85,7 +84,7 @@ export class DatabaseFetcher {
     }
 
 
-    async fetchTemplateFromCache(databaseIdentifier: string): Promise<Uint8Array> {
+    async fetchTemplateFromCache(databaseIdentifier: string): Promise<Uint8Array<ArrayBuffer>> {
         if (databaseIdentifier == null) { return null; }
 
         if (!this.cacheAvailable()) return (null);
@@ -102,7 +101,7 @@ export class DatabaseFetcher {
 
     }
 
-    async saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array | string) {
+    async saveDatabaseToCache(databaseIdentifier: string, templateDump: Uint8Array<ArrayBuffer> | string) {
         if (!this.cacheAvailable()) return;
 
         let cache = await caches.open('my-cache');

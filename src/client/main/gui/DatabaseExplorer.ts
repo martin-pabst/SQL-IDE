@@ -1,8 +1,8 @@
 import { MainBase } from "../MainBase.js";
-import { Table, Column } from "../../compiler/parser/SQLTable.js";
-import { DatabaseStructure } from "../../tools/DatabaseTools.js";
+import { Table} from "../../compiler/parser/SQLTable.js";
+import { DatabaseStructure } from "../../sqljs-worker/DatabaseTools.js";
 import { downloadFile, openContextMenu } from "../../tools/HtmlTools.js";
-
+import jQuery from "jquery";
 
 export class DatabaseExplorer {
 

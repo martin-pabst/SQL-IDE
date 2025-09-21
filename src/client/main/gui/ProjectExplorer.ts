@@ -8,7 +8,7 @@ import { Accordion, AccordionContextMenuItem, AccordionElement, AccordionPanel }
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
 import { Helper } from "./Helper.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
-
+import jQuery from "jquery";
 
 
 export class ProjectExplorer {

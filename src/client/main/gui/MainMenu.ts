@@ -1,12 +1,14 @@
 import { Main } from "../Main.js";
 import { UserData } from "../../communication/Data.js";
-import { PasswordChanger } from "./UserMenu.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import { ajax } from "../../communication/AjaxHelper.js";
-
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
+import jQuery from "jquery";
+
+declare var BUILD_DATE: string;
+declare var APP_VERSION: string;
 
 export type Action = (identifier: string) => void;
 
@@ -157,20 +159,20 @@ export class MainMenu {
                             {
                                 identifier: "Aktuellen Zustand als Vorlage hochladen...", action: () => {
                                     let currentWorkspace = this.main.currentWorkspace;
-                                    if(currentWorkspace == null){
+                                    if (currentWorkspace == null) {
                                         alert('Es ist kein Workspace ausgewählt.');
                                         return;
                                     }
-                                    if(currentWorkspace.database.owner_id != this.main.user.id){
+                                    if (currentWorkspace.database.owner_id != this.main.user.id) {
                                         alert('Die Datenbank gehört einer anderen Benutzerin/einem anderen Benutzer. Sie kann daher nicht als Vorlage hochgeladen werden.');
                                         return;
                                     }
-                                    if(currentWorkspace.database.published_to == 0){
+                                    if (currentWorkspace.database.published_to == 0) {
                                         alert('Die Datenbank ist noch nicht für andere Benutzer/innen veröffentlicht, daher kann sie nicht als Vorlage hochgeladen werden. \nDie Möglichkeit zum Veröffentlichen finden Sie unter Datenbank->Einstellungen.');
                                         return;
                                     }
-                                    new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate", 
-                                    () => {alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.')});
+                                    new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate",
+                                        () => { alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.') });
                                 }
                             },
 
@@ -192,7 +194,12 @@ export class MainMenu {
                             {
                                 identifier: "Datenschutzerklärung...",
                                 link: "https://www.learnj.de/doku.php?id=ide:datenschutzerklaerung"
+                            },
+                            {
+                                identifier: "<div class='jo_menu_version'>" + "Version " + APP_VERSION + " (" + BUILD_DATE + ")</div>",
+                                noHoverAnimation: true
                             }
+
 
                         ]
                     }
@@ -201,19 +208,19 @@ export class MainMenu {
             ]
         };
 
-        if (user != null && (user.is_admin )) {
+        if (user != null && (user.is_admin)) {
             mainMenu.items[0].subMenu.items.push({
-                            identifier:"Shutdown server...",
-                            action: () => {
-                                if(confirm("Server wirklich herunterfahren?")){
-                                    ajax("shutdown", {}, () => {
-                                        alert('Server erfolgreich heruntergefahren.');
-                                    }, (message) => {
-                                        alert(message);
-                                    })
-                                }
-                            }
-                        }
+                identifier: "Shutdown server...",
+                action: () => {
+                    if (confirm("Server wirklich herunterfahren?")) {
+                        ajax("shutdown", {}, () => {
+                            alert('Server erfolgreich heruntergefahren.');
+                        }, (message) => {
+                            alert(message);
+                        })
+                    }
+                }
+            }
             )
         }
 

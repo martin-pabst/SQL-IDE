@@ -1,4 +1,4 @@
-import { ColumnStructure, TableStructure } from "../../tools/DatabaseTools.js";
+import { ColumnStructure, TableStructure } from "../../sqljs-worker/DatabaseTools.js";
 import { SQLType, SQLBaseType, SQLDerivedType, SQLTextEnumType, SQLNumberEnumType } from "./SQLTypes.js";
 
 

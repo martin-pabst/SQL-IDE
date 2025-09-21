@@ -3,7 +3,7 @@ import { NetworkManager } from "../communication/NetworkManager.js";
 import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
-import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { checkIfMousePresent, getCookieValue } from "../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ActionManager } from "./gui/ActionManager.js";
@@ -29,6 +29,7 @@ import { MainBase } from "./MainBase.js";
 import * as monaco from 'monaco-editor';
 import { NewNotifier } from "../communication/NewNotifier.js";
 import { setCookie } from "../tools/HttpTools.js";
+import jQuery from "jquery";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -244,7 +245,7 @@ export class Main implements MainBase {
 
         this.startTimer();
 
-        $(window).on('unload', function() {
+        jQuery(window).on('unload', function() {
             
             if(navigator.sendBeacon && that.user != null){
                 that.networkManager.sendUpdates(null, false);

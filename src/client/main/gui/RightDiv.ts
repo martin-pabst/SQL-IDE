@@ -1,7 +1,6 @@
 import { makeTabs } from "../../tools/HtmlTools.js";
-import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
-
+import jQuery from "jquery";
 
 export class RightDiv {
 

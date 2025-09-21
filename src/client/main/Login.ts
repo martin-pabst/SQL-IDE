@@ -5,7 +5,7 @@ import { PushClientManager } from "../communication/pushclient/PushClientManager
 import { AutoLogout } from "./AutoLogout.js";
 import { Main } from "./Main.js";
 import { UserMenu } from "./gui/UserMenu.js";
-
+import jQuery from "jquery";
 
 export class Login {
 

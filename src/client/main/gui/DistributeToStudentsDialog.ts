@@ -1,8 +1,7 @@
 import { ClassData, UserData } from "../../communication/Data.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
-import { isEmptyObject } from "jquery";
-
+import jQuery from "jquery";
 
 export class DistributeToStudentsDialog {
 
@@ -56,9 +55,9 @@ export class DistributeToStudentsDialog {
         jQuery('.jo_ds_filterdiv>input').on('input', () => {
             let filterText = <string>jQuery('.jo_ds_filterdiv>input').val();
             if(filterText == null || filterText == ""){
-                $('.jo_ds_student_line').show();
+                jQuery('.jo_ds_student_line').show();
             } else {
-                $('.jo_ds_student_line').each((index, element) => {
+                jQuery('.jo_ds_student_line').each((index, element) => {
                 let filterTextLowerCase = filterText.toLocaleLowerCase();
                     let $element = jQuery(element);
                     let klass:ClassData = $element.data('klass');
@@ -89,7 +88,7 @@ export class DistributeToStudentsDialog {
     distributeDatabase() {
 
         let student_ids: number[] = [];
-        $('.jo_ds_student_line').each((index, element) => {
+        jQuery('.jo_ds_student_line').each((index, element) => {
             let $element = jQuery(element);
             if($element.hasClass('jo_active')){
                 let student: UserData = $element.data('student');

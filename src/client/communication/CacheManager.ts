@@ -1,6 +1,6 @@
 export class CacheManager {
     
-    fetchTemplateFromCache(databaseId: number, callback: (templateDump: Uint8Array) => void) {
+    fetchTemplateFromCache(databaseId: number, callback: (templateDump: Uint8Array<ArrayBuffer>) => void) {
         if(databaseId == null){callback(null); return;}
         let that = this;
         if(!this.cacheAvailable()) callback(null);
@@ -13,7 +13,7 @@ export class CacheManager {
         })        
     }
 
-    saveTemplateToCache(databaseId: number, templateDump: Uint8Array) {
+    saveTemplateToCache(databaseId: number, templateDump: Uint8Array<ArrayBuffer>) {
         if(!this.cacheAvailable()) return;
         let that = this;
         this.getCache((cache) => {

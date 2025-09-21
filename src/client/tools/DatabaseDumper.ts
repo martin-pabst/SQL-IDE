@@ -1,5 +1,5 @@
 import { MainBase } from "../main/MainBase.js";
-import { ColumnStructure, DatabaseStructure, DatabaseTool, TableStructure } from "./DatabaseTools.js";
+import { ColumnStructure, DatabaseStructure, DatabaseTool, TableStructure } from "../sqljs-worker/DatabaseTools.js";
 
 type TableData = {
     table: TableStructure;

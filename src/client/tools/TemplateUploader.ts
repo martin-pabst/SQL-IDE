@@ -1,7 +1,7 @@
 import { csrfToken } from "../communication/AjaxHelper.js";
 import { UploadTemplateResponse } from "../communication/Data.js";
 import { Main } from "../main/Main.js";
-import { Workspace } from "../workspace/Workspace.js";
+import pako from 'pako';
 
 export class TemplateUploader {
 
@@ -13,7 +13,6 @@ export class TemplateUploader {
         if (workspace_id >= 0) {
             let dbTool = main.getDatabaseTool();
             dbTool.export((buffer) => {
-                // @ts-ignore
                 buffer = pako.deflate(buffer);
                 this.uploadIntern(buffer, workspace_id, reason, main, callback);
             }, (error) => {

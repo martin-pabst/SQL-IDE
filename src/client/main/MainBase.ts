@@ -2,7 +2,7 @@ import * as monaco from 'monaco-editor';
 import { Compiler } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
-import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ActionManager } from "./gui/ActionManager.js";
 import { BottomDiv } from "./gui/BottomDiv.js";

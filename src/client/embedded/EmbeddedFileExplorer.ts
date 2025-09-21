@@ -2,7 +2,9 @@ import { Module, ModuleStore } from "../compiler/parser/Module.js";
 import { MainEmbedded } from "./MainEmbedded.js";
 import { openContextMenu, makeEditable } from "../tools/HtmlTools.js";
 import { JOScript, ScriptType } from "./EmbeddedStarter.js";
+import markdownit from 'markdown-it';
 import * as monaco from 'monaco-editor'
+import jQuery from "jquery";
 
 type FileData = {
     type: ScriptType,
@@ -205,7 +207,7 @@ export class EmbeddedFileExplorer {
                 let code: string[] = [];
 
                 //@ts-ignore
-                let md1 = window.markdownit({
+                let md1 = markdownit({
                     highlight: function (str, lang) {
                         code.push(str);
                         return "";
@@ -223,7 +225,7 @@ export class EmbeddedFileExplorer {
 
                 this.colorize(code, syntaxMap, () => {
                     //@ts-ignore
-                    let md2 = window.markdownit({
+                    let md2 = markdownit({
                         highlight: function (str, lang) {
                             return syntaxMap[str];
                         }

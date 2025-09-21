@@ -4,7 +4,7 @@ import { makeDiv } from "../../tools/HtmlTools.js";
 import { dateToStringWithoutTime, stringToDate } from "../../tools/StringTools.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
-
+import jQuery from "jquery";
 
 type ModuleWithWorkspace = {
     module: Module,

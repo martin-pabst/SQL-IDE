@@ -1,6 +1,13 @@
 import { Formatter } from "../main/gui/Formatter.js";
 import { ThemeManager } from "../main/gui/ThemeManager.js";
 import { MainEmbedded } from "./MainEmbedded.js";
+import jQuery from "jquery";
+
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 
 import '/include/css/editor.css';
 import '/include/css/bottomdiv.css';
@@ -18,6 +25,35 @@ export type JOScript = {
     type: ScriptType;
     title: string;
     text: string;
+}
+
+function initMonacoEditor(): void {
+    // see https://github.com/microsoft/monaco-editor/blob/main/docs/integrate-esm.md#using-vite
+    // https://dev.to/lawrencecchen/monaco-editor-svelte-kit-572
+    // https://github.com/microsoft/monaco-editor/issues/4045
+
+    self.MonacoEnvironment = {
+        getWorker: (_workerId, label) => {
+            switch (label) {
+                case 'json':
+                    return new jsonWorker()
+                case 'css':
+                case 'scss':
+                case 'less':
+                    return new cssWorker()
+                case 'html':
+                case 'handlebars':
+                case 'razor':
+                    return new htmlWorker()
+                case 'typescript':
+                case 'javascript':
+                    return new tsWorker()
+                default:
+                    return new editorWorker()
+            }
+        }
+    };
+
 }
 
 export class EmbeddedStarter {
@@ -55,14 +91,14 @@ export class EmbeddedStarter {
     }
 
     initJavaOnlineDivs() {
-        
+
         jQuery('.sql-online').each((index: number, element: HTMLElement) => {
             let $div = jQuery(element);
             let scriptList: JOScript[] = [];
             $div.find('script').each((index: number, element: HTMLElement) => {
                 let $script = jQuery(element);
                 let type: ScriptType = "sql";
-                if($script.data('type') != null) type = <ScriptType>($script.data('type'));
+                if ($script.data('type') != null) type = <ScriptType>($script.data('type'));
                 let script: JOScript = {
                     type: type,
                     title: $script.attr('title'),
@@ -89,37 +125,12 @@ jQuery(function () {
 
     let embeddedStarter = new EmbeddedStarter();
 
-    let prefix = "";
-    let editorPath = "lib/monaco-editor/dev/vs"
-    //@ts-ignore
-    if(window.javaOnlineDir != null){
-        //@ts-ignore
-        prefix = window.javaOnlineDir;
-    }
+    initMonacoEditor();
+
+    embeddedStarter.initEditor();
+    embeddedStarter.initGUI();
 
     //@ts-ignore
-    if(window.monacoEditorPath != null){
-        //@ts-ignore
-        editorPath = window.monacoEditorPath;
-    }
-
-    //@ts-ignore
-    window.require.config({ paths: { 'vs': prefix + editorPath } });
-    //@ts-ignore
-    window.require.config({
-        'vs/nls': {
-            availableLanguages: {
-                '*': 'de'
-            }
-        },
-        ignoreDuplicateModules: ["vs/editor/editor.main"]
-    });
-    //@ts-ignore
-    window.require(['vs/editor/editor.main'], function () {
-
-        embeddedStarter.initEditor();
-        embeddedStarter.initGUI();
-
-    });
+    console.log("SQL-IDE embedded Version " + APP_VERSION + " vom " + BUILD_DATE);
 
 });

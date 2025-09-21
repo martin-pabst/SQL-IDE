@@ -1,13 +1,14 @@
 import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { LoadableDatabase } from "../../tools/DatabaseLoader.js";
-import { DatabaseTool } from "../../tools/DatabaseTools.js";
+import { DatabaseTool } from "../../sqljs-worker/DatabaseTools.js";
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
-import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { AccordionElement } from "./Accordion.js";
+import pako from 'pako'
 
+import jQuery from "jquery";
 
 type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase" | "useDumpFile";
 
@@ -256,13 +257,11 @@ export class NewDatabaseDialog {
         let isDatabase: boolean = false;
         let dumpFileType = DatabaseTool.getDumpType(db.binDump);
         if (dumpFileType == "binaryCompressed") {
-            // @ts-ignore
             let dbUncompressed = pako.inflate(db.binDump);
             if (DatabaseTool.getDumpType(dbUncompressed) == "binaryUncompressed") {
                 isDatabase = true;
             }
         } else if (DatabaseTool.getDumpType(db.binDump) == "binaryUncompressed") {
-            //@ts-ignore
             db.binDump = pako.deflate(db.binDump);
             isDatabase = true;
         }

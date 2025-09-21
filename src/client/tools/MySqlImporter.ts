@@ -6,7 +6,8 @@ import { Parser, SQLStatement } from "../compiler/parser/Parser.js";
 import { StatementCleaner } from "../compiler/parser/StatementCleaner.js";
 import { MainBase } from "../main/MainBase.js";
 import { LoadableDatabase } from "./DatabaseLoader.js";
-import { DatabaseTool } from "./DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
+import * as zip from "@zip.js/zip.js";
 
 export class MySqlImporter {
 
@@ -55,14 +56,12 @@ export class MySqlImporter {
     }
 
     async unzipURL(url: string): Promise<string> {
-        //@ts-ignore
         const reader = new zip.ZipReader(new zip.HttpReader(url));
         return this.unzipIntern(reader);
     }
 
     async unzipFile(file: globalThis.File): Promise<string> {
         // create a BlobReader to read with a ZipReader the zip from a Blob object
-        //@ts-ignore
         const reader = new zip.ZipReader(new zip.BlobReader(file));
         return this.unzipIntern(reader);
     }
@@ -77,7 +76,6 @@ export class MySqlImporter {
                 // get first entry content as text by using a TextWriter
                 text += await entry.getData(
                     // writer
-                    //@ts-ignore
                     new zip.TextWriter(),
                     // options
                     {

@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    "lib": ["ESNext", "DOM", "WebWorker"],
     "moduleResolution": "Node",
     "strict": false,
     "resolveJsonModule": true,
@@ -11,7 +11,8 @@
     "esModuleInterop": true,
     "noEmit": true,
     "skipLibCheck": true,
-
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
     "noUnusedLocals": false,
     "noImplicitReturns": false,
     "noUnusedParameters": false

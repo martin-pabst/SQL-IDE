@@ -1,33 +1,9 @@
-export function createDb1(SQL, buffer) {
+/**
+ * BEWARE: Identical function in sqljsWorker.ts!!
+ */
+export function createDb(SQL, buffer) {
 
-    var db = new SQL.Database(buffer);
-
-    db.create_function("month", function(inputText){
-        var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
-        let match = inputText.match(dateformat);
-        if (match){
-            return Number(match[1]);
-        }
-        return -1;
-    })
-
-    db.create_function("day", function(inputText){
-        var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
-        let match = inputText.match(dateformat);
-        if (match){
-            return Number(match[2]);
-        }
-        return -1;
-    })
-
-    db.create_function("year", function(inputText){
-        var dateformat = /^(\d{4})[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
-        let match = inputText.match(dateformat);
-        if (match){
-            return Number(match[1]);
-        }
-        return -1;
-    })
+    const db = new SQL.Database(buffer);
 
     db.create_function("isDate", function (inputText) {
 
@@ -89,7 +65,7 @@ export function createDb1(SQL, buffer) {
         if (typeof inputText != 'string') return false;
 
         // var dateformat = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
-        var dateformat = /^\d{4}[\-](0[1-9]|1[012])[\-](0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0123]):([0-5][0-9]):([0-5][0-9])$/;
+        var dateformat = /^\d{4}[\-](0[1-9]|1[012])[\-](0[1-9]|[12][0-9]|3[01]) ([01][1-9]|2[0123]):([0-5][0-9]):([0-5][0-9])$/;
         // Match the date format through regular expression
         if (inputText.match(dateformat)) {
             var splitStr = inputText.split(' ');
@@ -133,6 +109,33 @@ export function createDb1(SQL, buffer) {
         }
     });
 
+    db.create_function("month", function (inputText) {
+        var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
+        let match = inputText.match(dateformat);
+        if (match) {
+            return Number(match[1]);
+        }
+        return -1;
+    })
+
+    db.create_function("day", function (inputText) {
+        var dateformat = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
+        let match = inputText.match(dateformat);
+        if (match) {
+            return Number(match[2]);
+        }
+        return -1;
+    })
+
+    db.create_function("year", function (inputText) {
+        var dateformat = /^(\d{4})[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/;
+        let match = inputText.match(dateformat);
+        if (match) {
+            return Number(match[1]);
+        }
+        return -1;
+    })
+
     db.create_function("isTime", function (inputText) {
         if (inputText == null) return true;
 
@@ -144,14 +147,15 @@ export function createDb1(SQL, buffer) {
     });
 
     db.create_function("concat", function (arg) {
-        console.log("Hier1");
         if (arguments == null) return "";
         let erg = "";
-        for(let i = 0; i < arguments.length; i++){
+        for (let i = 0; i < arguments.length; i++) {
             erg += ("" + arguments[i]);
         }
         return erg;
     })
+
+
 
     return db;
 }

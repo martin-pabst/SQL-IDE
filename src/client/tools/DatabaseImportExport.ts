@@ -1,8 +1,9 @@
 import { MainBase } from "../main/MainBase.js";
 import { LoadableDatabase } from "./DatabaseLoader.js";
-import { DatabaseTool } from "./DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { downloadFile } from "./HtmlTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
+import pako from 'pako'
 
 export class DatabaseImportExport {
 
@@ -19,9 +20,8 @@ export class DatabaseImportExport {
             return new Promise<LoadableDatabase>((resolve, reject) => {
                 reader.onload = (event) => {
                     let ab: ArrayBuffer = <ArrayBuffer>event.target.result;
-                    let db: Uint8Array = new Uint8Array(ab);
+                    let db: Uint8Array<ArrayBuffer> = new Uint8Array(ab);
         
-                    //@ts-ignore
                     if(DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
                     
                     main.getWaitOverlay().hide();
@@ -43,7 +43,7 @@ export class DatabaseImportExport {
                 return;
             }
             if (!filename.endsWith(".sqLite")) filename = filename + ".sqLite";
-            downloadFile(new Blob([db.buffer]), filename, true);
+            downloadFile(new Blob([<ArrayBuffer>db.buffer]), filename, true);
         }, () => {});
     }
 

@@ -1,6 +1,6 @@
 import { SQLStatement } from "../compiler/parser/Parser.js";
 import { WriteQueryListener } from "../main/gui/ResultsetPresenter.js";
-import { DatabaseTool } from "../tools/DatabaseTools.js";
+import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { MainEmbedded } from "./MainEmbedded.js";
 
