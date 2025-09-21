@@ -24,6 +24,8 @@ import { EmbeddedSlider } from "./EmbeddedSlider.js";
 import { JOScript } from "./EmbeddedStarter.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
 
+import gridUrl from '/include/graphics/grid.svg';
+
 import jQuery from "jquery";
 
 type JavaOnlineConfig = {
@@ -606,16 +608,13 @@ export class MainEmbedded implements MainBase {
 
     makeWaitDiv(): JQuery<HTMLElement> {
 
-        //@ts-ignore
-        let url = (window.javaOnlineDir == null ? '' : window.javaOnlineDir) + 'assets/graphics/grid.svg';
-
         let waitHtml = `
         <div class="bitteWarten">
         <div style="margin-bottom: 30px">
             <div class="bitteWartenText" style="font-size: 20px"></div>
         </div>
         <div>
-            <img src="${url}" alt="" style="height: 40px">
+            <img src="${gridUrl}" alt="" style="height: 40px">
         </div>
         <div class="bitteWartenProgress" style="font-size: 20px"></div>
         </div>

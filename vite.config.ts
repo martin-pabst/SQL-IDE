@@ -1,4 +1,4 @@
-import { searchForWorkspaceRoot, type UserConfig } from 'vite'
+import { type UserConfig } from 'vite'
 import commonConfig from './vite.config-common.ts'
 
 export default {

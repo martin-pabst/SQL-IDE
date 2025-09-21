@@ -80,14 +80,6 @@ export class DatabaseTool {
 
         let t = performance.now();
 
-        // console.log("Starting worker...");
-
-        // let url: string = "worker/sqljs-worker.js"
-        // if(this.main.isEmbedded()){
-        //     //@ts-ignore
-        //     url = window.javaOnlineDir + url;
-        // }
-
         // @ts-ignore
         if(window.jo_doc){
             // In embedded mode inside iframe the calling domain is different, so web workers are not supported
