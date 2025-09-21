@@ -1,9 +1,13 @@
 import {createDb} from './sqljsWorkerTools.js';
 
+import initSqlJs from 'sql.js/dist/sql-wasm'
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url' // vite magic: get url as string, let vite track the dependency
+
 export class WorkerSim {
 
     //@ts-ignore
-    initsql = initSqlJs({locateFile: (path, scriptDirectory) => "https://embed.learn-sql.de/include/lib/sql.js/sql-wasm.wasm"});
+    // initsql = initSqlJs({locateFile: (path, scriptDirectory) => "https://embed.learn-sql.de/include/lib/sql.js/sql-wasm.wasm"});
+    initsql = initSqlJs({locateFile: (path, scriptDirectory) => wasmUrl});
     db;
     SQL;
 

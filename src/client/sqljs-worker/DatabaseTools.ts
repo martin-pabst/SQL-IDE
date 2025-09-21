@@ -1,6 +1,7 @@
 import { MainBase } from "../main/MainBase.js";
 import jQuery from "jquery";
 import workerUrl from "./sqljsWorker?worker&url";
+import { WorkerSim } from "./sqljsWorkerSim.js";
 
 export type DatabaseDumpType = "binaryUncompressed" | "binaryCompressed" | "other";
 
@@ -87,16 +88,19 @@ export class DatabaseTool {
         //     url = window.javaOnlineDir + url;
         // }
 
-        //@ts-ignore
-        // if(window.jo_doc){
-        //     //@ts-ignore
-        //     this.worker = new WorkerSim();
-        // } else {
+        // @ts-ignore
+        if(window.jo_doc){
+            // In embedded mode inside iframe the calling domain is different, so web workers are not supported
+            // because of browser security policy.
+            // Use simulated worker instead.
+            //@ts-ignore
+            this.worker = new WorkerSim();
+        } else {
             // see https://v3.vitejs.dev/guide/features.html#web-workers
             // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
-            // this.worker = new Worker(new URL("sqljsWorker.ts", import.meta.url), { type: 'module' });
+            this.worker = new Worker(new URL("sqljsWorker.ts", import.meta.url), { type: 'module' });
             this.worker = new Worker(workerUrl, { type: 'module' });
-        // }
+        }
         let that = this;
 
         let errors: string[] = [];
