@@ -60,6 +60,7 @@ export enum TokenType {
     keywordView,
     keywordEnum,
     keywordBetween,
+    keywordNotBetween,
 
     keywordOr,
     keywordAnd,
@@ -152,6 +153,8 @@ export enum TokenType {
     // Comment
     comment,
 
+    exclamationMark, // !
+
     endofSourcecode, // will be generated after sourcecode end
     
     // Program statement types:
@@ -235,6 +238,7 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordView]: "view",
     [TokenType.keywordEnum]: "enum",
     [TokenType.keywordBetween]: "between",
+    [TokenType.keywordNotBetween]: "not between",
 
 
     [TokenType.keywordAnd]: "and",
@@ -339,6 +343,8 @@ export var specialCharList: {[keyword: string]:TokenType} = {
     '{': TokenType.leftCurlyBracket, // {}
     '}': TokenType.rightCurlyBracket,
     
+    '!': TokenType.exclamationMark, // !
+
     // operators
     '.': TokenType.dot, //.
     ',': TokenType.comma, //.
@@ -442,6 +448,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "offset": TokenType.keywordOffset,
     "in": TokenType.keywordIn,
     "not in": TokenType.keywordNotIn,
+    "not between": TokenType.keywordNotBetween,
     "like": TokenType.keywordLike,
     "collate": TokenType.keywordCollate,
     "default": TokenType.keywordDefault,

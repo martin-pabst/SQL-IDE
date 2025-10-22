@@ -41,6 +41,7 @@ export class Lexer {
 
     tokenTypesToMerge: { first: TokenType, second: TokenType, merged: TokenType }[] = [
         { first: TokenType.keywordNotIn, second: TokenType.keywordIn, merged: TokenType.keywordNotIn },
+        { first: TokenType.keywordNot, second: TokenType.keywordBetween, merged: TokenType.keywordNotBetween },
         { first: TokenType.keywordIs, second: TokenType.keywordNot, merged: TokenType.isNot },
         { first: TokenType.isNot, second: TokenType.keywordNull, merged: TokenType.isNotNull },
         { first: TokenType.keywordIs, second: TokenType.keywordNull, merged: TokenType.isNull },
@@ -135,6 +136,17 @@ export class Lexer {
 
         if (specialCharToken != null) {
             switch (specialCharToken) {
+                case TokenType.exclamationMark:
+                    if (this.nextChar == "=") {
+                        this.pushToken(TokenType.notEqual, '!=');
+                        this.next();
+                        this.next();
+                        return;
+                    } else {
+                        this.pushToken(TokenType.exclamationMark, '!');
+                        this.next();
+                        return;
+                    }
                 case TokenType.leftSquareBracket:
                     if (this.nextChar == "]") {
                         this.pushToken(TokenType.leftRightSquareBracket, "[]");
