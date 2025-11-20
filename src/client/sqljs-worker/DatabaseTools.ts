@@ -44,7 +44,7 @@ export type TableStructure = {
     size: number;
     columns: ColumnStructure[];
     completeSQL: string;
-    type: ("table"|"view");
+    type: ("table" | "view");
 }
 
 export type DatabaseStructure = {
@@ -65,16 +65,16 @@ export class DatabaseTool {
 
     databaseStructure: DatabaseStructure;
 
-    constructor(private main: MainBase){
+    constructor(private main: MainBase) {
 
     }
 
     initializeWorker(template: Uint8Array, queries: string[], callbackAfterInitializing?: (errors: string[]) => void,
         callbackAfterRetrievingStructure?: () => void) {
-        
+
         this.main.getWaitOverlay().show('Bitte warten, die Datenbank wird initialisiert...');
-        
-            if (this.worker != null) {
+
+        if (this.worker != null) {
             this.worker.terminate();
         }
 
@@ -89,7 +89,7 @@ export class DatabaseTool {
         // }
 
         // @ts-ignore
-        if(window.jo_doc){
+        if (window.jo_doc) {
             // In embedded mode inside iframe the calling domain is different, so web workers are not supported
             // because of browser security policy.
             // Use simulated worker instead.
@@ -134,7 +134,7 @@ export class DatabaseTool {
 
             };
 
-            if(queries == null) queries = [];
+            if (queries == null) queries = [];
             queries = queries.slice();
             queries.unshift("PRAGMA foreign_keys = OFF;")
             queries.push("PRAGMA foreign_keys = ON;")
@@ -142,13 +142,13 @@ export class DatabaseTool {
 
             let execQuery = () => {
                 if (queries.length > 0) {
-                    this.main.getWaitOverlay().setProgress(`${Math.round((1-queries.length/queryCount)*100) + " %"}`)
+                    this.main.getWaitOverlay().setProgress(`${Math.round((1 - queries.length / queryCount) * 100) + " %"}`)
                     let query = queries.shift();
                     that.executeQuery(query, (result) => {
                         execQuery();
                     }, (error) => {
                         errors.push("Error while setting up database: " + error + ", query: " + query);
-                        console.log({"error": "Error while setting up database: " + error, "query": query});
+                        console.log({ "error": "Error while setting up database: " + error, "query": query });
                         console.log()
                         execQuery();
                     })
@@ -220,7 +220,7 @@ export class DatabaseTool {
 
         let id = this.queryId++;
 
-        this.querySuccessCallbacksMap.set(id, (results) => { successCallback(results[0].buffer)  });
+        this.querySuccessCallbacksMap.set(id, (results) => { successCallback(results[0].buffer) });
         this.queryErrorCallbackMap.set(id, errorCallback);
 
         this.worker.postMessage({
@@ -231,7 +231,7 @@ export class DatabaseTool {
 
     }
 
-    
+
 
     getDirectoryEntries(callback: (entries: DatabaseDirectoryEntry[]) => void) {
         if (this.databaseDirectoryEntries != null) {
@@ -254,7 +254,7 @@ export class DatabaseTool {
         this.executeQuery(sql, (result) => {
             let sql1 = "";
             let values = result[0]?.values;
-            let types: ("table"|"view")[] = values?.map(value => value[2]);
+            let types: ("table" | "view")[] = values?.map(value => value[2]);
 
             values?.forEach(value => sql1 += `PRAGMA table_info("${value[0]}");\nPRAGMA foreign_key_list("${value[0]}");\nselect count(*) from "${value[0]}";\n\n`)
 
@@ -267,7 +267,7 @@ export class DatabaseTool {
 
                     callback(that.databaseStructure);
 
-                }, (error) => { 
+                }, (error) => {
                     console.log(error);
                     that.databaseStructure = { tables: [] };
                     callback(that.databaseStructure);
@@ -277,12 +277,17 @@ export class DatabaseTool {
                 callback(that.databaseStructure);
             }
 
-        }, (error) => { console.log(error) });
+        }, (error) => {
+            console.log(error);
+            alert("Error retrieving database structure: " + error);
+            that.databaseStructure = { tables: [] };
+            callback(that.databaseStructure);
+        });
 
 
     }
 
-    parseDatabaseStructure(tables: QueryResult[], columns: QueryResult[], types: ("table"|"view")[]): DatabaseStructure {
+    parseDatabaseStructure(tables: QueryResult[], columns: QueryResult[], types: ("table" | "view")[]): DatabaseStructure {
         this.databaseStructure = {
             tables: []
         };
@@ -328,11 +333,11 @@ export class DatabaseTool {
 
                 let enumValues: string[] = [];
 
-                if(type.indexOf("Enum") >= 0){
+                if (type.indexOf("Enum") >= 0) {
                     let rs = `"${name}" ${type} .* check\\("${name}" in \\((.*)\\)\\)`;
                     let regEx = new RegExp(rs);
                     let match = tableSQL.match(regEx);
-                    if(match != null){
+                    if (match != null) {
                         enumValues = match[1].split(", ");
                     }
                 }
@@ -372,7 +377,7 @@ export class DatabaseTool {
                 if (cs.referencesRawData != null) {
                     let table = tableNameToStructureMap.get(cs.referencesRawData[2]?.toLocaleLowerCase());
                     // SQlite doesn't remove foreign key references to columns of a dropped table
-                    if(table == null) continue;
+                    if (table == null) continue;
                     let column = table.columns.find(c => c.name.toLocaleLowerCase() == cs.referencesRawData[4].toLocaleLowerCase());
                     cs.references = column;
                 }
