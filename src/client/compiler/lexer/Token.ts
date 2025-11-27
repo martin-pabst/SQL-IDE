@@ -61,6 +61,7 @@ export enum TokenType {
     keywordEnum,
     keywordBetween,
     keywordNotBetween,
+    keywordNotLike,
 
     keywordOr,
     keywordAnd,
@@ -238,7 +239,8 @@ export var TokenTypeReadable: {[tt: number]: string} = {
     [TokenType.keywordView]: "view",
     [TokenType.keywordEnum]: "enum",
     [TokenType.keywordBetween]: "between",
-    [TokenType.keywordNotBetween]: "not between",
+    [TokenType.keywordNotBetween]: "not between", 
+    [TokenType.keywordNotLike]: "not like", 
 
 
     [TokenType.keywordAnd]: "and",
@@ -448,7 +450,7 @@ export var keywordList: {[keyword: string]:TokenType} = {
     "offset": TokenType.keywordOffset,
     "in": TokenType.keywordIn,
     "not in": TokenType.keywordNotIn,
-    "not between": TokenType.keywordNotBetween,
+    "not between": TokenType.keywordNotBetween, 
     "like": TokenType.keywordLike,
     "collate": TokenType.keywordCollate,
     "default": TokenType.keywordDefault,

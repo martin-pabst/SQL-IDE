@@ -403,6 +403,10 @@ varcharType.addBinaryOperation(TokenType.keywordLike, varcharType, booleanType);
 varcharType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 
+varcharType.addBinaryOperation(TokenType.keywordNotLike, varcharType, booleanType);
+varcharType.addBinaryOperation(TokenType.keywordNotLike, textType, booleanType);
+textType.addBinaryOperation(TokenType.keywordNotLike, textType, booleanType);
+
 charType.addBinaryOperation(TokenType.concatenation, charType, charType);
 charType.addBinaryOperation(TokenType.concatenation, varcharType, charType);
 charType.addBinaryOperation(TokenType.concatenation, textType, textType);
@@ -410,6 +414,10 @@ textType.addBinaryOperation(TokenType.concatenation, textType, textType);
 charType.addBinaryOperation(TokenType.keywordLike, charType, booleanType);
 charType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
+
+charType.addBinaryOperation(TokenType.keywordNotLike, charType, booleanType);
+charType.addBinaryOperation(TokenType.keywordNotLike, textType, booleanType);
+textType.addBinaryOperation(TokenType.keywordNotLike, textType, booleanType);
 
 booleanType.addBinaryOperation(TokenType.equal, booleanType, booleanType);
 
