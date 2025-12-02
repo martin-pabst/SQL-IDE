@@ -137,7 +137,7 @@ export class SQLBaseType extends SQLType {
     getBinaryResult(operator: TokenType, value1: any, value2: any): any {
         switch (operator) {
             case TokenType.concatenation:
-                if (value1 != null && value2 != null) return value1 + value2;
+                if (value1 != null && value2 != null) return (value1 + "") + (value2 + "");
                 return value1 != null ? value1 : value2;
             case TokenType.plus:
                 if (value1 != null && value2 != null) return value1 + value2;
@@ -398,7 +398,14 @@ SQLBaseType.addBaseTypes(baseTypes);
 varcharType.addBinaryOperation(TokenType.concatenation, varcharType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, charType, varcharType);
 varcharType.addBinaryOperation(TokenType.concatenation, textType, textType);
+varcharType.addBinaryOperation(TokenType.concatenation, floatType, textType);
+varcharType.addBinaryOperation(TokenType.concatenation, intType, textType);
+
+
 textType.addBinaryOperation(TokenType.concatenation, textType, textType);
+textType.addBinaryOperation(TokenType.concatenation, floatType, textType);
+textType.addBinaryOperation(TokenType.concatenation, intType, textType);
+
 varcharType.addBinaryOperation(TokenType.keywordLike, varcharType, booleanType);
 varcharType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
 textType.addBinaryOperation(TokenType.keywordLike, textType, booleanType);
@@ -429,6 +436,8 @@ for (let i = 0; i < numericTypes.length; i++) {
         numericTypes[i].addBinaryOperation(numericBinaryOperators, numericTypes[j], numericTypes[j]);
         numericTypes[i].addBinaryOperation(comparisonOperators, numericTypes[j], booleanType);
     }
+    numericTypes[i].addBinaryOperation(TokenType.concatenation, varcharType, textType);
+    numericTypes[i].addBinaryOperation(TokenType.concatenation, textType, textType);
     numericTypes[i].unaryOperators = [TokenType.minus];
 }
 

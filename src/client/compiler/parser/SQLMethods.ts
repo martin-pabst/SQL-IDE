@@ -56,6 +56,7 @@ export class SQLMethodStore {
         this.pushOneParameterMethod("month" , "integer","date");
         this.pushOneParameterMethod("day" , "integer","date");
         this.pushOneParameterMethod("year" , "integer","date");
+        this.pushOneParameterMethod("round" , "integer","float");
 
         let countMethod = new SQLMethod("count", true, "integer", [new SQLMethodParameter("spalte", "text")]);
         countMethod.acceptsStarParameter = true;
@@ -64,6 +65,10 @@ export class SQLMethodStore {
         let strftimeMethod = new SQLMethod("strftime", false, "text", [new SQLMethodParameter("formatstring", "text"), new SQLMethodParameter("date", "date")]);
         strftimeMethod.acceptsStarParameter = true;
         this.methods.push(strftimeMethod);
+
+        let round2Params = new SQLMethod("round", false, "float", [new SQLMethodParameter("number", "float"), new SQLMethodParameter("digits", "integer")]);
+        round2Params.acceptsStarParameter = false;
+        this.methods.push(round2Params);
 
     }
     
