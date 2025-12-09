@@ -6,7 +6,7 @@ import jQuery from "jquery";
 
 export class TemplateUploader {
 
-    uploadCurrentDatabase(workspace_id: number, main: Main, dump: Uint8Array | null, 
+    uploadCurrentDatabase(workspace_id: number, main: Main, compressedDump: Uint8Array | null, 
         reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace" | "distributeWorkspace", 
         callback: (response: UploadTemplateResponse) => void = () => { }) {
             
@@ -21,7 +21,7 @@ export class TemplateUploader {
                 main.waitOverlay.hide();
             })
         } else {
-            this.uploadIntern(dump, -1, reason, main, callback);
+            this.uploadIntern(compressedDump, -1, reason, main, callback);
         }
 
     }
