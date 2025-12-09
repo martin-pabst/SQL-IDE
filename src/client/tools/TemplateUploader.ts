@@ -49,7 +49,7 @@ export class TemplateUploader {
 
             },
             error: function (jqXHR, message) {
-                alert('message');
+                alert("Fehler beim Hochladen der Datenbank: " + message);
                 main.waitOverlay.hide();
             }
         }
