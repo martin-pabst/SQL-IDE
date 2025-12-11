@@ -17,7 +17,9 @@ export class CacheManager {
         if(!this.cacheAvailable()) return;
         let that = this;
         this.getCache((cache) => {
-            cache.put(that.databaseIdToCacheIdentifier(databaseId), new Response(templateDump));
+            cache.put(that.databaseIdToCacheIdentifier(databaseId), new Response(templateDump)).catch((reason: any) => { 
+                console.warn("Konnte Template nicht im Cache speichern, Grund: " + reason);
+             });   
         })        
     }
 

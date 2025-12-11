@@ -3,6 +3,8 @@ import { UploadTemplateResponse } from "../communication/Data.js";
 import { Main } from "../main/Main.js";
 import pako from 'pako';
 
+import jQuery from "jquery";
+
 export class TemplateUploader {
 
     uploadCurrentDatabase(workspace_id: number, main: Main, dump: Uint8Array | null, 
@@ -33,7 +35,7 @@ export class TemplateUploader {
         let headers: {[key: string]: string;} = { 'x-workspaceid': "" + workspace_id, "x-reason": reason };
         if(csrfToken != null) headers["x-token-pm"] = csrfToken;
         
-        $.ajax({
+        jQuery.ajax({
             type: 'POST',
             async: true,
             contentType: 'application/octet-stream',

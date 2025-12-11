@@ -641,6 +641,7 @@ export class SymbolResolver {
                 for (let i = 0; i < method.parameters.length; i++) {
                     let methodParameter = method.parameters[i];
                     let operand = node.operands[i];
+                    if(operand == null) continue
                     if (!operand.sqlType.canCastTo(methodParameter.type)) {
                         found = false;
                         break;
