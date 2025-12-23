@@ -159,7 +159,7 @@ export class MainEmbedded implements MainBase {
         this.databaseExplorer = new DatabaseExplorer(this, this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
         if (this.config.databaseURL != null) {
-            new DatabaseFetcher(this).load(this.config.databaseURL).then((loadableDb) => {
+            new DatabaseFetcher(this).load(this.config.databaseURL, this.getWaitOverlay()).then((loadableDb) => {
                 this.initialTemplateDump = loadableDb.binDump;
                 this.initialStatements = loadableDb.statements == null ? [] : loadableDb.statements;
                 this.initDatabase();

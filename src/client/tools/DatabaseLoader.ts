@@ -3,6 +3,7 @@ import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
 import jQuery from "jquery";
 import pako from 'pako'
+import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 
 export type LoadableDatabase = {
     binDump?: Uint8Array<ArrayBuffer>,
@@ -15,7 +16,7 @@ export class DatabaseFetcher {
 
     }
 
-    public async load(url: string): Promise<LoadableDatabase> {
+    public async load(url: string, waitOverlay: WaitOverlay): Promise<LoadableDatabase> {
         let urlWithoutProtocol = url.replace("https://", "")
             .replace("http://", "").toLocaleLowerCase();
 
@@ -24,14 +25,16 @@ export class DatabaseFetcher {
         let templateDump: Uint8Array<ArrayBuffer> = await this.fetchTemplateFromCache(urlWithoutProtocol);
         if (templateDump != null) {
             if (DatabaseTool.getDumpType(templateDump) == "binaryCompressed") {
+                waitOverlay.show("Datenbank aus Cache wird entpackt...");
                 templateDump = pako.inflate(templateDump);
+                waitOverlay.hide();
             }
             return { binDump: templateDump }
         }
 
         let db: LoadableDatabase;
-        if (urlLowerCase.endsWith(".sqlite")) {
-            db = await this.loadSqLiteDump(url, urlWithoutProtocol);
+        if (urlLowerCase.endsWith(".sqlite") || urlLowerCase.endsWith(".zz")) {
+            db = await this.loadSqLiteDump(url, waitOverlay);
         } else if (urlLowerCase.endsWith(".zip") || urlLowerCase.endsWith(".sql")) {
             db = await this.loadMySql(url, urlWithoutProtocol);
         }
@@ -47,8 +50,8 @@ export class DatabaseFetcher {
         return mySqlImporter.loadFromUrl(url);
     }
 
-    async loadSqLiteDump(url: string, urlWithoutProtocol: string): Promise<LoadableDatabase> {
-
+    async loadSqLiteDump(url: string, waitOverlay: WaitOverlay): Promise<LoadableDatabase> {
+        waitOverlay.show("Datenbank wird geladen...");
         return new Promise((resolve, reject) => {
 
             jQuery.ajax({
@@ -59,10 +62,15 @@ export class DatabaseFetcher {
                 success: function (response: any) {
                     let db = new Uint8Array(response);
                     // @ts-ignore
-                    if (DatabaseTool.getDumpType(db) == "binaryCompressed") db = pako.inflate(db);
+                    if (DatabaseTool.getDumpType(db) == "binaryCompressed") {
+                        waitOverlay.show("Datenbank wird entpackt...");
+                        db = pako.inflate(db);
+                    }
+                    waitOverlay.hide();
                     resolve({ binDump: db });
                 },
                 error: function (jqXHR, message) {
+                    waitOverlay.hide();
                     reject(message);
                 }
             });
