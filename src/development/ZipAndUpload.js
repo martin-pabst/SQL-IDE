@@ -33,7 +33,7 @@ await zipDirectory('dist', 'intern/tmp/dist.zip');
 await ssh.connect({
   host: 'online-ide.de',
   username: 'root',
-  privateKeyPath: 'intern/keys/ssh_private_key.ppk'
+  privateKeyPath: 'intern/keys/vsc-key_vps_40.ppk'
 })
 
 
@@ -66,7 +66,7 @@ await zipDirectory('dist-embedded/assets', 'intern/tmp/assets.zip');
 await ssh.connect({
   host: 'mathe-pabst.de',
   username: 'root',
-  privateKeyPath: 'intern/keys/ssh_private_key.ppk'
+  privateKeyPath: 'intern/keys/vsc-key_vps_30.ppk'
 })
 
 
