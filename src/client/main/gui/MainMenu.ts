@@ -171,8 +171,13 @@ export class MainMenu {
                                         alert('Die Datenbank ist noch nicht für andere Benutzer/innen veröffentlicht, daher kann sie nicht als Vorlage hochgeladen werden. \nDie Möglichkeit zum Veröffentlichen finden Sie unter Datenbank->Einstellungen.');
                                         return;
                                     }
-                                    new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate",
-                                        () => { alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.') });
+                                    if(currentWorkspace.database.has_large_template) {
+                                        this.main.networkManager.setLastPublishedStatementIndex(currentWorkspace.database.id, currentWorkspace.database.statements.length - 1);
+                                        alert('Der aktuelle Zustand der Datenbank wurde erfolgreich als Vorlage hochgeladen.');                                        
+                                    } else {
+                                        new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate",
+                                            () => { alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.') });
+                                    }
                                 }
                             },
 

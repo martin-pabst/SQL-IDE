@@ -142,7 +142,7 @@ export class NetworkManager {
             this.sendUpdates(() => {
 
                 let names = this.main.workspaceList.filter(ws => oldWorkspaces.indexOf(ws) < 0)
-                .map(ws => ws.name).join(", ");
+                    .map(ws => ws.name).join(", ");
 
                 alert(`Deine Lehrkraft hat Dir folgende Datenbank übermittelt: ${names}`);
 
@@ -195,6 +195,16 @@ export class NetworkManager {
         }, (message) => { alert(message) })
     }
 
+    setLastPublishedStatementIndex(database_id: number, last_published_statement_index: number) {
+        let request = {
+            databaseId: database_id,
+            lastPublishedStatementIndex: last_published_statement_index
+        };
+        ajax("setLastPublishedStatementIndex", request, (response: any) => {
+            // nothing to do
+        });
+    }
+
     setNameAndPublishedTo(workspace_id: number, name: string, published_to: number, description: string, callback: () => void) {
         let request: SetPublishedToRequest = {
             workspaceId: workspace_id,
@@ -245,25 +255,24 @@ export class NetworkManager {
 
         let callbackAfterSettingWorkspaceActive = () => {
 
-            new TemplateUploader().uploadCurrentDatabase(ws.id, this.main, null,
-                "distributeWorkspace",
-                (response) => {
+            // new TemplateUploader().uploadCurrentDatabase(ws.id, this.main, null,
+            //     "distributeWorkspace",
+            //     (response) => {
 
-                    this.sendUpdates(() => {
+            this.sendUpdates(() => {
 
-                        let request: DistributeWorkspaceRequest = {
-                            workspace_id: ws.id,
-                            database_as_template_id: response.newTemplateId,
-                            class_id: klasse?.id,
-                            student_ids: student_ids
-                        }
+                let request: DistributeWorkspaceRequest = {
+                    workspace_id: ws.id,
+                    class_id: klasse?.id,
+                    student_ids: student_ids
+                }
 
-                        ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
-                            callback(response.message)
-                        }, callback);
+                ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
+                    callback(response.message)
+                }, callback);
 
-                    }, false);
-                });
+            }, false);
+            // });
 
         }
 
@@ -415,10 +424,10 @@ export class NetworkManager {
             url: "servlet/getTemplate",
             headers: headers,
             xhrFields: { responseType: 'arraybuffer' },
-            success: function (response: any) {
+            success: function(response: any) {
                 callback(new Uint8Array(response));
             },
-            error: function (jqXHR, message) {
+            error: function(jqXHR, message) {
                 callback(null, "Konnte das Template nicht laden.");
             }
         });
@@ -588,4 +597,4 @@ export class NetworkManager {
     }
 
 
-}
+} 

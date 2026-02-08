@@ -197,6 +197,9 @@ export class NewDatabaseDialog {
                     break;
                 case "useDumpFile":
                     if (this.database != null) {
+
+                        // TODO 24.12.: handle large uploads...
+
                         new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump,
                             "uploadBaseTemplateForWorkspace",
                             (response) => {

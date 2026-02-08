@@ -141,7 +141,12 @@ export class DatabaseSettingsDialog {
             () => {
                 this.workspace.name = newName;
                 if (database.published_to == 0 && published_to > 0) {
-                    new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");
+                    if(database.has_large_template) {
+                        database.last_published_statement_index = database.statements.length -1;
+                        this.main.networkManager.setLastPublishedStatementIndex(database.id, database.last_published_statement_index);
+                    } else {
+                        new TemplateUploader().uploadCurrentDatabase(this.workspace.id, this.main, null, "publishDatabaseAsTemplate");
+                    }
                 }
                 database.published_to = published_to;
                 database.description = newDescription;

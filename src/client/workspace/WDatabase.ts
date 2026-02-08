@@ -15,6 +15,9 @@ export class WDatabase {
     description: string;
     owner_id: number;
 
+    has_large_template: boolean;
+    last_published_statement_index: number;
+
     static fromDatabaseData(data: DatabaseData, version: number): WDatabase {
 
         let db = new WDatabase();
@@ -28,6 +31,8 @@ export class WDatabase {
         db.templateDump = null;
         db.based_on_template_id = data.based_on_template_id;
         db.owner_id = data.owner_id;
+        db.has_large_template = data.has_large_template;
+        db.last_published_statement_index = data.last_published_statement_index;
         return db;
     }
 

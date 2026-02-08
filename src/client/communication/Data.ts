@@ -325,7 +325,6 @@ export type DeleteRepositoryResponse = { success: boolean, message?: string };
  */
 export type DistributeWorkspaceRequest = {
     workspace_id: number, // Workspace to copy
-    database_as_template_id: number, 
     class_id: number,
     student_ids: number[]
 }
@@ -585,7 +584,9 @@ export type DatabaseData = {
     statements: string[],
     published_to: number,
     description: string,
-    id_old_version_of_id: number
+    id_old_version_of_id: number,
+    has_large_template: boolean,
+    last_published_statement_index: number
 }
 
 export type GetDatabaseRequest = {
