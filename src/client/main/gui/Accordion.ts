@@ -758,7 +758,7 @@ export class AccordionPanel {
 
     getChildElements(folder: AccordionElement): AccordionElement[] {
         let path = folder.path.slice(0).concat(folder.name).join("/");
-        return this.elements.filter((element) => element.path.join("/").startsWith(path));
+        return this.elements.filter((element) => (element.path.join("/") + "/").startsWith(path + "/"));
     }
 
     pathStartsWith(path: string[], pathStart: string[]){
