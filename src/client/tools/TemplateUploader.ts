@@ -4,8 +4,6 @@ import { Main } from "../main/Main.js";
 import pako from 'pako';
 import jQuery from "jquery";
 
-import jQuery from "jquery";
-
 export class TemplateUploader {
 
     uploadCurrentDatabase(workspace_id: number, main: Main, compressedDump: Uint8Array | null, 
