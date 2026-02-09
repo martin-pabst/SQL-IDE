@@ -21,8 +21,8 @@ export class Parser {
 
     static operatorPrecedence: TokenType[][] = [
         [TokenType.keywordOr], [TokenType.keywordAnd],
-        [TokenType.keywordBetween],
-        [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual, TokenType.keywordLike],
+        [TokenType.keywordBetween, TokenType.keywordNotBetween],
+        [TokenType.lower, TokenType.lowerOrEqual, TokenType.greater, TokenType.greaterOrEqual, TokenType.equal, TokenType.notEqual, TokenType.keywordLike, TokenType.keywordNotLike],
         [TokenType.concatenation, TokenType.plus, TokenType.minus], [TokenType.multiplication, TokenType.division, TokenType.modulo],
         [TokenType.keywordIn, TokenType.keywordNotIn]
     ];
@@ -2103,8 +2103,8 @@ export class Parser {
 
         let first = true;
 
-        if(this.tt == TokenType.keywordBetween){
-            return this.parseBetween(left);
+        if(this.tt == TokenType.keywordBetween || this.tt == TokenType.keywordNotBetween){
+            return this.parseBetween(left, this.tt);
         }
 
         while (first || operators.indexOf(this.tt) >= 0) {
@@ -2137,7 +2137,7 @@ export class Parser {
 
     }
     
-    parseBetween(left: TermNode): TermNode {
+    parseBetween(left: TermNode, tt: TokenType.keywordBetween | TokenType.keywordNotBetween): TermNode {
         let position = this.getCurrentPosition();
         this.nextToken(); // skip "between"
         let secondOperand = this.parseTermBinary(2);

@@ -17,7 +17,6 @@ export class DatabaseExplorer {
         let dbTool = this.main.getDatabaseTool();
 
         dbTool.retrieveDatabaseStructure((dbstructure: DatabaseStructure) => {
-
             this.refreshAfterRetrievingDBStructure();
         });
 

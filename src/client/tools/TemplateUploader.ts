@@ -2,12 +2,13 @@ import { csrfToken } from "../communication/AjaxHelper.js";
 import { UploadTemplateResponse } from "../communication/Data.js";
 import { Main } from "../main/Main.js";
 import pako from 'pako';
+import jQuery from "jquery";
 
 import jQuery from "jquery";
 
 export class TemplateUploader {
 
-    uploadCurrentDatabase(workspace_id: number, main: Main, dump: Uint8Array | null, 
+    uploadCurrentDatabase(workspace_id: number, main: Main, compressedDump: Uint8Array | null, 
         reason: "publishDatabaseAsTemplate" | "uploadBaseTemplateForWorkspace" | "distributeWorkspace", 
         callback: (response: UploadTemplateResponse) => void = () => { }) {
             
@@ -22,7 +23,7 @@ export class TemplateUploader {
                 main.waitOverlay.hide();
             })
         } else {
-            this.uploadIntern(dump, -1, reason, main, callback);
+            this.uploadIntern(compressedDump, -1, reason, main, callback);
         }
 
     }
@@ -50,7 +51,7 @@ export class TemplateUploader {
 
             },
             error: function (jqXHR, message) {
-                alert('message');
+                alert("Fehler beim Hochladen der Datenbank: " + message);
                 main.waitOverlay.hide();
             }
         }

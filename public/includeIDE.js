@@ -8,17 +8,28 @@ let scripts = [
 includeJsAndCss(scripts, () => {
     window.onload = function () {
         if(window.jo_doc.startsWith("http")){
-            $.ajax({
-                url: window.jo_doc,
-                 type:"get",
-                 dataType:'text',  
-                 success: function(data){
-                   initScripts(data);
-                 },
-                 error:function() {
-                   alert("Fehler beim Laden von " + jo_doc);
-                 }
-             });
+
+            fetch(window.jo_doc, {
+                method: "GET"
+            }).then((response) => {
+                response.json().then((data) => {
+                    initScripts(data);
+                } )
+            }).catch(() => {
+                alert("Fehler beim Laden von " + jo_doc)
+            })
+
+            // $.ajax({
+            //     url: window.jo_doc,
+            //      type:"get",
+            //      dataType:'text',  
+            //      success: function(data){
+            //        initScripts(data);
+            //      },
+            //      error:function() {
+            //        alert("Fehler beim Laden von " + jo_doc);
+            //      }
+            //  });
         } else {
             initScripts(window.jo_doc);
         }
