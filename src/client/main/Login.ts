@@ -91,6 +91,13 @@ export class Login {
     }
 
     logout() {
+
+        let isSilent = window.location.href.indexOf('silent') >= 0;
+        if (!this.main.user || this.main.user.is_testuser) {
+            window.location.assign("/" + (isSilent ? "?silent=true" : ""));
+            return;
+        }
+
         this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
 
         if (this.main.workspacesOwnerId != this.main.user.id) {
@@ -116,24 +123,26 @@ export class Login {
                         // window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
                         window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
                     } else {
-                        jQuery('#login').show();
-                        this.main.waitOverlay.hide();
-                        jQuery('#login-message').empty();
-                        this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                        this.main.projectExplorer.fileListPanel.clear();
-                        this.main.projectExplorer.workspaceListPanel.clear();
+                        window.location.assign("/" + (isSilent ? "?silent=true" : ""));
 
-                        this.main.databaseExplorer.clear();
-                        this.main.resultsetPresenter.clear();
+                        // jQuery('#login').show();
+                        // this.main.waitOverlay.hide();
+                        // jQuery('#login-message').empty();
+                        // this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
+                        // this.main.projectExplorer.fileListPanel.clear();
+                        // this.main.projectExplorer.workspaceListPanel.clear();
 
-                        if (this.main.user.is_teacher) {
-                            this.main.teacherExplorer.removePanels();
-                            this.main.teacherExplorer = null;
-                        }
+                        // this.main.databaseExplorer.clear();
+                        // this.main.resultsetPresenter.clear();
+
+                        // if (this.main.user.is_teacher) {
+                        //     this.main.teacherExplorer.removePanels();
+                        //     this.main.teacherExplorer = null;
+                        // }
 
 
-                        this.main.currentWorkspace = null;
-                        this.main.user = null;
+                        // this.main.currentWorkspace = null;
+                        // this.main.user = null;
                     }
 
 

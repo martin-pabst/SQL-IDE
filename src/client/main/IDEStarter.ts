@@ -24,7 +24,7 @@ function initMonacoEditor(): void {
     // see https://github.com/microsoft/monaco-editor/blob/main/docs/integrate-esm.md#using-vite
     // https://dev.to/lawrencecchen/monaco-editor-svelte-kit-572
     // https://github.com/microsoft/monaco-editor/issues/4045
-    
+
     self.MonacoEnvironment = {
         getWorker: (_workerId, label) => {
             switch (label) {
@@ -51,12 +51,19 @@ function initMonacoEditor(): void {
 
 window.onload = () => {
 
+    if (window.location.href.indexOf('silent') < 0) {
+        let silentElements = document.getElementsByClassName('silent');
+        for (let i = 0; i < silentElements.length; i++) {
+            (silentElements[i] as HTMLElement).style.display = '';
+        }
+    }
+
     initMonacoEditor();
     let main = new Main();
     main.initGUI();
     main.initEditor();
     main.getMonacoEditor().updateOptions({ readOnly: true });
-    
+
     main.bottomDiv.initGUI();
 
 }
