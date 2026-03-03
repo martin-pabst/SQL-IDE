@@ -90,7 +90,7 @@ export class Login {
 
     }
 
-    logout() {
+    async logout() {
 
         let isSilent = window.location.href.indexOf('silent') >= 0;
         if (!this.main.user || this.main.user.is_testuser) {
