@@ -1,11 +1,11 @@
 import jQuery from "jquery";
 
-export type UserSettings = {
+export type GUIState = {
     helperHistory: {
     },
     //    theme: string,  // old!
     viewModes: ViewModes,
-    classDiagram: any
+    language: string,
 }
 
 export type ViewModes = {
@@ -34,8 +34,7 @@ export type FileData = {
     student_edited_after_revision: boolean,
     version: number,
     workspace_id: number,
-    forceUpdate: boolean,
-    file_type: number
+    forceUpdate: boolean
 }
 
 export type WorkspaceData = {
@@ -82,7 +81,7 @@ export type UserData = {
     familienname: string,
     rufname: string,
     currentWorkspace_id?: number,
-    settings?: UserSettings,
+    settings?: GUIState,
     password?: string,
     is_testuser?: boolean,
 
@@ -210,7 +209,7 @@ export type SendUpdatesResponse = {
 }
 
 export type UpdateUserSettingsRequest = {
-    settings: UserSettings,
+    settings: GUIState,
     current_workspace_id: number
     userId: number
 }
@@ -225,7 +224,7 @@ export type CreateOrDeleteFileOrWorkspaceRequest = {
     entity: "workspace" | "file",
     type: "create" | "delete",
     data?: CreateWorkspaceData | FileData, // in case of create
-    id?: number, // in case of delete
+    ids?: number[], // in case of delete
     owner_id?: number, // in case of create
     userId: number
 }
@@ -726,4 +725,13 @@ export type DatabaseChangedSSEMessage = {
     firstNewStatementIndex?: number,
     newStatements?: string[],
     rollbackToVersion?: number
+}
+
+export type FileOrder = {
+    fileId: number,
+    order: number
+}
+
+export type UpdateFileOrderRequest = {
+    fileOrderList: FileOrder[]
 }

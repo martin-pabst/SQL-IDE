@@ -36,8 +36,10 @@ export type File = {
     dirty: boolean,
     saved: boolean,
     version: number,
-    panelElement?: AccordionElement
 
+    parent_folder_id: number | null,
+    sorting_order: number
+    is_folder: boolean
 }
 
 export type IdentifierPosition = {
@@ -119,7 +121,7 @@ export class Module {
                         that.file.student_edited_after_revision = false;
                         that.file.text_before_revision = that.file.text;
                         that.file.saved = false;
-                        main1.networkManager.sendUpdates(null, false);
+                        main1.networkManager.sendUpdatesAsync(false);
                         main1.bottomDiv.homeworkManager.showHomeWorkRevisionButton();
                         main1.projectExplorer.renderHomeworkButton(that.file);
                     }

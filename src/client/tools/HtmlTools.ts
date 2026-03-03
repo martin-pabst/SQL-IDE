@@ -1,29 +1,59 @@
+import jQuery from 'jquery';
 import { escapeHtml } from "./StringTools.js";
-import jQuery from "jquery";
 
-export function makeEditable(elementWithText: JQuery<HTMLElement>,
-    elementToReplace: JQuery<HTMLElement>,
-    renameDoneCallback: (newContent: string) => void, selectionRange: { start: number, end: number } = null) {
+export function makeEditable(elementWithText: JQuery<HTMLElement> | HTMLElement,
+    elementToReplace: JQuery<HTMLElement> | HTMLElement | undefined,
+    renameDoneCallback: (newContent: string) => void, selectionRange?: { start: number, end: number }) {
+
+    if (elementWithText instanceof HTMLElement) {
+        elementWithText = jQuery(elementWithText);
+    }
+
+    if (!elementToReplace) elementToReplace = elementWithText;
+
+    if (elementToReplace instanceof HTMLElement) {
+        elementToReplace = jQuery(elementToReplace);
+    }
+
+    let etr: JQuery<HTMLElement> = <any>elementToReplace;
 
     let mousePointer = window.PointerEvent ? "pointer" : "mouse";
 
-    if (elementToReplace == null) {
-        elementToReplace = elementWithText;
-    }
-
     let $input = jQuery('<input type="text" class="jo_inplaceeditor" spellcheck="false">');
     $input.css({
-        width: elementToReplace.css('width'),
-        height: elementToReplace.css('height'),
         color: elementToReplace.css('color'),
         position: elementToReplace.css('position'),
         "background-color": elementToReplace.css('background-color'),
         "font-size": elementToReplace.css('font-size'),
         "font-weight": elementToReplace.css('font-weight'),
+        "line-height": elementToReplace.css('line-height'),
+        "flex": elementToReplace.css('flex'),
         "box-sizing": "border-box"
     });
+
+    let oldHeight = elementToReplace.css('height');
+    if(oldHeight != null && oldHeight != '0px'){
+        $input.css('height', oldHeight);
+    }
+
+    let oldWidth = elementToReplace.css('width');
+    if(oldWidth != null && oldWidth != '0px'){
+        $input.css('width', oldWidth);
+    }
+
+
     $input.val(elementWithText.text());
     $input.on(mousePointer + "down", (e) => { e.stopPropagation(); })
+    $input.on(mousePointer + "up", (e) => { e.stopPropagation(); })
+    $input[0].addEventListener("touchstart", (event) => {
+        event.stopPropagation();
+        $input[0].focus();
+    })
+    $input.on("click", (e) => {
+        e.stopPropagation();
+        $input[0].focus();
+    })
+
 
     if (selectionRange != null) {
         (<HTMLInputElement>$input[0]).setSelectionRange(selectionRange.start, selectionRange.end);
@@ -32,7 +62,9 @@ export function makeEditable(elementWithText: JQuery<HTMLElement>,
     elementToReplace.after($input);
     elementToReplace.hide();
     setTimeout(() => {
-        $input.focus();
+        $input[0].focus();
+        let event = new KeyboardEvent('touchstart', { 'bubbles': true });
+        $input[0].dispatchEvent(event);
     }, 300);
 
     $input.on("keydown.me", (ev) => {
@@ -40,18 +72,18 @@ export function makeEditable(elementWithText: JQuery<HTMLElement>,
             $input.off("keydown.me");
             $input.off("focusout.me");
             $input.remove();
-            elementToReplace.show();
+            etr!.show();
             let newValue = escapeHtml(<string>$input.val());
             renameDoneCallback(newValue);
             return;
         }
     });
 
-    $input.on("focusout.me", (ev) => {
+    $input.on("focusout.me", (_ev) => {
         $input.off("keydown.me");
         $input.off("focusout.me");
         $input.remove();
-        elementToReplace.show();
+        etr!.show();
         let newValue = escapeHtml(<string>$input.val());
         renameDoneCallback(newValue);
         return;
@@ -64,35 +96,55 @@ export type ContextMenuItem = {
     color?: string;
     callback: () => void;
     link?: string;
-    subMenu?: ContextMenuItem[]
+    subMenu?: ContextMenuItem[];
+    iconClass?: string
 };
 
-export function openContextMenu(items: ContextMenuItem[], x: number, y: number): JQuery<HTMLElement> {
+export function openContextMenu(items: ContextMenuItem[], x: number, y: number, isSubMenu: boolean = false): JQuery<HTMLElement> {
 
     let mousePointer = window.PointerEvent ? "pointer" : "mouse";
 
-    let $contextMenu = jQuery('<div class="jo_contextmenu"></div>');
+    if (!isSubMenu) jQuery('.jo_contextmenu').remove();
 
-    let $openSubMenu: JQuery<HTMLElement> = null;
-    let parentMenuItem: ContextMenuItem = null;
+    let $contextMenu = jQuery('<div class="jo_contextmenu"></div>');
+    let rootElement = <HTMLDivElement>jQuery('.joeCssFence')[0];
+    let backgroundColor = rootElement.style.getPropertyValue('--contextmenu-background');
+    $contextMenu.css('background-color', backgroundColor);
+
+    let fontColorNormal = rootElement.style.getPropertyValue('--fontColorNormal');
+
+    let $openSubMenu: JQuery<HTMLElement> | undefined = undefined;
+    let parentMenuItem: ContextMenuItem | undefined = undefined;
 
     for (let mi of items) {
+        if(mi.caption.trim() == '-') {
+           $contextMenu.append(jQuery('<div class="jo_menuitemdivider"></div>'));
+           continue;
+        }
+
+        let iconString = mi.iconClass ? `<span class="${mi.iconClass} jo_contextmenu_icon"></span>` : '';
         let caption: string = mi.caption;
         if (mi.link != null) {
             caption = `<a href="${mi.link}" target="_blank" class="jo_menulink">${mi.caption}</a>`;
         }
-        let $item = jQuery('<div>' + caption + (mi.subMenu != null ? '<span style="float: right"> &nbsp; &nbsp; &gt;</span>' : "") + '</div>');
+        let $item: JQuery<HTMLElement> = jQuery(`<div>${iconString}` + caption + (mi.subMenu != null ? '<span style="float: right; "> &nbsp; &nbsp; &gt;</span>' : "") + '</div>');
+        $item.find('a').attr('style', 'color: ' + fontColorNormal + " !important");
+        $item.attr('style', 'color: ' + fontColorNormal + " !important");
         if (mi.color != null) {
             $item.css('color', mi.color);
         }
         if (mi.link == null) {
             $item.on(mousePointer + 'up.contextmenu', (ev) => {
                 ev.stopPropagation();
-                jQuery('.jo_contextmenu').remove();
-                jQuery(document).off(mousePointer + "up.contextmenu");
-                jQuery(document).off(mousePointer + "down.contextmenu");
-                jQuery(document).off("keydown.contextmenu");
-                mi.callback();
+                if (mi.subMenu) {
+                    $item.trigger("move.contextmenu");
+                } else {
+                    jQuery('.jo_contextmenu').remove();
+                    jQuery(document).off(mousePointer + "up.contextmenu");
+                    jQuery(document).off(mousePointer + "down.contextmenu");
+                    jQuery(document).off("keydown.contextmenu");
+                    mi.callback();
+                }
             });
             $item.on(mousePointer + 'down.contextmenu', (ev) => {
                 ev.stopPropagation();
@@ -114,18 +166,18 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
         $item.on(mousePointer + 'move.contextmenu', () => {
             if (mi != parentMenuItem && $openSubMenu != null) {
                 $openSubMenu.remove();
-                parentMenuItem = null;
-                $openSubMenu = null;
+                parentMenuItem = undefined;
+                $openSubMenu = undefined;
             }
             if (mi.subMenu != null) {
-                $openSubMenu = openContextMenu(mi.subMenu, $item.offset().left + $item.width(), $item.offset().top);
+                $openSubMenu = openContextMenu(mi.subMenu, $item.offset()!.left + $item.width()!, $item.offset()!.top, true);
             }
         });
 
         $contextMenu.append($item);
     }
 
-    jQuery(document).on(mousePointer + "down.contextmenu", (e) => {
+    jQuery(document).on(mousePointer + "down.contextmenu", (_e) => {
         jQuery(document).off(mousePointer + "down.contextmenu");
         jQuery(document).off("keydown.contextmenu");
         jQuery('.jo_contextmenu').remove();
@@ -141,18 +193,34 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number):
 
     let leftRight = x > window.innerWidth * 0.8 ? "right" : "left";
     let xp = x > window.innerWidth * 0.8 ? window.innerWidth - x : x;
-    let topBottom = y > window.innerHeight * 0.8 ? "bottom" : "top";
-    let yp = y > window.innerHeight * 0.8 ? window.innerHeight - y : y;
+    let topBottom = "top"; //y > window.innerHeight * 0.8 ? "bottom" : "top";
+    // let yp = y > window.innerHeight * 0.8 ? window.innerHeight - y : y;
 
-    let css = {};
+    jQuery("body").append($contextMenu);
+    $contextMenu.show();
+
+    let css: { [key: string]: any } = {};
+    
+    let yp = y;
+    let height = $contextMenu.height() || 0;
+    if (y + height > window.innerHeight) {
+        yp = y - (height - (window.innerHeight - y)) - 20;
+    }
+
+    if(height > window.innerHeight - 20){
+        yp = 10;
+        css['max-height'] = (window.innerHeight - 20) + "px";
+        css['overflow'] = "auto";
+    }
+
     css[leftRight] = xp + "px";
     css[topBottom] = yp + "px";
 
     $contextMenu.css(css);
 
-
-    jQuery("body").append($contextMenu);
-    $contextMenu.show();
+    $contextMenu.on(mousePointer + "down.contextmenu", (ev) => {
+        ev.stopPropagation();
+    });
 
     return $contextMenu;
 }
@@ -181,7 +249,7 @@ export function convertPxToNumber(pxString: string): number {
     return Number.parseInt(pxString);
 }
 
-export function makeDiv(id: string, klass: string = "", text: string = "", css?: { [id: string]: any }): JQuery<HTMLDivElement> {
+export function makeDiv(id: string, klass: string = "", text: string = "", css?: { [id: string]: any }, $parentDiv?: JQuery<HTMLElement>): JQuery<HTMLDivElement> {
 
     let s = "";
     if (id != null && id != "") s += ` id="${id}"`;
@@ -198,6 +266,10 @@ export function makeDiv(id: string, klass: string = "", text: string = "", css?:
         div.text(text);
     }
 
+    if ($parentDiv != null) {
+        $parentDiv.append(div);
+    }
+
     return <any>div;
 
 }
@@ -212,7 +284,7 @@ export function setSelectItems($selectElement: JQuery<HTMLSelectElement>, items:
     $selectElement.empty();
     items.forEach(item => {
         let selected: string = (item.value == activeItemValue) ? ' selected="selected"' : "";
-        let element = jQuery(`<option value=${item.value}${selected}>${item.caption}</option>`);
+        let element = jQuery(`<option value="${item.value}"${selected}>${item.caption}</option>`);
         $selectElement.append(element);
         element.data('object', item.object);
     }
@@ -259,7 +331,7 @@ export function animateToTransparent($element: JQuery<HTMLElement>, cssProperty:
 }
 
 export function downloadFile(obj: any, filename: string, isBlob: boolean = false) {
-    var blob = isBlob? obj : new Blob([typeof obj == 'string' ? obj : JSON.stringify(obj)], { type: 'text/plain' });
+    var blob = isBlob ? obj : new Blob([typeof obj == 'string' ? obj : JSON.stringify(obj, undefined, 3)], { type: 'text/plain' });
     //@ts-ignore
     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
         //@ts-ignore
@@ -278,7 +350,7 @@ export function downloadFile(obj: any, filename: string, isBlob: boolean = false
 }
 
 
-function fallbackCopyTextToClipboard(text) {
+function fallbackCopyTextToClipboard(text: string) {
     var textArea = document.createElement("textarea");
     textArea.value = text;
 
@@ -292,7 +364,7 @@ function fallbackCopyTextToClipboard(text) {
     textArea.select();
 
     try {
-        var successful = document.execCommand('copy');
+        document.execCommand('copy');
     } catch (err) {
         console.error('Fallback: Oops, unable to copy', err);
     }
@@ -300,7 +372,7 @@ function fallbackCopyTextToClipboard(text) {
     document.body.removeChild(textArea);
 }
 
-export function copyTextToClipboard(text) {
+export function copyTextToClipboard(text: string) {
     if (!navigator.clipboard) {
         fallbackCopyTextToClipboard(text);
         return;
@@ -311,11 +383,73 @@ export function copyTextToClipboard(text) {
     });
 }
 
-export function getCookieValue(name: string): string | undefined 
-{
-  const regex = new RegExp(`(^| )${name}=([^;]+)`)
-  const match = document.cookie.match(regex)
-  if (match) {
-    return match[2]
-  }
+export function lightenDarkenHexColor(col: string, amount: number) {
+    var num = parseInt(col, 16);
+    var r = (num >> 16) + amount;
+    var g = ((num >> 8) & 0x00FF) + amount;
+    var b = (num & 0x0000FF) + amount;
+    var newColor = b | (g << 8) | (r << 16);
+    return newColor.toString(16);
+}
+
+export function lightenDarkenIntColor(color: number, amount: number) {
+    var r = (color >> 16);
+    var g = ((color >> 8) & 0x00FF);
+    var b = (color & 0x0000FF);
+    r = (Math.round((0xff - r) * amount) + r) & 0xff;
+    g = (Math.round((0xff - g) * amount) + g) & 0xff;
+    b = (Math.round((0xff - b) * amount) + b) & 0xff;
+    var newColor = b | (g << 8) | (r << 16);
+    return newColor;
+}
+
+export function getCookieValue(name: string): string | undefined {
+    const regex = new RegExp(`(^| )${name}=([^;]+)`)
+    const match = document.cookie.match(regex)
+    if (match) {
+        return match[2]
+    }
+}
+
+export function findGetParameter(parameterName: string): string | null {
+    var result: string | null = null,
+        tmp: string[] = [];
+    location.search
+        .substring(1)
+        .split("&")
+        .forEach(function (item) {
+            tmp = item.split("=");
+            if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+        });
+    return result;
+}
+
+export function transferElements(sourceParent: HTMLElement, destParent: HTMLElement) {
+    if (sourceParent && destParent) {
+        while (sourceParent.children.length > 0) {
+            let child = sourceParent.children[0];
+            destParent.append(child);
+        }
+    }
+}
+
+export function isIPad() {
+    if (navigator.userAgent.match(/Mac/) && navigator.maxTouchPoints) {
+        // if the device is an iPad
+        return true
+    }
+    return false;
+}
+
+export function preventTouchDefault(element: HTMLElement) {
+    const touchHandler = (ev: TouchEvent) => {
+        if(ev.touches.length == 1){
+            ev.preventDefault() // Prevent text selection
+        }
+    }
+    element.addEventListener('touchstart', touchHandler, { passive: false })
+    element.addEventListener('touchmove', touchHandler, { passive: false })
+    element.addEventListener('touchend', touchHandler, { passive: false })
+    element.addEventListener('touchcancel', touchHandler, { passive: false })
+
 }

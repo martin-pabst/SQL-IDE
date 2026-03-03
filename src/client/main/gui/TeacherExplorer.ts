@@ -44,8 +44,7 @@ export class TeacherExplorer {
 
         this.studentPanel.selectCallback = (ae: UserData) => {
 
-            that.main.networkManager.sendUpdates(() => {
-
+            that.main.networkManager.sendUpdatesAsync(false).then(() => {
                 let request: GetWorkspacesRequest = {
                     ws_userId: ae.id,
                     userId: this.main.user.id,
@@ -112,14 +111,16 @@ export class TeacherExplorer {
             "Klassen", "1", null, "", "class", false, false, "class", false, []);
 
         this.classPanel.selectCallback = (ea) => {
-            that.main.networkManager.sendUpdates(() => {
+            that.main.networkManager.sendUpdatesAsync().then(
+                () => {
 
-                let classData = <ClassData>ea;
-                if (classData != null) {
-                    this.renderStudents(classData.students);
+                    let classData = <ClassData>ea;
+                    if (classData != null) {
+                        this.renderStudents(classData.students);
+                    }
+
                 }
-
-            });
+            );
         }
 
 
@@ -129,7 +130,7 @@ export class TeacherExplorer {
         this.studentPanel.clear();
 
         userDataList.sort((a, b) => {
-            if(a.vidis_akronym && b.vidis_akronym){
+            if (a.vidis_akronym && b.vidis_akronym) {
                 return getUserDisplayName(a) > getUserDisplayName(b) ? 1 : -1;
             }
             if (a.familienname > b.familienname) return 1;

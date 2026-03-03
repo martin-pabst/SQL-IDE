@@ -15,7 +15,7 @@ import { Helper } from "./gui/Helper.js";
 import { HistoryViewer } from "./gui/HistoryViewer.js";
 import { MainMenu } from "./gui/MainMenu.js";
 import { ProgramControlButtons } from "./gui/ProgramControlButtons.js";
-import { ProjectExplorer } from "./gui/ProjectExplorer.js";
+import { ProjectExplorer } from "./gui/ProjectExplorerOld.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { RightDiv } from "./gui/RightDiv.js";
 import { Sliders } from "./gui/Sliders.js";
@@ -248,7 +248,7 @@ export class Main implements MainBase {
         jQuery(window).on('unload', function() {
             
             if(navigator.sendBeacon && that.user != null){
-                that.networkManager.sendUpdates(null, false);
+                that.networkManager.sendUpdatesAsync(false);
                 that.networkManager.sendUpdateUserSettings(() => {});
             }
             

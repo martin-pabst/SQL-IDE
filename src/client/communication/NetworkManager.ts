@@ -1,8 +1,8 @@
 import { Main } from "../main/Main.js";
-import { ajax, csrfToken } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse } from "./Data.js";
+import { ajax, ajaxAsync, csrfToken } from "./AjaxHelper.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse, UpdateFileOrderRequest } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
-import { Module } from "../compiler/parser/Module.js";
+import { File, Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { AccordionElement } from "../main/gui/Accordion.js";
 import { CacheManager } from "./CacheManager.js";
@@ -31,14 +31,14 @@ export class NetworkManager {
 
     }
 
-    initializeTimer() {
+    async initializeTimer() {
 
         let that = this;
         this.$updateTimerDiv.find('svg').attr('width', that.updateFrequencyInSeconds);
 
         if (this.interval != null) clearInterval(this.interval);
 
-        this.interval = setInterval(() => {
+        this.interval = setInterval(async () => {
 
             if (that.main.user == null) return; // don't call server if no user is logged in
 
@@ -49,7 +49,7 @@ export class NetworkManager {
                 this.counterTillForcedUpdate--;
                 let forceUpdate = this.counterTillForcedUpdate == 0;
                 if (forceUpdate) this.counterTillForcedUpdate = this.forcedUpdateEvery;
-                that.sendUpdates(() => { }, forceUpdate);
+                await that.sendUpdatesAsync(forceUpdate);
             }
 
             let $rect = this.$updateTimerDiv.find('.jo_updateTimerRect');
@@ -67,6 +67,7 @@ export class NetworkManager {
         }, 1000);
 
     }
+
 
     sendUpdates(callback?: () => void, sendIfNothingIsDirty: boolean = false) {
 
@@ -136,17 +137,68 @@ export class NetworkManager {
 
     }
 
-    initializeSSE() {
-        PushClientManager.subscribe("doFileUpdate", (data) => {
-            let oldWorkspaces = this.main.workspaceList.slice();
-            this.sendUpdates(() => {
+    async sendUpdatesAsync(sendIfNothingIsDirty: boolean = false) {
 
-                let names = this.main.workspaceList.filter(ws => oldWorkspaces.indexOf(ws) < 0)
+        if (this.main.user == null) return;
+
+        this.main.projectExplorer.writeEditorTextToFile();
+
+        if (this.main.userDataDirty) {
+
+            this.main.userDataDirty = false;
+            this.sendUpdateUserSettings(() => { });
+        }
+
+
+        let wdList: WorkspaceData[] = [];
+        let fdList: FileData[] = [];
+
+        for (let ws of this.main.workspaceList) {
+
+            if (!ws.saved) {
+                wdList.push(ws.getWorkspaceData(false));
+                ws.saved = true;
+            }
+
+            for (let m of ws.moduleStore.getModules(false)) {
+                if (!m.file.saved) {
+                    m.file.text = m.getProgramTextFromMonacoModel();
+                    fdList.push(m.getFileData(ws));
+                    // console.log("Save file " + m.file.name);
+                    m.file.saved = true;
+                }
+            }
+        }
+
+        let request: SendUpdatesRequest = {
+            workspacesWithoutFiles: wdList,
+            files: fdList,
+            owner_id: this.main.workspacesOwnerId,
+            userId: this.main.user.id,
+            language: 1,
+            currentWorkspaceId: this.main.getCurrentWorkspace()?.id,
+            getModifiedWorkspaces: false
+        }
+
+        if (wdList.length > 0 || fdList.length > 0 || sendIfNothingIsDirty) {
+            let response: SendUpdatesResponse = await ajaxAsync('servlet/sendUpdates', request);
+            if (response.success) {
+                this.updateWorkspaces(request, response);
+            }
+            return response.success;
+        }
+
+        return false;
+    }
+
+    async initializeSSE() {
+        PushClientManager.subscribe("doFileUpdate", async (data) => {
+            let oldWorkspaces = this.main.workspaceList.slice();
+            await this.sendUpdatesAsync(true);
+            let names = this.main.workspaceList.filter(ws => oldWorkspaces.indexOf(ws) < 0)
                 .map(ws => ws.name).join(", ");
 
-                alert(`Deine Lehrkraft hat Dir folgende Datenbank übermittelt: ${names}`);
-
-            }, true);
+            alert(`Deine Lehrkraft hat Dir folgende Datenbank übermittelt: ${names}`);
         })
 
 
@@ -210,9 +262,20 @@ export class NetworkManager {
 
 
 
-    sendCreateFile(m: Module, ws: Workspace, owner_id: number, callback: (error: string) => void) {
+    async sendCreateFile(file: File, ws: Workspace, owner_id: number) {
 
-        let fd: FileData = m.getFileData(ws);
+        let fd: FileData = {
+            name: file.name,
+            text: file.text,
+            text_before_revision: null,
+            submitted_date: null,
+            student_edited_after_revision: false,
+            version: 1,
+            workspace_id: ws.id,
+            id: null,
+            forceUpdate: false,
+        }
+
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "create",
             entity: "file",
@@ -221,11 +284,13 @@ export class NetworkManager {
             userId: this.main.user.id
         }
 
-        ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            m.file.id = response.id;
-            callback(null);
-        }, callback);
+        let response: CRUDResponse = await ajaxAsync("servlet/createOrDeleteFileOrWorkspace", request);
 
+        if (response.success) {
+            file.id = response.id;
+        }
+
+        return response.success;
     }
 
     sendDuplicateWorkspace(ws: Workspace, callback: (error: string, workspaceData?: WorkspaceData) => void) {
@@ -247,22 +312,20 @@ export class NetworkManager {
 
             new TemplateUploader().uploadCurrentDatabase(ws.id, this.main, null,
                 "distributeWorkspace",
-                (response) => {
+                async (response) => {
 
-                    this.sendUpdates(() => {
+                    await this.sendUpdatesAsync(false);
 
-                        let request: DistributeWorkspaceRequest = {
-                            workspace_id: ws.id,
-                            database_as_template_id: response.newTemplateId,
-                            class_id: klasse?.id,
-                            student_ids: student_ids
-                        }
+                    let request: DistributeWorkspaceRequest = {
+                        workspace_id: ws.id,
+                        database_as_template_id: response.newTemplateId,
+                        class_id: klasse?.id,
+                        student_ids: student_ids
+                    }
 
-                        ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
-                            callback(response.message)
-                        }, callback);
-
-                    }, false);
+                    ajax("distributeWorkspace", request, (response: DistributeWorkspaceResponse) => {
+                        callback(response.message)
+                    }, callback);
                 });
 
         }
@@ -272,22 +335,19 @@ export class NetworkManager {
     }
 
 
-    sendDeleteWorkspaceOrFile(type: "workspace" | "file", id: number, callback: (error: string) => void) {
+    async sendDeleteWorkspaceOrFileAsync(type: "workspace" | "file", ids: number[]): Promise<boolean> {
 
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "delete",
             entity: type,
-            id: id,
+            ids: ids,
             userId: this.main.user.id
         }
 
-        ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            if (response.success) {
-                callback(null);
-            } else {
-                callback("Netzwerkfehler!");
-            }
-        }, callback);
+        let response: CRUDResponse = await ajaxAsync("createOrDeleteFileOrWorkspace", request);
+
+        return response.success;
+
 
     }
 
@@ -584,6 +644,21 @@ export class NetworkManager {
             alert(message);
             callback(message, false);
         })
+
+    }
+
+    async sendUpdateFileOrder(files: File[]) {
+
+        let fileOrderList = files.map((file, index) => {
+            return {
+                fileId: file.id,
+                order: index
+            }
+        });
+        
+        let request: UpdateFileOrderRequest = { fileOrderList: fileOrderList }; 
+
+        return await ajaxAsync("servlet/updateFileOrder", request);
 
     }
 

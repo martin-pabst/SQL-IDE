@@ -154,7 +154,8 @@ export async function ajaxAsync(url: string, data: any): Promise<any>{
     } catch (exception){
         return {
             status: "Error",
-            message: "Es ist ein Fehler aufgetreten: " + exception
+            message: "Es ist ein Fehler aufgetreten: " + exception,
+            success: false
         }
     }
 }

@@ -90,7 +90,7 @@ export class Login {
 
     }
 
-    logout() {
+    async logout() {
         this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
 
         if (this.main.workspacesOwnerId != this.main.user.id) {
@@ -99,51 +99,50 @@ export class Login {
 
         PushClientManager.getInstance().close();
 
-        this.main.networkManager.sendUpdates(() => {
+        await this.main.networkManager.sendUpdatesAsync(true);
 
-            this.main.notifier.connect(null);
+        this.main.notifier.connect(null);
 
-            let logoutRequest: LogoutRequest = {
-                currentWorkspaceId: this.main.currentWorkspace?.id
-            }
+        let logoutRequest: LogoutRequest = {
+            currentWorkspaceId: this.main.currentWorkspace?.id
+        }
 
-            this.main.networkManager.sendUpdateUserSettings(() => {
+        this.main.networkManager.sendUpdateUserSettings(() => {
 
-                ajax('logout', logoutRequest, () => {
-                    // window.location.href = 'index.html';
+            ajax('logout', logoutRequest, () => {
+                // window.location.href = 'index.html';
 
-                    if (this.loggedInWithVidis) {
-                        // window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
-                        window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
-                    } else {
-                        jQuery('#login').show();
-                        this.main.waitOverlay.hide();
-                        jQuery('#login-message').empty();
-                        this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                        this.main.projectExplorer.fileListPanel.clear();
-                        this.main.projectExplorer.workspaceListPanel.clear();
+                if (this.loggedInWithVidis) {
+                    // window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
+                    window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
+                } else {
+                    jQuery('#login').show();
+                    this.main.waitOverlay.hide();
+                    jQuery('#login-message').empty();
+                    this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
+                    this.main.projectExplorer.fileListPanel.clear();
+                    this.main.projectExplorer.workspaceListPanel.clear();
 
-                        this.main.databaseExplorer.clear();
-                        this.main.resultsetPresenter.clear();
+                    this.main.databaseExplorer.clear();
+                    this.main.resultsetPresenter.clear();
 
-                        if (this.main.user.is_teacher) {
-                            this.main.teacherExplorer.removePanels();
-                            this.main.teacherExplorer = null;
-                        }
-
-
-                        this.main.currentWorkspace = null;
-                        this.main.user = null;
+                    if (this.main.user.is_teacher) {
+                        this.main.teacherExplorer.removePanels();
+                        this.main.teacherExplorer = null;
                     }
 
 
+                    this.main.currentWorkspace = null;
+                    this.main.user = null;
+                }
 
-                });
 
 
             });
 
-        }, true);
+
+        });
+
 
     }
 
@@ -178,14 +177,13 @@ export class Login {
                 this.main.waitOverlay.show('Bitte warten...');
 
                 let user: UserData = response.user;
-                if (user.settings == null || user.settings.helperHistory == null) {
-                    user.settings = {
-                        helperHistory: {
-                        },
-                        viewModes: null,
-                        classDiagram: null
-                    }
-                }
+
+                user.settings = Object.assign({
+                    helperHistory: {
+                    },
+                    viewModes: null,
+                    language: 'de'
+                }, user.settings || {});
 
                 this.main.waitForGUICallback = () => {
 
