@@ -47,6 +47,11 @@ export class Column {
             type = new SQLDerivedType(<SQLBaseType>type, parameterValues);
         }
 
+        // If type is unrecognized default to type text.
+        if (!type) {
+            type = SQLBaseType.getBaseType('text');
+        }
+
         let column = new Column(cs.name, type, table, cs.isPrimaryKey, !cs.isPrimaryKey, cs.defaultValue, cs.isAutoIncrement);
         column.notNull = cs.notNull;
         
