@@ -202,6 +202,7 @@ export class NewDatabaseDialog {
                             (response) => {
                             workspaceData.template_id = response.newTemplateId;
                             this.createWorkspace(workspaceData);
+                            alert("Die Datenbank wurde erfolgreich angelegt und hochgeladen.");
                         });
 
                     } else {
@@ -269,6 +270,7 @@ export class NewDatabaseDialog {
         if (isDatabase) {
             that.database = db;
             jQuery('.jo_databaseimport_ok').html("Die Datenbankdatei wurde erfolgreich von Datei eingelesen. Sie können die Datenbank jetzt durch Klick auf den Button unten erstellen.");
+            alert("Die Datenbankdatei wurde erfolgreich eingelesen. Sie können die Datenbank jetzt durch Klick auf den Button unten erstellen.");
         } else {
             alert("In der Datei befindet sich kein Binärdump einer Datenbank.");
         }

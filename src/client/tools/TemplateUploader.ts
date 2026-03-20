@@ -17,7 +17,7 @@ export class TemplateUploader {
                 buffer = pako.deflate(buffer);
                 this.uploadIntern(buffer, workspace_id, reason, main, callback);
             }, (error) => {
-                alert("Fehler beim Exportieren der Datenbank: " + error)
+                alert("Fehler beim Hochladen der Datenbank: " + error)
                 main.waitOverlay.hide();
             })
         } else {
