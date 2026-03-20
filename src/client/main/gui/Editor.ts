@@ -134,7 +134,7 @@ export class Editor {
             //     suggestSelection: 'recentlyUsedByPrefix',
             // },
 
-            mouseWheelZoom: this.isEmbedded,
+            mouseWheelZoom: true, // this.isEmbedded,
 
             minimap: {
                 enabled: this.showMinimap
@@ -152,14 +152,23 @@ export class Editor {
 
         let that = this;
 
-        let mouseWheelListener = (event: WheelEvent) => {
-            if (event.ctrlKey === true) {
 
-                that.changeEditorFontSize(Math.sign(event.deltaY), true);
 
-                event.preventDefault();
+        // let mouseWheelListener = (event: WheelEvent) => {
+        //     if (event.ctrlKey === true) {
+
+        //         that.changeEditorFontSize(Math.sign(event.deltaY), true);
+
+        //         event.preventDefault();
+        //     }
+        // };
+
+        this.editor.onDidChangeConfiguration((e) => {
+            if (e.hasChanged(monaco.editor.EditorOption.fontSize)) {
+                let newFontSize = this.editor.getOption(monaco.editor.EditorOption.fontSize);
+                this.setFontSize(newFontSize)
             }
-        };
+        });
 
 
         this.editor.onDidChangeConfiguration((event) => {
@@ -179,11 +188,11 @@ export class Editor {
         // We need this to set our model after user uses Strg+click on identifier
         this.editor.onDidChangeModel((event) => {
 
-            let element: HTMLDivElement = <any>$element.find('.monaco-editor')[0];
-            if(element != null){
-                element.removeEventListener("wheel", mouseWheelListener);
-                element.addEventListener("wheel", mouseWheelListener, { passive: false });
-            }
+            // let element: HTMLDivElement = <any>$element.find('.monaco-editor')[0];
+            // if(element != null){
+            //     element.removeEventListener("wheel", mouseWheelListener);
+            //     element.addEventListener("wheel", mouseWheelListener, { passive: false });
+            // }
 
             if (this.main.getCurrentWorkspace() == null) return;
 
@@ -310,24 +319,24 @@ export class Editor {
 
     }
 
-    changeEditorFontSize(delta: number, dynamic: boolean = true) {
-        let editorfs = this.editor.getOptions().get(monaco.editor.EditorOption.fontSize);
+    // changeEditorFontSize(delta: number, dynamic: boolean = true) {
+    //     let editorfs = this.editor.getOptions().get(monaco.editor.EditorOption.fontSize);
 
-        if (dynamic) {
-            if (editorfs < 10) {
-                delta *= 1;
-            } else if (editorfs < 20) {
-                delta *= 2;
-            } else {
-                delta *= 4;
-            }
-        }
+    //     if (dynamic) {
+    //         if (editorfs < 10) {
+    //             delta *= 1;
+    //         } else if (editorfs < 20) {
+    //             delta *= 2;
+    //         } else {
+    //             delta *= 4;
+    //         }
+    //     }
 
-        let newEditorFs = editorfs + delta;
-        if (newEditorFs >= 6 && newEditorFs <= 80) {
-            this.setFontSize(newEditorFs);
-        }
-    }
+    //     let newEditorFs = editorfs + delta;
+    //     if (newEditorFs >= 6 && newEditorFs <= 80) {
+    //         this.setFontSize(newEditorFs);
+    //     }
+    // }
 
 
     addActions() {
