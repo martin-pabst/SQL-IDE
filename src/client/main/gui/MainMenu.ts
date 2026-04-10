@@ -129,9 +129,7 @@ export class MainMenu {
                             { identifier: "Hoher Kontrast im Editor ein/aus", action: () => { editor.getAction("editor.action.toggleHighContrast").run(); } },
 
                             { identifier: "-" },
-                            { identifier: "Zoom out (Strg + Mausrad)", action: () => { this.main.editor.changeEditorFontSize(-4); } },
                             { identifier: "Zoom normal", action: () => { this.main.editor.setFontSize(14); } },
-                            { identifier: "Zoom in (Strg + Mausrad)", action: () => { this.main.editor.changeEditorFontSize(4); } },
 
                         ]
                     }
