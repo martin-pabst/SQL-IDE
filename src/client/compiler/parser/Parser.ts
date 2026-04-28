@@ -448,7 +448,7 @@ export class Parser {
             case TokenType.keywordAlter:
                 return this.parseAlterTable();
             case TokenType.keywordCommit:
-                this.pushError("Die Aweisung commit ist unnötig, da jede Anweisung automatisch commited wird.", "info");
+                this.pushError("Die Anweisung commit ist unnötig, da jede Anweisung automatisch commited wird.", "info");
                 this.nextToken();
                 return null;
             // Omitted statements:
@@ -457,7 +457,7 @@ export class Parser {
             case TokenType.keywordUse:
                 return this.parseUse();
             case TokenType.keywordStart:
-                this.pushError("Die Aweisung 'start transaction' ist unnötig, da jede Anweisung automatisch commited wird.", "info");
+                this.pushError("Die Anweisung 'start transaction' ist unnötig, da jede Anweisung automatisch commited wird.", "info");
                 this.nextToken();
                 this.expect(TokenType.keywordTransaction, true);
                 return null;
@@ -620,7 +620,7 @@ export class Parser {
                 }
                 return;
             default:
-                this.pushError("Erwartet wird das Schlüsselwort 'to' (zum Umbenennen der Tabelle) oder das Schlüsselwor 'column' (zum Umbenennen einer Spalte).")
+                this.pushError("Erwartet wird das Schlüsselwort 'to' (zum Umbenennen der Tabelle) oder das Schlüsselwort 'column' (zum Umbenennen einer Spalte).")
                 return;
         }
 
@@ -994,7 +994,7 @@ export class Parser {
             this.addCompletionHintHere(node.tableIdentifier, false, first ? [] : ['where'], 1, null, " = ");
             first = false;
             if (this.tt != TokenType.identifier) {
-                this.pushError("Hier wird der Bezeichner derjenigen Spalte der Tabelle " + node.tableIdentifier + " erwaretet, deren Wert verändert werden soll.", "error");
+                this.pushError("Hier wird der Bezeichner derjenigen Spalte der Tabelle " + node.tableIdentifier + " erwartet, deren Wert verändert werden soll.", "error");
                 break;
             }
 
@@ -1457,7 +1457,7 @@ export class Parser {
                         break;
                     case "varchar":
                         node.parameters = [1];
-                        this.pushError("Hinter dem Datentyp varchar wird zwingend eine Längenangabe in Klammern erwaretet, also z.B. varchar(30)", "error", identifierPos)
+                        this.pushError("Hinter dem Datentyp varchar wird zwingend eine Längenangabe in Klammern erwartet, also z.B. varchar(30)", "error", identifierPos)
                         break;
                 }
             }

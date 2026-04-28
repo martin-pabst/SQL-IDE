@@ -170,7 +170,7 @@ export class MainMenu {
                                         return;
                                     }
                                     new TemplateUploader().uploadCurrentDatabase(currentWorkspace.id, this.main, null, "publishDatabaseAsTemplate",
-                                        () => { alert('Der aktuelle Zustand der Datebank wurde erfolgreich als Vorlage hochgeladen.') });
+                                        () => { alert('Der aktuelle Zustand der Datenbank wurde erfolgreich als Vorlage hochgeladen.') });
                                 }
                             },
 
