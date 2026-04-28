@@ -253,7 +253,7 @@ export class SymbolResolver {
                             }
                             if (!column.type.canCastTo(columnNode.baseType)) {
                                 this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
-                                    " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                                    " kann nicht in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
                                     column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
                             }
                         }
@@ -364,7 +364,7 @@ export class SymbolResolver {
                         }
                         if (!column.type.canCastTo(columnNode.baseType)) {
                             this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
-                                " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                                " kann nicht in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
                                 column.identifier + " umgewandelt werden.", "error", columnNode.referencesPosition);
                         }
                     }
@@ -388,7 +388,7 @@ export class SymbolResolver {
                     }
                     if (!column.type.canCastTo(columnNode.baseType)) {
                         this.pushError("Der Datentyp " + columnNode.baseType.toString() + " der Spalte " + columnNode.identifier +
-                            " kann nich in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
+                            " kann nicht in den Datentyp " + column.type.toString() + " der referenzierten Spalte " + table.identifier + "." +
                             column.identifier + " umgewandelt werden.", "error", fki.referencesPosition);
                     }
                 }

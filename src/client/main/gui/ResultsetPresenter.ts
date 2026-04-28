@@ -180,8 +180,8 @@ export class ResultsetPresenter {
                         // Step 3: Send successful statements to server in order to retrieve new db-version-number
                         main.networkManager.AddDatabaseStatements(workspace, sucessfullyExecutedModifyingStatements.map(st => st.sqlCleaned == null ? st.sql : st.sqlCleaned), (statements_before, new_version) => {
 
-                            // Step 5 (worst case): statements before is not empty, so the should be executed before the statements executed in step 2
-                            // => clear whole database and execute all statements in the right order, beginning with a empty database.
+                            // Step 5 (worst case): statements before is not empty, so they should be executed before the statements executed in step 2
+                            // => clear whole database and execute all statements in the right order, beginning with an empty database.
                             if (statements_before.length > 0) {
     
                                 workspace.database.version = 0;

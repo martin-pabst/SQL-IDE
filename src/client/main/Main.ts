@@ -285,7 +285,7 @@ export class Main implements MainBase {
                 let errors = this.bottomDiv?.errorManager?.showErrors(this.currentWorkspace);
                 this.projectExplorer.renderErrorCount(this.currentWorkspace, errors);
 
-                this.editor.onDidChangeCursorPosition(null); // mark occurrencies of symbol under cursor
+                this.editor.onDidChangeCursorPosition(null); // mark occurrences of symbol under cursor
 
                 if (this.projectExplorer) {
                     this.version++;

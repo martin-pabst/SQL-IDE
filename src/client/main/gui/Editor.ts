@@ -343,7 +343,7 @@ export class Editor {
         let that = this;
 
         this.editor.addAction({
-            // An unique identifier of the contributed action.
+            // A unique identifier of the contributed action.
             id: 'Find bracket',
 
             // A label of the action that will be presented to the user.
@@ -372,7 +372,7 @@ export class Editor {
         });
 
         this.editor.addAction({
-            // An unique identifier of the contributed action.
+            // A unique identifier of the contributed action.
             id: 'Execute statement',
 
             // A label of the action that will be presented to the user.
@@ -393,7 +393,7 @@ export class Editor {
             contextMenuOrder: 1.0,
 
             // Method that will be executed when the action is triggered.
-            // @param editor The editor instance is passed in as a convinience
+            // @param editor The editor instance is passed in as a convenience
             run: function (ed) {
                 that.main.getActionManager().trigger('execute');
                 return null;
