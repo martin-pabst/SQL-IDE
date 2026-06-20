@@ -100,11 +100,21 @@ export class ResultsetPresenter {
     }
 
     exportCSV(){
+        let quotationMark = '"';
+        let separator = ",";
+        if(!this.main.isEmbedded()){
+            if((<Main>this.main).user.schule_id == 243){
+                console.log("Using semicolon as separator and no quotation marks for CSV export, because school has id 243.");
+                quotationMark = "";
+                separator = ";";
+            }
+        }
+
         let file: string = "";
         // file += table.columns.map(c => c.identifier).join("; ") + "\n";
         if(this.result){
-            file += this.result.columns.map(c => `"${c}"`).join(",") + "\n";
-            file += this.result.values.map(line => line.map(c => `"${c}"`).join(",")).join("\n");
+            file += this.result.columns.map(c => `${quotationMark}${c}${quotationMark}`).join(separator) + "\n";
+            file += this.result.values.map(line => line.map(c => `${quotationMark}${c}${quotationMark}`).join(separator)).join("\n");
         }
         downloadFile("\ufeff" + file, "results.csv", false);
 

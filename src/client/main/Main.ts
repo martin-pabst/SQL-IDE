@@ -4,7 +4,7 @@ import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
-import { checkIfMousePresent, getCookieValue } from "../tools/HtmlTools.js";
+import { checkIfMousePresent, findGetParameter, getCookieValue } from "../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ActionManager } from "./gui/ActionManager.js";
 import { BottomDiv } from "./gui/BottomDiv.js";
@@ -145,15 +145,10 @@ export class Main implements MainBase {
 
         this.login = new Login(this);
 
-        let singleUseToken1 = location.search.split('singleUseToken=')[1];
-        if(singleUseToken1){
-            setCookie("singleUseToken", singleUseToken1, 3);
-        }
+        let singleUseToken = findGetParameter("singleUseToken");
 
-        let singleUseToken: string | undefined = getCookieValue("singleUseToken");
 
         if(singleUseToken){
-            setCookie("singleUseToken", "", 0);
             this.login.initGUI();
             this.login.loginWithVidis(singleUseToken);    
         } else {

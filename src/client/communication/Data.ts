@@ -168,7 +168,8 @@ export type TeacherData = {
 export type LoginRequest = {
     username: string,
     password: string,
-    language: number
+    language: number,
+    singleUseToken: string | null
 }
 
 export type TicketLoginRequest = {
@@ -182,7 +183,8 @@ export type LoginResponse = {
     classdata: ClassData[], // null if !is_teacher
     workspaces: Workspaces,
     csrfToken: string,
-    isTestuser: boolean
+    isTestuser: boolean,
+    vidis_id_token?: string
 }
 
 export type LogoutRequest = {

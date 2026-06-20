@@ -10,6 +10,7 @@ import jQuery from "jquery";
 export class Login {
 
     loggedInWithVidis: boolean = false;
+    vidis_id_token: string = "";
 
     constructor(private main: Main) {
         new AutoLogout(this);
@@ -120,8 +121,8 @@ export class Login {
                     // window.location.href = 'index.html';
 
                     if (this.loggedInWithVidis) {
-                        window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
-                        // window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.main.user.vidis_sub + "&post_logout_redirect_uri=https%3A%2F%2Fwww.sql-ide.de");
+                        window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fonline-ide.de/vidisLogout");
+                        // window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fonline-ide.de/vidisLogout");
                     } else {
                         window.location.assign("/" + (isSilent ? "?silent=true" : ""));
 
@@ -164,16 +165,20 @@ export class Login {
         $loginSpinner.show();
 
         let loginRequest: LoginRequest = {
-            username: <string>jQuery('#login-username').val(),
-            password: <string>jQuery('#login-password').val(),
-            language: 1
+            username: singleUseToken ? "" : <string>jQuery('#login-username').val(),
+            password: singleUseToken ? "" : <string>jQuery('#login-password').val(),
+            language: 1, 
+            singleUseToken: singleUseToken || null
         }
 
-        ajax('login' + (singleUseToken ? ('?singleUseToken=' + singleUseToken) : ''), loginRequest, (response: LoginResponse) => {
+        ajax('login', loginRequest, (response: LoginResponse) => {
 
             if (!response.success) {
                 jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');
             } else {
+
+                this.loggedInWithVidis = response.vidis_id_token != null;
+                this.vidis_id_token = response.vidis_id_token;
 
                 PushClientManager.getInstance().open();
 
