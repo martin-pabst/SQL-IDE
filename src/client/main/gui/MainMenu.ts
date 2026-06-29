@@ -6,6 +6,8 @@ import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import { ajax } from "../../communication/AjaxHelper.js";
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import jQuery from "jquery";
+import { AllDatabaseExporterImporter } from "../../tools/AllDatabaseExporterImporter.js";
+import { downloadFile } from "../../tools/HtmlTools.js";
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -52,6 +54,16 @@ export class MainMenu {
                                 identifier: "Speichern und Beenden",
                                 action: () => { jQuery('#buttonLogout').trigger("click"); }
                             },
+                            {
+                                identifier: "Alle Datenbanken exportieren...", action: async () => {
+                                    let databases = await new AllDatabaseExporterImporter().saveAllWorkspacesToZipFile(this.main);
+                                    let blob = <Uint8Array<ArrayBuffer>>await databases.generateAsync({ type: "uint8array" });
+                                    downloadFile(new Blob([blob]), "AlleDatenbanken.zip", true);
+                                    let ws = this.main.getCurrentWorkspace();
+                                    this.main.currentWorkspace = null;
+                                    this.main.projectExplorer.setWorkspaceActive(ws, () => { }, true);
+                                }
+                            }
 
                         ]
                     }

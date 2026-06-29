@@ -4,6 +4,8 @@ import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { downloadFile } from "./HtmlTools.js";
 import { MySqlImporter } from "./MySqlImporter.js";
 import pako from 'pako'
+import JSZip from "jszip";
+import type { Workspace } from "../workspace/Workspace.js";
 
 export class DatabaseImportExport {
 
@@ -46,7 +48,6 @@ export class DatabaseImportExport {
             downloadFile(new Blob([<ArrayBuffer>db.buffer]), filename, true);
         }, () => {});
     }
-
 
 
 
