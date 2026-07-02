@@ -67,7 +67,7 @@ export class StatementCleaner {
     cleanCreateTableStatement(ast: CreateTableNode): string {
         let st: string = `create table ${ast.ifNotExists ? " if not exists" : ""} ${this.escapeIdentifier(ast.identifier)}(\n   `;
 
-        st += ast.columnList.map(column => this.cleanColumnDef(column)).join(",\n   ");
+        st += ast.columnList.map(column => this.cleanColumnDef(column, ast.combinedPrimaryKeyColumns.map(c => c.toLocaleLowerCase()))).join(",\n   ");
         if (ast.foreignKeyInfoList != null && ast.foreignKeyInfoList.length > 0) {
             st += ",\n   " + ast.foreignKeyInfoList.map(fki => this.cleanForeignKeyInfo(fki)).join(",\n   ");
         }
@@ -104,7 +104,7 @@ export class StatementCleaner {
         return fkiString;
     }
 
-    cleanColumnDef(column: CreateTableColumnNode): string {
+    cleanColumnDef(column: CreateTableColumnNode, combinedPrimaryKeyColumns: string[]): string {
 
         let type = column.baseType.getSQLiteType();
         if (type == "int" && column.isAutoIncrement) {
@@ -115,7 +115,7 @@ export class StatementCleaner {
         if (column.parameters != null && column.parameters.length > 0 && !column.isAutoIncrement) {
             st += `(${column.parameters.join(", ")})`;
         }
-        if (column.notNull) {
+        if (column.notNull || combinedPrimaryKeyColumns.indexOf(column.identifier.toLocaleLowerCase()) >= 0) {
             st += " not null";
         }
         if (column.defaultValue != null) {
