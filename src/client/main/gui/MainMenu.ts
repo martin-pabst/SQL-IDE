@@ -62,6 +62,7 @@ export class MainMenu {
                                     let ws = this.main.getCurrentWorkspace();
                                     this.main.currentWorkspace = null;
                                     this.main.projectExplorer.setWorkspaceActive(ws, () => { }, true);
+                                    alert('Alle Datenbanken wurden erfolgreich exportiert und als Zip-Datei heruntergeladen.');
                                 }
                             }
 
