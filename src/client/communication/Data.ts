@@ -719,11 +719,11 @@ export type LongPollingListenerResponse = {
     newStatements?: string[]
 }
 
-export type RegisterDatabaseSSEListenerRequest = { workspaceId: number, registerOrUnregister: "register" | "unregister" }
+export type RegisterPushClientForDatabaseRequest = { workspaceId: number, registerOrUnregister: "register" | "unregister" }
 
-export type RegisterDatabaseSSEListenerResponse = { success: boolean, message: string }
+export type RegisterPushClientForDatabaseResponse = { success: boolean, message: string }
 
-export type DatabaseChangedSSEMessage = {
+export type DatabaseChangedPushMessage = {
     databaseId: number,
     firstNewStatementIndex?: number,
     newStatements?: string[],

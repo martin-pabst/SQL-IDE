@@ -2,7 +2,7 @@ import { Main } from "../main/Main.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ajax, ajaxAsync, csrfToken } from "./AjaxHelper.js";
-import { DatabaseChangedSSEMessage as DatabaseChangedPushMessage, GetNewStatementsRequest, GetNewStatementsResponse, RegisterDatabaseSSEListenerRequest as RegisterPushClientForDatabaseRequest } from "./Data.js";
+import { DatabaseChangedPushMessage, GetNewStatementsRequest, GetNewStatementsResponse, RegisterPushClientForDatabaseRequest } from "./Data.js";
 import { PushClientManager } from "./pushclient/PushClientManager.js";
 
 export class NewNotifier {

@@ -1,0 +1,1 @@
+type DarkLightState = "dark" | "light";
