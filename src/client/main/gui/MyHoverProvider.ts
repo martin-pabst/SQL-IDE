@@ -44,7 +44,7 @@ export class MyHoverProvider {
             }
         }
 
-        let module: Module = this.editor.main.getCurrentWorkspace()?.getModuleByMonacoModel(model);
+        let module: Module = this.editor.main.getCurrentWorkspace()?.getModuleForMonacoModel(model);
 
         if (module == null) {
             return null;

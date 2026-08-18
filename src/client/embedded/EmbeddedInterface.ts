@@ -37,7 +37,7 @@ export class SingleIDEAccessImpl implements SingleIDEAccess {
     }
 
     getFiles(): IDEFileAccess[] {
-        return this.ide.getCurrentWorkspace().moduleStore.getModules(false).map(file => new IDEFileAccessImpl(file));        
+        return this.ide.getCurrentWorkspace().moduleStore.getModules().map(file => new IDEFileAccessImpl(file));        
     }
 
 

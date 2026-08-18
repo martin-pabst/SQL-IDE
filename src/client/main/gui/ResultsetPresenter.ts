@@ -344,9 +344,11 @@ export class ResultsetPresenter {
 
         }
 
-        let model = this.main.getCurrentlyEditedModule().model;
-        monaco.editor.setModelMarkers(model, 'test', markers);
-        this.oldErrorDecorations = model.deltaDecorations(this.oldErrorDecorations, decorations);
+        let model = this.main.getCurrentlyEditedModule().file.getMonacoModel();
+        if(model){
+            monaco.editor.setModelMarkers(model, 'test', markers);
+            this.oldErrorDecorations = model.deltaDecorations(this.oldErrorDecorations, decorations);
+        }
 
     }
 

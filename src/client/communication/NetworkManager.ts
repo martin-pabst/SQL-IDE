@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
-import { ajax, csrfToken } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateUserSettingsRequest, UpdateUserSettingsResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, CreateWorkspaceData, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse } from "./Data.js";
+import { ajax, ajaxAsync, csrfToken, PerformanceCollector } from "./AjaxHelper.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateGuiStateRequest, UpdateGuiStateResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse, type UpdateFileOrderRequest, type BaseResponse, type UpdateWorkspaceOrderRequest, type CreateWorkspaceData, type MoveFileRequest, type CheckIfPruefungIsRunningResponse } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { Module } from "../compiler/parser/Module.js";
 import { WDatabase } from "../workspace/WDatabase.js";
@@ -11,32 +11,39 @@ import { FileTool } from "../tools/FileTool.js";
 import { PushClientManager } from "./pushclient/PushClientManager.js";
 import pako from 'pako'
 import jQuery from "jquery";
+import type { GUIFile } from "../compiler/parser/GUIFile.js";
+import { FileTypeManager } from "../compiler/parser/FileTypeManager.js";
 
 export class NetworkManager {
 
     timerhandle: any;
 
-    ownUpdateFrequencyInSeconds: number = 20;
+    ownUpdateFrequencyInSeconds: number = 25;
     teacherUpdateFrequencyInSeconds: number = 5;
 
-    updateFrequencyInSeconds: number = 20;
-    forcedUpdateEvery: number = 4;
-    counterTillForcedUpdate: number = 2;
+    updateFrequencyInSeconds: number = 25;
+    forcedUpdateEvery: number = 25;
+    forcedUpdatesInARow: number = 0;
+
     secondsTillNextUpdate: number = this.updateFrequencyInSeconds;
     errorHappened: boolean = false;
 
     interval: any;
 
+    counterTillForcedUpdate: number;
+
     constructor(private main: Main, private $updateTimerDiv: JQuery<HTMLElement>) {
 
     }
 
-    initializeTimer() {
+    async initializeTimer() {
 
         let that = this;
         this.$updateTimerDiv.find('svg').attr('width', that.updateFrequencyInSeconds);
 
         if (this.interval != null) clearInterval(this.interval);
+
+        this.counterTillForcedUpdate = this.forcedUpdateEvery;
 
         this.interval = setInterval(() => {
 
@@ -46,10 +53,18 @@ export class NetworkManager {
 
             if (that.secondsTillNextUpdate < 0) {
                 that.secondsTillNextUpdate = that.updateFrequencyInSeconds;
-                this.counterTillForcedUpdate--;
-                let forceUpdate = this.counterTillForcedUpdate == 0;
-                if (forceUpdate) this.counterTillForcedUpdate = this.forcedUpdateEvery;
-                that.sendUpdates(() => { }, forceUpdate);
+                that.counterTillForcedUpdate--;
+                let doForceUpdate = that.counterTillForcedUpdate == 0;
+                if (doForceUpdate) {
+                    this.forcedUpdatesInARow++;
+                    that.counterTillForcedUpdate = this.forcedUpdateEvery;
+                    if (this.forcedUpdatesInARow > 50) {
+                        that.counterTillForcedUpdate = this.forcedUpdateEvery * 10;
+                    }
+                }
+
+                that.sendUpdatesAsync(doForceUpdate, false);
+
             }
 
             let $rect = this.$updateTimerDiv.find('.jo_updateTimerRect');
@@ -64,22 +79,30 @@ export class NetworkManager {
                 this.$updateTimerDiv.attr('title', that.secondsTillNextUpdate + " Sekunden bis zum nächsten Speichern");
             }
 
+            PerformanceCollector.sendDataToServer();
+
         }, 1000);
 
     }
 
-    sendUpdates(callback?: () => void, sendIfNothingIsDirty: boolean = false) {
 
-        if (this.main.user == null) return;
+    /**
+     * TODO: Ungeprüft übernommen von der Online-IDE
+     */
+    async sendUpdatesAsync(sendIfNothingIsDirty: boolean = false, sendBeacon: boolean = false, alertIfNewWorkspacesFound: boolean = false): Promise<boolean> {
 
-        this.main.projectExplorer.writeEditorTextToFile();
-
-        if (this.main.userDataDirty) {
-
-            this.main.userDataDirty = false;
-            this.sendUpdateUserSettings(() => { });
+        if (this.main.user == null || this.main.user.is_testuser) {
+            return true;
         }
 
+        let userSettings = this.main.user.sql_gui_state;
+
+        if (this.main.gui_state_dirty) {
+
+            this.main.gui_state_dirty = false;
+            this.sendUpdateGuiState(sendBeacon);
+            this.forcedUpdatesInARow = 0;
+        }
 
         let wdList: WorkspaceData[] = [];
         let fdList: FileData[] = [];
@@ -89,14 +112,15 @@ export class NetworkManager {
             if (!ws.saved) {
                 wdList.push(ws.getWorkspaceData(false));
                 ws.saved = true;
+                this.forcedUpdatesInARow = 0;
             }
 
-            for (let m of ws.moduleStore.getModules(false)) {
-                if (!m.file.saved) {
-                    m.file.text = m.getProgramTextFromMonacoModel();
-                    fdList.push(m.getFileData(ws));
-                    // console.log("Save file " + m.file.name);
-                    m.file.saved = true;
+            for (let file of ws.getFiles()) {
+                if (!file.isSaved()) {
+                    this.forcedUpdatesInARow = 0;
+                    fdList.push(file.getFileData(ws));
+                    // console.log("Save file " + file.name);
+                    file.setSaved(true);
                 }
             }
         }
@@ -106,49 +130,85 @@ export class NetworkManager {
             files: fdList,
             owner_id: this.main.workspacesOwnerId,
             userId: this.main.user.id,
-            language: 1,
-            currentWorkspaceId: this.main.getCurrentWorkspace()?.id,
-            getModifiedWorkspaces: false
+            currentWorkspaceId: this.main.currentWorkspace?.pruefung_id == null ? this.main.currentWorkspace?.id : null,
+            getModifiedWorkspaces: sendIfNothingIsDirty
         }
 
         let that = this;
-        if (wdList.length > 0 || fdList.length > 0 || sendIfNothingIsDirty) {
-            ajax('sendUpdates', request, (response: SendUpdatesResponse) => {
-                that.errorHappened = !response.success;
-                if (!that.errorHappened) {
+        if (wdList.length > 0 || fdList.length > 0 || sendIfNothingIsDirty || this.errorHappened) {
 
-                    that.updateWorkspaces(request, response);
+            if (sendBeacon) {
+                // If user closes browser-tab or even browser then only sendBeacon works to send data.
+                navigator.sendBeacon("sendUpdates", JSON.stringify(request));
+            } else {
 
-                    if (callback != null) {
-                        callback();
-                        return;
+                try {
+                    let response: SendUpdatesResponse = await ajaxAsync('servlet/sendUpdates', request);
+                    that.errorHappened = !response.success;
+                    if (!that.errorHappened) {
+
+                        if (response.workspaces != null) {
+                            that.updateWorkspaces(request, response, alertIfNewWorkspacesFound);
+                        }
+
+
+                        /**
+                         * 13.06.2026: filesToForceUpdate was used to to update student's file if
+                         * a teacher was editing them concurrently.
+                         */
+                        // if (response.filesToForceUpdate != null) {
+                        //     that.updateFiles(response.filesToForceUpdate);
+                        // }
+
+                        // if(response.activePruefung != null){
+                        //     that.main.pruefungManagerForStudents.startPruefung(response.activePruefung);
+                        // }
+
+                        return true;
+
+                    } else {
+                        let message: string = "Fehler beim Senden der Daten: ";
+                        if (response["message"]) message += response["message"];
+                        console.log(message);
+                        return false;
                     }
+                } catch (message) {
+                    that.errorHappened = true;
+                    console.log("Fehler beim Ajax-call: " + message)
+                    return;
                 }
-            }, () => {
-                that.errorHappened = true;
-            });
-        } else {
-            if (callback != null) {
-                callback();
-                return;
             }
         }
 
+        return true;
     }
 
-    initializeSSE() {
-        PushClientManager.subscribe("doFileUpdate", (data) => {
-            let oldWorkspaces = this.main.workspaceList.slice();
-            this.sendUpdates(() => {
-
-                let names = this.main.workspaceList.filter(ws => oldWorkspaces.indexOf(ws) < 0)
-                .map(ws => ws.name).join(", ");
-
-                alert(`Deine Lehrkraft hat Dir folgende Datenbank übermittelt: ${names}`);
-
-            }, true);
+    initializePushClientManager() {
+        PushClientManager.getInstance().subscribe("doFileUpdate", (data) => {
+            this.sendUpdatesAsync(true, false, true);
         })
+    }
 
+    checkIfTestIsRunning(){
+        ajaxAsync("servlet/checkIfPruefungIsRunning", {}).then((resp: CheckIfPruefungIsRunningResponse) => {
+            if(resp && resp.runningPruefung){
+                this.main.pruefungManagerForStudents.startPruefung(resp.runningPruefung);
+            }
+        })
+    }
+
+    savePruefungWorkspace(pruefungWorkspace: Workspace){
+
+        let request: SendUpdatesRequest = {
+            workspacesWithoutFiles: [pruefungWorkspace.getWorkspaceData(false)],
+            files: pruefungWorkspace.getFiles().map(file => file.getFileData(pruefungWorkspace)),
+            owner_id: this.main.workspacesOwnerId,
+            userId: this.main.user.id,
+            currentWorkspaceId: this.main.currentWorkspace?.pruefung_id == null ? this.main.currentWorkspace?.id : null,
+            getModifiedWorkspaces: false
+        }
+
+        ajaxAsync('servlet/sendUpdates', request);
 
     }
 
@@ -210,9 +270,15 @@ export class NetworkManager {
 
 
 
-    sendCreateFile(m: Module, ws: Workspace, owner_id: number, callback: (error: string) => void) {
+    async sendCreateFile(f: GUIFile, ws: Workspace, owner_id: number): Promise<boolean> {
 
-        let fd: FileData = m.getFileData(ws);
+        if (this.main.user.is_testuser) {
+            f.id = Math.round(Math.random() * 10000000);
+            return false;
+        }
+
+
+        let fd: FileData = f.getFileData(ws);
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "create",
             entity: "file",
@@ -221,23 +287,28 @@ export class NetworkManager {
             userId: this.main.user.id
         }
 
-        ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            m.file.id = response.id;
-            callback(null);
-        }, callback);
+        let response: CRUDResponse = await ajaxAsync("servlet/createOrDeleteFileOrWorkspace", request);
+        if (response.success) {
+            f.id = response.id;
+            f.setSaved(true);
+        }
+
+        return response.success;
 
     }
 
-    sendDuplicateWorkspace(ws: Workspace, callback: (error: string, workspaceData?: WorkspaceData) => void) {
+    async sendDuplicateWorkspace(ws: Workspace): Promise<DuplicateWorkspaceResponse> {
 
-        let request: DuplicateWorkspaceRequest = {
-            workspace_id: ws.id,
-            language: 1
+        if (this.main.user.is_testuser) {
+            return { message: "Diese Aktion ist für den Testuser nicht möglich.", workspace: null };
         }
 
-        ajax("duplicateWorkspace", request, (response: DuplicateWorkspaceResponse) => {
-            callback(response.message, response.workspace)
-        }, callback);
+
+        let request: DuplicateWorkspaceRequest = {
+            workspace_id: ws.id
+        }
+
+        return await ajaxAsync("/servlet/duplicateWorkspace", request);
 
     }
 
@@ -249,7 +320,7 @@ export class NetworkManager {
                 "distributeWorkspace",
                 (response) => {
 
-                    this.sendUpdates(() => {
+                    this.sendUpdatesAsync(false).then(() => {
 
                         let request: DistributeWorkspaceRequest = {
                             workspace_id: ws.id,
@@ -262,52 +333,80 @@ export class NetworkManager {
                             callback(response.message)
                         }, callback);
 
-                    }, false);
+                    });
                 });
 
         }
 
-        this.main.projectExplorer.setWorkspaceActive(ws, callbackAfterSettingWorkspaceActive);
+        this.main.projectExplorer.setWorkspaceActive(ws, false, false, callbackAfterSettingWorkspaceActive);
 
     }
 
 
-    sendDeleteWorkspaceOrFile(type: "workspace" | "file", id: number, callback: (error: string) => void) {
+    async sendDeleteWorkspaceOrFileAsync(type: "workspace" | "file", ids: number[]): Promise<boolean> {
+
+        if (this.main.user.is_testuser) {
+            return true;
+        }
 
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
             type: "delete",
             entity: type,
-            id: id,
+            ids: ids,
             userId: this.main.user.id
         }
 
-        ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
-            if (response.success) {
-                callback(null);
-            } else {
-                callback("Netzwerkfehler!");
-            }
-        }, callback);
+        let response: CRUDResponse =
+            await ajaxAsync("/servlet/createOrDeleteFileOrWorkspace", request);
 
+        return response.success;
     }
 
-    sendUpdateUserSettings(callback: (error: string) => void) {
+    async sendUpdateGuiState(sendBeacon: boolean = false): Promise<string> {
 
-        let request: UpdateUserSettingsRequest = {
-            settings: this.main.user.settings,
-            userId: this.main.user.id,
-            current_workspace_id: this.main.getCurrentWorkspace()?.id
+        if (this.main.user.is_testuser) {
+            return;
         }
 
-        ajax("updateUserSettings", request, (response: UpdateUserSettingsResponse) => {
+        let request: UpdateGuiStateRequest = {
+            gui_state: this.main.user.sql_gui_state,
+            userId: this.main.user.id
+        }
+
+        if (sendBeacon) {
+            navigator.sendBeacon("servlet/updateGuiState", JSON.stringify(request));
+        } else {
+            let response: UpdateGuiStateResponse = await ajaxAsync("servlet/updateGuiState", request);
             if (response.success) {
-                callback(null);
+                return null;
             } else {
-                callback("Netzwerkfehler!");
+                return "Netzwerkfehler!";
             }
-        }, callback);
+
+        }
 
     }
+
+    async sendUpdateFileOrder(files: GUIFile[]): Promise<boolean> {
+        let request: UpdateFileOrderRequest = {
+            fileOrderList: files.map(f => ({ fileId: f.id, order: f.sorting_order }))
+        }
+
+        let response: BaseResponse = await ajaxAsync('servlet/updateFileOrder', request);
+
+        return response.success;
+    }
+
+    async sendUpdateWorkspaceOrder(workspaces: Workspace[]): Promise<boolean> {
+        let request: UpdateWorkspaceOrderRequest = {
+            workspaceOrderList: workspaces.map(ws => ({ workspaceId: ws.id, order: ws.sorting_order }))
+        }
+
+        let response: BaseResponse = await ajaxAsync('servlet/updateWorkspaceOrder', request);
+
+        return response.success;
+    }
+
 
 
     getNewStatements(workspace: Workspace, callback: (statements: string[], firstNewStatementIndex: number) => void) {
@@ -441,7 +540,7 @@ export class NetworkManager {
 
     }
 
-    updateWorkspaces(sendUpdatesRequest: SendUpdatesRequest, sendUpdatesResponse: SendUpdatesResponse) {
+    private updateWorkspaces(sendUpdatesRequest: SendUpdatesRequest, sendUpdatesResponse: SendUpdatesResponse, alertIfNewWorkspacesFound: boolean = false) {
 
         let idToRemoteWorkspaceDataMap: Map<number, WorkspaceData> = new Map();
 
@@ -458,13 +557,13 @@ export class NetworkManager {
 
             // Did student get a workspace from his/her teacher?
             if (localWorkspaces.length == 0) {
-                newWorkspaceNames.push(remoteWorkspace.name);
+                if (remoteWorkspace.pruefung_id == null) {
+                    newWorkspaceNames.push(remoteWorkspace.name);
+                }
                 this.createNewWorkspaceFromWorkspaceData(remoteWorkspace);
             }
 
         }
-
-
 
         for (let workspace of this.main.workspaceList) {
             let remoteWorkspace: WorkspaceData = idToRemoteWorkspaceDataMap.get(workspace.id);
@@ -472,99 +571,76 @@ export class NetworkManager {
                 let idToRemoteFileDataMap: Map<number, FileData> = new Map();
                 remoteWorkspace.files.forEach(fd => idToRemoteFileDataMap.set(fd.id, fd));
 
-                let idToModuleMap: Map<number, Module> = new Map();
+                let idToFileMap: Map<number, GUIFile> = new Map();
                 // update/delete files if necessary
-                for (let module of workspace.moduleStore.getModules(false)) {
-                    let fileId = module.file.id;
-                    idToModuleMap.set(fileId, module);
+                for (let file of workspace.getFiles()) {
+                    let fileId = file.id;
+                    idToFileMap.set(fileId, file);
                     let remoteFileData = idToRemoteFileDataMap.get(fileId);
                     if (remoteFileData == null) {
-                        this.main.projectExplorer.fileListPanel.removeElement(module);
-                        this.main.currentWorkspace.moduleStore.removeModule(module);
-                    } else if (remoteFileData.version > module.file.version) {
-                        if (fileIdsSended.indexOf(fileId) < 0 || remoteFileData.forceUpdate) {
-                            module.file.text = remoteFileData.text;
-                            module.model.setValue(remoteFileData.text);
-
-                            module.file.saved = true;
-                            module.lastSavedVersionId = module.model.getAlternativeVersionId()
+                        this.main.projectExplorer.fileTreeview.removeElementAndItsFolderContents(file);
+                        this.main.getCurrentWorkspace()?.removeFile(file);
+                    } else {
+                        if (fileIdsSended.indexOf(fileId) < 0 && file.getText() != remoteFileData.text) {
+                            file.setText(remoteFileData.text);
+                            file.setSaved(true);
                         }
-                        module.file.version = remoteFileData.version;
+                        file.remote_version = remoteFileData.version;
                     }
                 }
 
+
                 // add files if necessary
                 for (let remoteFile of remoteWorkspace.files) {
-                    if (idToModuleMap.get(remoteFile.id) == null) {
+                    if (idToFileMap.get(remoteFile.id) == null) {
                         this.createFile(workspace, remoteFile);
                     }
                 }
             }
         }
 
-        this.main.projectExplorer.workspaceListPanel.sortElements();
-        this.main.projectExplorer.fileListPanel.sortElements();
+        if (newWorkspaceNames.length > 0 && alertIfNewWorkspacesFound) {
+            let message: string = newWorkspaceNames.length > 1 ? "Folgende Workspaces hat Deine Lehrkraft Dir gesendet: " : "Folgenden Workspace hat Deine Lehrkraft Dir gesendet: ";
+            message += newWorkspaceNames.join(", ");
+            alert(message);
+        }
+
+        this.main.projectExplorer.workspaceTreeview.sort();
+        this.main.projectExplorer.fileTreeview.sort();
 
     }
 
-    public createNewWorkspaceFromWorkspaceData(remoteWorkspace: WorkspaceData, withSort: boolean = false) {
-        let w = this.main.createNewWorkspace(remoteWorkspace.name, remoteWorkspace.owner_id);
-        w.id = remoteWorkspace.id;
-        w.sql_history = "";
-        w.path = remoteWorkspace.path;
-        w.isFolder = remoteWorkspace.isFolder;
+    public createNewWorkspaceFromWorkspaceData(remoteWorkspace: WorkspaceData, withSort: boolean = false): Workspace {
+
+        let w = this.main.restoreWorkspaceFromData(remoteWorkspace);
 
         this.main.workspaceList.push(w);
-        let path = remoteWorkspace.path.split("/");
-        if (path.length == 1 && path[0] == "") path = [];
 
-        let panelElement: AccordionElement = {
-            name: remoteWorkspace.name,
-            externalElement: w,
-            iconClass: "workspace",
-            isFolder: remoteWorkspace.isFolder,
-            path: path
-        };
-
-        this.main.projectExplorer.workspaceListPanel.addElement(panelElement, true);
-        w.panelElement = panelElement;
-
-        for (let fileData of remoteWorkspace.files) {
-            this.createFile(w, fileData);
-        }
+        let iconClass = "img_database-dark";
+        let node = this.main.projectExplorer.workspaceTreeview.addNode(w.isFolder,w.name,
+            iconClass, w
+         )
+         // TODO: node.readonly = w.readonly
 
         if (withSort) {
-            this.main.projectExplorer.workspaceListPanel.sortElements();
-            this.main.projectExplorer.fileListPanel.sortElements();
+            this.main.projectExplorer.workspaceTreeview.sort();
         }
+        return w;
     }
 
-    createFile(workspace: Workspace, remoteFile: FileData) {
-        let ae: any = null; //AccordionElement
-        if (workspace == this.main.currentWorkspace) {
-            ae = {
-                name: remoteFile.name,
-                externalElement: null
-            }
+    private createFile(workspace: Workspace, remoteFile: FileData) {
+        let f = this.main.projectExplorer.getNewFile(remoteFile); //new Module(f, this.main);
 
-            this.main.projectExplorer.fileListPanel.addElement(ae, true);
+        let ae: any = null; //AccordionElement
+        if (workspace == this.main.getCurrentWorkspace()) {
+
+            let iconClass = FileTypeManager.filenameToFileType(f.name).iconclass;
+            
+            this.main.projectExplorer.fileTreeview.addNode(false, f.name, iconClass, f)
+
         }
 
-        let f: any = { // File
-            id: remoteFile.id,
-            name: remoteFile.name,
-            dirty: false,
-            saved: true,
-            text: remoteFile.text,
-            version: remoteFile.version,
-            identical_to_repository_version: true,
-            workspace_id: workspace.id,
-            panelElement: ae
-        };
-        let m = this.main.projectExplorer.getNewModule(f); //new Module(f, this.main);
-        if (ae != null) ae.externalElement = m;
-        let modulStore = workspace.moduleStore;
-        modulStore.putModule(m);
+        workspace.addFile(f);
 
     }
 
@@ -586,6 +662,16 @@ export class NetworkManager {
         })
 
     }
+
+    async moveFile(file_id: number, destination_workspace_id: number) {
+        let request: MoveFileRequest = {
+            file_id: file_id,
+            destination_workspace_id: destination_workspace_id
+        }
+        let response = await ajaxAsync("servlet/moveFile", request);
+        return response.success;
+    }
+
 
 
 }

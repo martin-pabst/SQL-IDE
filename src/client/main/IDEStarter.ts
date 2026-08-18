@@ -7,15 +7,15 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 
 
-import '/include/css/editor.css';
-import '/include/css/editorStatic.css';
-import '/include/css/bottomdiv.css';
-import '/include/css/run.css';
-import '/include/css/helper.css';
-import '/include/css/icons.css';
-import '/include/css/databaseExplorer.css';
-import '/include/css/dialog.css';
-import '/include/css/databasedialogs.css';
+import '/assets/css/editor.css';
+import '/assets/css/editorStatic.css';
+import '/assets/css/bottomdiv.css';
+import '/assets/css/run.css';
+import '/assets/css/helper.css';
+import '/assets/css/icons.css';
+import '/assets/css/databaseExplorer.css';
+import '/assets/css/dialog.css';
+import '/assets/css/databasedialogs.css';
 
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 

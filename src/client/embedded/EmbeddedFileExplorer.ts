@@ -22,7 +22,7 @@ export class EmbeddedFileExplorer {
 
         let that = this;
 
-        for (let module of moduleStore.getModules(false)) {
+        for (let module of moduleStore.getModules()) {
 
             this.addModule(module);
 
@@ -157,7 +157,7 @@ export class EmbeddedFileExplorer {
 
         this.files.forEach((file) => {
             if(file.module != null){                // Hints have module == null
-                file.module.file.saved = false;
+                file.module.file.setSaved(false);
             }
         });
     }

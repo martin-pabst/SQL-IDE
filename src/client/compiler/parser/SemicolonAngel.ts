@@ -38,7 +38,9 @@ export class SemicolonAngel {
         this.semicolonPositions = this.semicolonPositions.filter(p => p.isThereAgain);
 
         let currentlyEditedModule = this.main.getCurrentlyEditedModule();
-        let cursorLine = this.main.getMonacoEditor().getPosition().lineNumber;
+        let cursorLine = this.main.getMonacoEditor().getPosition()?.lineNumber;
+
+        if(typeof cursorLine == "undefined") return;
 
         this.semicolonPositions.filter(p => time - p.firstSeenMs > 2000).forEach(p => {
 

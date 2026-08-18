@@ -5,6 +5,7 @@ import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
 import * as monaco from 'monaco-editor'
+import type { GUIFile } from "../../compiler/parser/GUIFile.js";
 
 
 export class ErrorManager {
@@ -29,13 +30,13 @@ export class ErrorManager {
         }).attr('title', 'Undo');
     }
 
-    showErrors(workspace: Workspace): Map<Module, number> {
+    showErrors(workspace: Workspace): Map<GUIFile, number> {
 
         this.main.getResultsetPresenter().showErrorDecorations([]);
 
         this.lightBulbOnClickFunctionList = [];
 
-        let errorCountMap: Map<Module, number> = new Map();
+        let errorCountMap: Map<GUIFile, number> = new Map();
 
         this.$errorDiv = this.$bottomDiv.find('.jo_tabs>.jo_errorsTab');
         this.$errorDiv.empty();
@@ -45,13 +46,13 @@ export class ErrorManager {
         let ms = workspace.moduleStore;
         let editor: monaco.editor.IStandaloneCodeEditor = this.main.getMonacoEditor();
 
-        for (let m of ms.getModules(false)) {
+        for (let m of ms.getModules()) {
             let markers: monaco.editor.IMarkerData[] = [];
             let decorations: monaco.editor.IModelDeltaDecoration[] = [];
             let $errorList: JQuery<HTMLElement>[] = [];
 
             let errors = m.getSortedAndFilteredErrors();
-            errorCountMap.set(m, m.getErrorCount());
+            errorCountMap.set(m.file, m.getErrorCount());
 
             for (let error of errors) {
 
@@ -131,8 +132,8 @@ export class ErrorManager {
 
             }
 
-            monaco.editor.setModelMarkers(m.model, 'test', markers);
-            m.oldErrorDecorations = m.model.deltaDecorations(m.oldErrorDecorations, decorations);
+            monaco.editor.setModelMarkers(m.file.getMonacoModel(), 'test', markers);
+            m.oldErrorDecorations = m.file.getMonacoModel().deltaDecorations(m.oldErrorDecorations, decorations);
 
             // decorations used when user clicks on error in error-list:
             this.oldDecorations = this.main.getMonacoEditor().deltaDecorations(this.oldDecorations, []);
@@ -200,8 +201,8 @@ export class ErrorManager {
     showError(m: Module, error: Error) {
 
         if (this.main instanceof Main) {
-            if (m != this.main.projectExplorer.getCurrentlyEditedModule()) {
-                this.main.projectExplorer.setModuleActive(m);
+            if (m.file != this.main.projectExplorer.getCurrentlyEditedFile()) {
+                this.main.projectExplorer.setFileActive(m.file);
             }
         }
         let position = error.position;
@@ -230,5 +231,10 @@ export class ErrorManager {
 
 
     }
+
+    clearErrors() {
+        this.$errorDiv.empty();
+    }
+
 
 }

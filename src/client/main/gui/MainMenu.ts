@@ -61,7 +61,7 @@ export class MainMenu {
                                     downloadFile(new Blob([blob]), "AlleDatenbanken.zip", true);
                                     let ws = this.main.getCurrentWorkspace();
                                     this.main.currentWorkspace = null;
-                                    this.main.projectExplorer.setWorkspaceActive(ws, () => { }, true);
+                                    this.main.projectExplorer.setWorkspaceActive(ws, true);
                                     alert('Alle Datenbanken wurden erfolgreich exportiert und als Zip-Datei heruntergeladen.');
                                 }
                             }
@@ -158,7 +158,7 @@ export class MainMenu {
                                         owner_id = that.main.workspacesOwnerId;
                                     }
 
-                                    new NewDatabaseDialog(that.main, owner_id, []);
+                                    new NewDatabaseDialog(that.main, owner_id, null);
                                 }
                             },
                             { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },

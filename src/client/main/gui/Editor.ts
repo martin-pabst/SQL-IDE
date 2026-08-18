@@ -196,10 +196,10 @@ export class Editor {
 
             if (this.main.getCurrentWorkspace() == null) return;
 
-            let module = this.main.getCurrentWorkspace().getModuleByMonacoModel(this.editor.getModel());
-            if (this.main instanceof Main && module != null) {
+            let file = this.main.getCurrentWorkspace().getFileForMonacoModel(this.editor.getModel());
+            if (this.main instanceof Main && file != null) {
 
-                this.main.projectExplorer.setActiveAfterExternalModelSet(module);
+                this.main.projectExplorer.setActiveAfterExternalModelSet(file);
             }
         });
 

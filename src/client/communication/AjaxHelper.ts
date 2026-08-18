@@ -1,5 +1,6 @@
 import { PerformanceData } from "./Data.js";
 import jQuery from "jquery";
+import { PushClientManager } from "./pushclient/PushClientManager.js";
 
 export class PerformanceCollector {
     static performanceData: PerformanceData[] = [];
@@ -124,13 +125,14 @@ export function extractCsrfTokenFromGetRequest(){
 }
 
 
-export async function ajaxAsync(url: string, data: any): Promise<any>{
+export async function ajaxAsync(url: string, data: any): Promise<any> {
     let headers: [string, string][] = [["content-type", "text/json"]];
 
-    if(csrfToken != null){
+    if (csrfToken != null) {
         headers.push(["x-token-pm", csrfToken]);
     }
 
+    showNetworkBusy(true);
     try {
         let response = await fetch(url, {
             method: "POST",
@@ -138,20 +140,22 @@ export async function ajaxAsync(url: string, data: any): Promise<any>{
             body: JSON.stringify(data)
         })
 
-         let obj: any = await response.json()
+        let obj: any = await response.json()
 
-        if(obj["token"] != null){
+        if (obj["token"] != null) {
             csrfToken = obj["token"];
+            PushClientManager.getInstance().open();
         }
 
-        if(obj == null){
-            alert("Fehler beim Übertragen der Daten.");             
-        } else if(obj.success != true){
-            alert("Fehler beim Übertragen der Daten:\n" + obj.message);             
+        if (obj == null) {
+            alert("Fehler beim Übertragen der Daten.");
+        } else if (obj.success != true) {
+            alert("Fehler beim Übertragen der Daten:\n" + obj.message);
         }
-
+        showNetworkBusy(false);
         return obj;
-    } catch (exception){
+    } catch (exception) {
+        showNetworkBusy(false);
         return {
             status: "Error",
             message: "Es ist ein Fehler aufgetreten: " + exception

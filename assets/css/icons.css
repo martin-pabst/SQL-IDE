@@ -201,6 +201,13 @@
    background-image: url('../icons/foreign_key.svg');
 }
 
+.img_gear-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/gear-dark.svg');
+}
+
 .img_grid {
    width: 16px;
    height: 16px;
@@ -515,4 +522,3 @@
    background-repeat: no-repeat;
    background-image: url('../icons/workspace-dark.svg');
 }
-

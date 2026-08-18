@@ -5,16 +5,17 @@ import { dateToStringWithoutTime, stringToDate } from "../../tools/StringTools.j
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import jQuery from "jquery";
+import type { GUIFile } from '../../compiler/parser/GUIFile.js';
 
-type ModuleWithWorkspace = {
-    module: Module,
+type FileWithWorkspace = {
+    file: GUIFile,
     workspace: Workspace
 }
 
 type DayWithModules = {
     date: Date;
     day: string;
-    modules: ModuleWithWorkspace[];
+    modules: FileWithWorkspace[];
 }
 
 export class HomeworkManager {
@@ -59,14 +60,13 @@ export class HomeworkManager {
 
     showRevision(module: Module) {
 
-        module.file.text = module.getProgramTextFromMonacoModel();
         let file = module.file;
 
         jQuery('#editor').hide();
         jQuery('#diffEditor').show();
 
-        var originalModel = monaco.editor.createModel(file.text_before_revision, "myJava");
-        var modifiedModel = monaco.editor.createModel(file.text, "myJava");
+        var originalModel = monaco.editor.createModel(file.text_before_revision, "vscSQL");
+        var modifiedModel = monaco.editor.createModel(file.getText(), "vscSQL");
 
         this.diffEditor = monaco.editor.createDiffEditor(document.getElementById("diffEditor"), {
             // You can optionally disable the resizing
@@ -106,9 +106,9 @@ export class HomeworkManager {
         let map: { [day: string]: DayWithModules } = {};
 
         workspaces.forEach(ws => {
-            ws.moduleStore.getModules(false).forEach(module => {
+            ws.getFiles().forEach(file => {
 
-                let dateString = module.file.submitted_date;
+                let dateString = file.submitted_date;
                 if (dateString != null) {
 
                     let date: Date = stringToDate(dateString);
@@ -123,7 +123,7 @@ export class HomeworkManager {
                         map[dateWithoutTime] = dwm;
                         daysWithModules.push(dwm);
                     }
-                    dwm.modules.push({module: module, workspace: ws});
+                    dwm.modules.push({file: file, workspace: ws});
 
                 }
 
@@ -148,15 +148,15 @@ export class HomeworkManager {
 
         let first: boolean = true;
 
-        daysWithModules.forEach(dwm => {
+         daysWithModules.forEach(dwm => {
 
-            dwm.modules.sort((m1, m2) => m1.module.file.name.localeCompare(m2.module.file.name));
+            dwm.modules.sort((m1, m2) => m1.file.name.localeCompare(m2.file.name));
 
             let $div = makeDiv("", "jo_homeworkDate", dwm.day);
             this.$homeworkTabLeft.append($div);
 
             $div.on("click", (e) => {
-                this.$homeworkTabLeft.find('.jo_homeworkDate').removeClass('active');
+                this.$homeworkTabLeft.find('.jo_homeworkDate').removeClass('jo_active');
                 $div.addClass('jo_active');
                 that.select(dwm);
             });
@@ -178,12 +178,12 @@ export class HomeworkManager {
         dwm.modules.forEach(moduleWithWorkspace => {
             let $div = jQuery(`<div class="jo_homeworkEntry">Workspace <span class="jo_homework-workspace">
                     ${moduleWithWorkspace.workspace.name}</span>, Datei <span class="jo_homework-file">
-                    ${moduleWithWorkspace.module.file.name}</span> (Abgabe: ${moduleWithWorkspace.module.file.submitted_date} )</div>`);
+                    ${moduleWithWorkspace.file.name}</span> (Abgabe: ${moduleWithWorkspace.file.submitted_date} )</div>`);
             that.$homeworkTabRight.append($div);
             $div.on("click", () => {
                     that.main.projectExplorer.setWorkspaceActive(moduleWithWorkspace.workspace);
-                    that.main.projectExplorer.setModuleActive(moduleWithWorkspace.module);
-                    that.main.projectExplorer.fileListPanel.select(moduleWithWorkspace.module, false);
+                    that.main.projectExplorer.setFileActive(moduleWithWorkspace.file);
+                    that.main.projectExplorer.fileTreeview.selectElement(moduleWithWorkspace.file, false);
             });
         })
         

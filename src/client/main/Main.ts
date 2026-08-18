@@ -1,4 +1,4 @@
-import { ClassData, UserData, Workspaces } from "../communication/Data.js";
+import { ClassData, UserData, Workspaces, type WorkspaceData } from "../communication/Data.js";
 import { NetworkManager } from "../communication/NetworkManager.js";
 import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
@@ -30,6 +30,8 @@ import * as monaco from 'monaco-editor';
 import { NewNotifier } from "../communication/NewNotifier.js";
 import { setCookie } from "../tools/HttpTools.js";
 import jQuery from "jquery";
+import type { PruefungManagerForStudents } from "./pruefung/PruefungManagerForStudents.js";
+import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -53,7 +55,7 @@ export class Main implements MainBase {
 
     // VORSICHT: ggf. Module -> any
     getCurrentlyEditedModule(): Module {
-        return this.projectExplorer.getCurrentlyEditedModule();
+        return this.currentWorkspace.getCurrentlyEditedModule();
     }
 
     getActionManager(): ActionManager {
@@ -65,7 +67,7 @@ export class Main implements MainBase {
     }
 
     setModuleActive(module: Module) {
-        this.projectExplorer.setModuleActive(module);
+        this.projectExplorer.setFileActive(module.file);
     }
 
     getSemicolonAngel(): SemicolonAngel {
@@ -76,7 +78,7 @@ export class Main implements MainBase {
         return this.databaseTool;
     }
 
-    getDatabaseExplorer():DatabaseExplorer {
+    getDatabaseExplorer(): DatabaseExplorer {
         return this.databaseExplorer;
     }
 
@@ -104,6 +106,8 @@ export class Main implements MainBase {
     actionManager: ActionManager;
     mainMenu: MainMenu;
 
+    pruefungManagerForStudents: PruefungManagerForStudents;
+
     login: Login;
 
     compiler: Compiler;
@@ -120,7 +124,7 @@ export class Main implements MainBase {
     timerHandle: any;
 
     user: UserData;
-    userDataDirty: boolean = false;
+    gui_state_dirty: boolean = false;
 
     themeManager: ThemeManager;
 
@@ -148,9 +152,9 @@ export class Main implements MainBase {
         let singleUseToken = findGetParameter("singleUseToken");
 
 
-        if(singleUseToken){
+        if (singleUseToken) {
             this.login.initGUI();
-            this.login.loginWithVidis(singleUseToken);    
+            this.login.loginWithVidis(singleUseToken);
         } else {
             this.login.initGUI();
         }
@@ -240,13 +244,14 @@ export class Main implements MainBase {
 
         this.startTimer();
 
-        jQuery(window).on('unload', function() {
-            
-            if(navigator.sendBeacon && that.user != null){
-                that.networkManager.sendUpdates(null, false);
-                that.networkManager.sendUpdateUserSettings(() => {});
+        jQuery(window).on('unload', async function () {
+
+            if (navigator.sendBeacon && that.user != null) {
+                await that.networkManager.sendUpdatesAsync(false, true);
+
+                PushClientManager.getInstance().close();
             }
-            
+
         });
 
 
@@ -320,10 +325,10 @@ export class Main implements MainBase {
         this.projectExplorer.renderWorkspaces(this.workspaceList);
 
         if (currentWorkspace == null && this.workspaceList.length > 0) {
-            for(let ws of this.workspaceList){
-                if(!ws.isFolder){
+            for (let ws of this.workspaceList) {
+                if (!ws.isFolder) {
                     currentWorkspace = this.workspaceList[0];
-                    
+
                     break;
                 }
             }
@@ -335,7 +340,7 @@ export class Main implements MainBase {
 
         if (this.workspaceList.length == 0) {
 
-            Helper.showHelper("newDatabaseHelper", this, this.projectExplorer.workspaceListPanel.$captionElement);
+            Helper.showHelper("newDatabaseHelper", this, jQuery(this.projectExplorer.workspaceTreeview.addFolderButton.parent));
 
         }
 
@@ -344,6 +349,10 @@ export class Main implements MainBase {
 
     createNewWorkspace(name: string, owner_id: number): Workspace {
         return new Workspace(name, this, owner_id);
+    }
+
+    restoreWorkspaceFromData(workspaceData: WorkspaceData): Workspace {
+        return Workspace.restoreFromData(workspaceData, this);
     }
 
 

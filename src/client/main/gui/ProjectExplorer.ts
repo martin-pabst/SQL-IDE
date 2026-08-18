@@ -1,27 +1,39 @@
 import * as monaco from 'monaco-editor';
-import { ClassData, CreateWorkspaceData } from "../../communication/Data.js";
+import { ClassData, type DuplicateWorkspaceResponse, type FileData, type GetWorkspacesRequest, type GetWorkspacesResponse, type Pruefung, type UserData } from "../../communication/Data.js";
 import { TextPosition } from "../../compiler/lexer/Token.js";
-import { File, Module } from "../../compiler/parser/Module.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
-import { Accordion, AccordionContextMenuItem, AccordionElement, AccordionPanel } from "./Accordion.js";
 import { DistributeToStudentsDialog } from "./DistributeToStudentsDialog.js";
 import { Helper } from "./Helper.js";
-import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import jQuery from "jquery";
+import { ProjectExplorerMessages } from './language/ProjectExplorerMessages.js';
+import { AccordionMessages } from './language/AccordionMessages.js';
+import { GUIFile } from '../../compiler/parser/GUIFile.js';
+import { FileTypeManager } from '../../compiler/parser/FileTypeManager.js';
+import { downloadFile } from '../../tools/HtmlTools.js';
+import { dateToString } from '../../tools/StringTools.js';
+import { TreeviewAccordion } from '../../tools/treeview/TreeviewAccordion.js';
+import { Treeview, TreeviewContextMenuItem, DragKind } from '../../tools/treeview/Treeview.js';
+import type { TreeviewNode } from '../../tools/treeview/TreeviewNode.js';
+import { NewDatabaseDialog } from './NewDatabaseDialog.js';
+import type { TeacherExplorer } from './TeacherExplorer.js';
+import { ajaxAsync } from '../../communication/AjaxHelper.js';
+import '/assets/css/icons.css';
+import '/assets/css/projectexplorer.css';
+import type { IconButtonComponent } from '../../tools/IconButtonComponent.js';
 
 
 export class ProjectExplorer {
 
-    programPointerModule: Module = null;
+    programPointerFile: GUIFile = null;
     programPointerPosition: TextPosition;
     programPointerDecoration: string[] = [];
 
-    accordion: Accordion;
-    fileListPanel: AccordionPanel;
-    workspaceListPanel: AccordionPanel;
+    accordion: TreeviewAccordion;
+    fileTreeview: Treeview<GUIFile, number>;
+    workspaceTreeview: Treeview<Workspace, number>;
+    addDatabaseButton: IconButtonComponent;
 
-    $homeAction: JQuery<HTMLElement>;
 
     constructor(private main: Main, private $projectexplorerDiv: JQuery<HTMLElement>) {
 
@@ -29,521 +41,667 @@ export class ProjectExplorer {
 
     initGUI() {
 
-        this.accordion = new Accordion(this.main, this.$projectexplorerDiv);
+        this.accordion = new TreeviewAccordion(this.$projectexplorerDiv[0]);
 
         this.initFilelistPanel();
 
         this.initWorkspacelistPanel();
 
+
+        this.workspaceTreeview.addDragDropSource({ treeview: this.workspaceTreeview, dropInsertKind: "asElement", defaultDragKind: "move" })
+        this.workspaceTreeview.addDragDropSource({ treeview: this.fileTreeview, dropInsertKind: "intoElement", defaultDragKind: "copy", dragKindWithShift: "move" });
+        this.fileTreeview.addDragDropSource({ treeview: this.fileTreeview, dropInsertKind: "asElement", defaultDragKind: "move" })
+
     }
 
     initFilelistPanel() {
 
-        let that = this;
 
-        this.fileListPanel = new AccordionPanel(this.accordion, "Kein Workspace gewählt", "1",
-            "img_add-file-dark", "Neue Datei...", "java", true, false, "file", true, []);
+        this.fileTreeview = new Treeview(this.accordion, {
+            captionLine: {
+                enabled: true
+            },
+            withSelection: true,
+            selectMultiple: true,
+            selectWholeFolders: true,
+            withFolders: true,
+            isDragAndDropSource: true,
+            buttonAddElements: true,
+            buttonAddFolders: true,
+            withDeleteButtons: true,
+            confirmDelete: true,
+            defaultIconClass: "img_file-dark-java",
+            buttonAddElementsCaption: ProjectExplorerMessages.newFile(),
+            comparator: (a, b) => {
+                return a.name > b.name ? 1 : a.name < b.name ? -1 : 0;
+            },
+            contextMenu: {
+                messageNewNode: ProjectExplorerMessages.newFile(),
+                messageRename: AccordionMessages.rename()
+            },
+            minHeight: 150,
+            flexWeight: "1",
+            keyExtractor: (file) => file.id,
+            parentKeyExtractor: (file) => file.parent_folder_id,
 
-        this.fileListPanel.newFilesElementCallback =
+            orderExtractor: (file) => file?.sorting_order || 0,
+            orderSetter(file, order) {
+                file.sorting_order = order;
+            },
+            orderBy: "comparator"
+        })
 
-            (accordionElement, successfulNetworkCommunicationCallback) => {
+        this.fileTreeview.newNodeCallback = async (name: string, node: TreeviewNode<GUIFile, number>) => {
 
-                if (that.main.currentWorkspace == null) {
-                    alert('Bitte wählen Sie zuerst einen Workspace aus.');
-                    return null;
+            if (this.main.currentWorkspace == null) {
+                if (this.fileTreeview.getCurrentlySelectedNodes().length > 0 && this.fileTreeview.getCurrentlySelectedNodes()[0].isFolder) {
+                    alert(ProjectExplorerMessages.firstChooseWorkspaceBecauseFolderIsSelected());
+                } else {
+                    alert(ProjectExplorerMessages.firstChooseWorkspace());
                 }
-
-                let f: File = {
-                    name: accordionElement.name,
-                    dirty: false,
-                    saved: true,
-                    text: "",
-                    text_before_revision: null,
-                    submitted_date: null,
-                    student_edited_after_revision: false,
-                    version: 1,
-                    panelElement: accordionElement
-                };
-                let m = new Module(f, that.main);
-                let modulStore = that.main.currentWorkspace.moduleStore;
-                modulStore.putModule(m);
-                that.setModuleActive(m);
-                that.main.networkManager.sendCreateFile(m, that.main.currentWorkspace, that.main.workspacesOwnerId,
-                    (error: string) => {
-                        if (error == null) {
-                            successfulNetworkCommunicationCallback(m);
-                        } else {
-                            alert('Der Server ist nicht erreichbar!');
-
-                        }
-                    });
-
-            };
-
-        this.fileListPanel.renameCallback =
-            (module: Module, newName: string) => {
-                newName = newName.substr(0, 80);
-                let file = module.file;
-
-                file.name = newName;
-                file.saved = false;
-                that.main.networkManager.sendUpdates();
-                return newName;
+                return null;
             }
 
-        this.fileListPanel.deleteCallback =
-            (module: Module, callbackIfSuccessful: () => void) => {
-                if(module && module.file && that?.main?.networkManager){
-                    that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, (error: string) => {
-                        if (error == null) {
-                            that.main.currentWorkspace.moduleStore.removeModule(module);
-                            callbackIfSuccessful();
-                        } else {
-                            alert('Der Server ist nicht erreichbar!');
-    
-                        }
-                    });
+            let file = new GUIFile(this.main, name);
+            file.isFolder = node.isFolder;
+            let parentNode = node.getParent();
+            if (!parentNode.isRootNode()) {
+                file.parent_folder_id = parentNode.externalObject.id;
+            }
+
+            if (!node.isFolder) node.iconClass = FileTypeManager.filenameToFileType(name).iconclass;
+
+            this.main.getCurrentWorkspace().addFile(file);
+
+            if (!file.isFolder) this.setFileActive(file);
+
+
+            let success = this.main.user.is_testuser || await this.main.networkManager.sendCreateFile(file, this.main.currentWorkspace, this.main.workspacesOwnerId);
+            if (!success) {
+                this.fileTreeview.removeNodeAndItsFolderContents(node);
+                this.setFileActive(null);
+                return null;
+            }
+
+            return file;
+        }
+
+        this.fileTreeview.renameCallback = async (file, newName, node) => {
+
+            if (newName.length > 80) {
+                alert(ProjectExplorerMessages.FilenameHasBeenTruncated(80));
+                newName = newName.substring(0, 80);
+            }
+
+            file.name = newName;
+            file.setSaved(false);
+            if (!file.isFolder) {
+                let fileType = file.isFolder ? undefined : FileTypeManager.filenameToFileType(newName);
+                node.iconClass = fileType.iconclass;
+                monaco.editor.setModelLanguage(file.getMonacoModel(), fileType.language);
+            }
+
+            if (this.main.user.is_testuser) return { correctedName: newName, success: true };
+
+            let resp: boolean = await this.main.networkManager.sendUpdatesAsync(true);
+
+            return { correctedName: newName, success: resp }
+        }
+
+        this.fileTreeview.deleteCallback = async (file, node) => {
+
+            let filesToDelete: GUIFile[] = [file];
+            if (file.isFolder) {
+                filesToDelete = filesToDelete.concat(file.getFolderContentsRecursively(this.fileTreeview.getAllExternalObjects()));
+                if (filesToDelete.length > 1) {
+                    if (!confirm(ProjectExplorerMessages.confirmDeleteFileFolderRecursively(filesToDelete.length)))
+                        return false;
                 }
             }
 
-        this.fileListPanel.contextMenuProvider = (accordionElement: AccordionElement) => {
 
-            let cmiList: AccordionContextMenuItem[] = [];
+            let success = this.main.user.is_testuser || await this.main.networkManager.sendDeleteWorkspaceOrFileAsync("file", filesToDelete.map(f => f.id));
 
-            if (!(that.main.user.is_teacher || that.main.user.is_admin || that.main.user.is_schooladmin)) {
-                let module: Module = <Module>accordionElement.externalElement;
-                let file = module.file;
+            if (success) {
+                for (let f of filesToDelete) {
+                    this.main.getCurrentWorkspace().removeFile(f);
+                }
 
-                // if (file.submitted_date == null) {
-                //     cmiList.push({
-                //         caption: "Als Hausaufgabe markieren",
-                //         callback: (element: AccordionElement) => {
+                if (node.hasFocus) {
+                    let files = this.main.getCurrentWorkspace().getFiles();
+                    if (files.length == 0) {
+                        this.fileTreeview.setCaption(ProjectExplorerMessages.noFile());
+                        this.setFileActive(null);
+                    } else {
+                        this.setFileActive(files[0]);
+                    }
+                }
+            }
 
-                //             let file = (<Module>element.externalElement).file;
-                //             file.submitted_date = dateToString(new Date());
-                //             file.saved = false;
-                //             that.main.networkManager.sendUpdates(null, true);
-                //             that.renderHomeworkButton(file);
-                //         }
-                //     });
-                // } else {
-                //     cmiList.push({
-                //         caption: "Hausaufgabenmarkierung entfernen",
-                //         callback: (element: AccordionElement) => {
+            return success;
 
-                //             let file = (<Module>element.externalElement).file;
-                //             file.submitted_date = null;
-                //             file.saved = false;
-                //             that.main.networkManager.sendUpdates(null, true);
-                //             that.renderHomeworkButton(file);
+        }
 
-                //         }
-                //     });
-                // }
+        this.fileTreeview.contextMenuProvider = (file, node) => {
+            let cmiList: TreeviewContextMenuItem<GUIFile, number>[] = [];
+
+            cmiList.push(
+                {
+                    caption: ProjectExplorerMessages.duplicate(),
+                    callback: async (file, treeviewNode) => {
+
+                        let oldFile: GUIFile = file;
+                        let newFile: GUIFile = new GUIFile(this.main, oldFile.name + " - " + ProjectExplorerMessages.copy(), oldFile.getText());
+                        newFile.remote_version = oldFile.remote_version;
+
+                        let workspace = this.main.getCurrentWorkspace();
+                        workspace.addFile(newFile);
+
+                        let success = await this.main.networkManager.sendCreateFile(newFile, workspace, this.main.workspacesOwnerId);
+
+                        if (success) {
+                            let newNode = this.fileTreeview.addNode(false, newFile.name, FileTypeManager.filenameToFileType(newFile.name).iconclass,
+                                newFile, treeviewNode.parentKey);
+                            this.setFileActive(newFile);
+                            newNode.renameNode();
+                        }
+                    }
+                },
+                {
+                    caption: ProjectExplorerMessages.exportAsFile(),
+                    callback: async (file, treeviewNode) => {
+
+                        downloadFile(file.getText(), file.name);
+
+                    }
+                },
+            );
+
+
+            if (!(this.main.user.is_teacher || this.main.user.is_admin || this.main.user.is_schooladmin)) {
+
+                if (file.submitted_date == null) {
+                    cmiList.push({
+                        caption: ProjectExplorerMessages.markAsAssignment(),
+                        callback: (file1, treeviewNode) => {
+                            file.submitted_date = dateToString(new Date());
+                            file.setSaved(false);
+                            this.main.networkManager.sendUpdatesAsync(true);
+                            this.renderHomeworkButton(file);
+                        }
+                    });
+                } else {
+                    cmiList.push({
+                        caption: ProjectExplorerMessages.removeAssignmentLabel(),
+                        callback: (file1, treevewNode) => {
+                            file.submitted_date = null;
+                            file.setSaved(false);
+                            this.main.networkManager.sendUpdatesAsync(true);
+                            this.renderHomeworkButton(file);
+                        }
+                    });
+                }
 
             }
 
             return cmiList;
+
         }
 
 
-
-        this.fileListPanel.selectCallback =
-            (module: Module) => {
-                that.setModuleActive(module);
+        this.fileTreeview.nodeClickedCallback =
+            (file: GUIFile) => {
+                if (!file.isFolder) {
+                    this.setFileActive(file);
+                }
             }
+
+
+        this.fileTreeview.dropEventCallback =
+            async (sourceTreeview, destinationNode, destinationChildIndex, dragKind) => {
+                if (sourceTreeview != this.fileTreeview || !destinationNode.isFolder) return;
+                let sourceNodes = sourceTreeview.getCurrentlySelectedNodes();
+                switch (dragKind) {
+                    case "move":
+                        let new_parent_folder_id = destinationNode.ownKey;
+                        sourceNodes = this.fileTreeview.reduceNodesToMove(sourceNodes);
+                        for (let node of sourceNodes) {
+                            let file = node.externalObject;
+                            if (file) file.parent_folder_id = new_parent_folder_id;
+                            file.setSaved(false);
+                        }
+                        if (await this.main.networkManager.sendUpdatesAsync(true)) {
+                            destinationNode.insertNodes(destinationChildIndex, sourceNodes);
+                            destinationNode.reorder();
+                        }
+                        break;
+                    case "copy":
+                        // Not yet implemented!
+                        break;
+                }
+
+            }
+
+        this.fileTreeview.orderChangedCallback = async (nodesWithNewOrder) => {
+            // we don't await response to increase gui responsiveness
+            // damage due to failed request would be low
+            this.main.networkManager.sendUpdateFileOrder(nodesWithNewOrder.map(node => node.externalObject));
+            return true;
+        }
 
 
 
     }
 
-    renderHomeworkButton(file: File) {
-        let $buttonDiv = file?.panelElement?.$htmlFirstLine?.find('.jo_additionalButtonHomework');
-        if ($buttonDiv == null) return;
+    renderHomeworkButton(file: GUIFile) {
 
-        $buttonDiv.find('.jo_homeworkButton').remove();
+        let node = this.fileTreeview.findNodeByElement(file);
+        if (!node) return;
+
+        let homeworkButton = node.getIconButtonByTag("Homework");
+        if (!homeworkButton) {
+            homeworkButton = node.addIconButton("img_homework", undefined, "", true);
+            homeworkButton.tag = "Homework";
+        }
 
         let klass: string = null;
         let title: string = "";
         if (file.submitted_date != null) {
             klass = "img_homework";
-            title = "Wurde als Hausaufgabe abgegeben: " + file.submitted_date
+            title = ProjectExplorerMessages.labeledAsAssignment() + ": " + file.submitted_date
             if (file.text_before_revision) {
                 klass = "img_homework-corrected";
-                title = "Korrektur liegt vor."
+                title = ProjectExplorerMessages.assignmentIsCorrected();
             }
         }
 
-        if (klass != null) {
-            let $homeworkButtonDiv = jQuery(`<div class="jo_homeworkButton ${klass}" title="${title}"></div>`);
-            $buttonDiv.prepend($homeworkButtonDiv);
-            if (klass.indexOf("jo_active") >= 0) {
-                $homeworkButtonDiv.on('mousedown', (e) => e.stopPropagation());
-                $homeworkButtonDiv.on('click', (e) => {
-                    e.stopPropagation();
-                    // TODO
-                });
-            }
-
+        if (klass) {
+            homeworkButton.iconClass = klass;
+            homeworkButton.title = title;
+            homeworkButton.setVisible(true);
+        } else {
+            homeworkButton.setVisible(false);
         }
+
     }
 
-
-
+    /**
+     * Initializes the workspace treeview in the project explorer.
+     */
     initWorkspacelistPanel() {
 
-        let that = this;
+        this.workspaceTreeview = new Treeview(this.accordion, {
+            captionLine: {
+                enabled: true,
+                text: ProjectExplorerMessages.WORKSPACES()
+            },
+            withSelection: true,
+            withFolders: true,
+            selectMultiple: true,
+            isDragAndDropSource: true,
+            withDeleteButtons: true,
+            confirmDelete: true,
+            buttonAddElements: false,
+            buttonAddFolders: true,
+            minHeight: 150,
+            flexWeight: "1",
+            defaultIconClass: "img_workspace-dark",
+            comparator: (a, b) => {
+                return a.name > b.name ? 1 : a.name < b.name ? -1 : 0;
+            },
+            keyExtractor: workspace => workspace.id,
+            parentKeyExtractor: workspace => workspace.parent_folder_id,
+            readOnlyExtractor: (workspace) => workspace.readonly || workspace.pruefung_id != null,
 
-        this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "3",
-            null, "Neue Datenbank...", "workspace", true, true, "workspace", false, ["file"]);
-
-        let $newWorkspaceAction = jQuery('<div class="img_add-database-dark jo_button jo_active" style="margin-right: 4px"' +
-            ' title="Neue Datenbank auf oberster Ordnerebene anlegen">');
-
-        let mousePointer = window.PointerEvent ? "pointer" : "mouse";
-
-        $newWorkspaceAction.on(mousePointer + 'down', (e) => {
-            e.stopPropagation();
-
-            let owner_id: number = that.main.user.id;
-            if (that.main.workspacesOwnerId != null) {
-                owner_id = that.main.workspacesOwnerId;
-            }
-
-            new NewDatabaseDialog(that.main, owner_id, this.workspaceListPanel.getCurrentlySelectedPath());
-
+            orderBy: "comparator",
+            orderExtractor: workspace => workspace.sorting_order,
+            orderSetter: (workspace, order) => workspace.sorting_order = order
         })
 
-        this.workspaceListPanel.addAction($newWorkspaceAction);
-        if(this.workspaceListPanel.$buttonNew != null){
-            this.workspaceListPanel.$buttonNew.hide();
+        this.addDatabaseButton =this.workspaceTreeview.captionLineAddIconButton("img_add-database-dark", "right", () => {
+            let owner_id: number = this.main.user.id;
+            if (this.main.workspacesOwnerId != null) {
+                owner_id = this.main.workspacesOwnerId;
+            }
+
+            let currentlySelectedNodes = this.workspaceTreeview.getCurrentlySelectedNodes();
+            let currentlySelectedFolder = currentlySelectedNodes.find(node => node.isFolder);
+            if (!currentlySelectedFolder) currentlySelectedFolder = this.workspaceTreeview.rootNode;
+
+            new NewDatabaseDialog(this.main, owner_id, currentlySelectedFolder)
+
+        }, ProjectExplorerMessages.newDatabase());
+
+        this.workspaceTreeview.renameCallback = async (workspace, newName, node) => {
+            newName = newName.substring(0, 80);
+            workspace.name = newName;
+            workspace.saved = false;
+
+            if (this.main.user.is_testuser) return { correctedName: newName, success: true };
+
+            let success = await this.main.networkManager.sendUpdatesAsync();
+            return { correctedName: newName, success: success }
         }
 
-        this.workspaceListPanel.newDatabaseElementCallback = (path: string[]) => {
-            let owner_id: number = that.main.user.id;
-            if (that.main.workspacesOwnerId != null) {
-                owner_id = that.main.workspacesOwnerId;
-            }
+        this.workspaceTreeview.deleteCallback = async (workspace) => {
 
-            new NewDatabaseDialog(that.main, owner_id, path);
-
-        }
-
-
-        this.workspaceListPanel.renameCallback =
-            (workspace: Workspace, newName: string) => {
-                newName = newName.substring(0, 80);
-                workspace.name = newName;
-                workspace.saved = false;
-                that.main.networkManager.sendUpdates();
-
-                // if user owns database: rename it, too
-                if(workspace.database?.owner_id == workspace.owner_id){
-                    workspace.database.name = newName;
-                    that.main.networkManager.setNameAndPublishedTo(workspace.id, newName, workspace.database.published_to, workspace.database.description, () => {})
-                }
-                return newName;
-            }
-
-        this.workspaceListPanel.deleteCallback =
-            (workspace: Workspace, successfulNetworkCommunicationCallback: () => void) => {
-                that.main.networkManager.sendDeleteWorkspaceOrFile("workspace", workspace.id, (error: string) => {
-                    if (error == null) {
-                        that.main.removeWorkspace(workspace);
-                        if(!workspace.isFolder){
-                            that.fileListPanel.clear();
-                            that.main.databaseExplorer.clear();
-                            that.main.getResultsetPresenter().clear();
-                            that.fileListPanel.enableNewButton(false);
-                            that.main.getMonacoEditor().setModel(null);
-                        }
-                        successfulNetworkCommunicationCallback();
-                    } else {
-                        alert('Fehler: ' + error);
-                    }
-                });
-            }
-
-        this.workspaceListPanel.selectCallback =
-            (workspace: Workspace) => {
-                if(workspace?.isFolder) return;
-                if (workspace != this.main.currentWorkspace) {
-                    that.main.networkManager.sendUpdates(() => {
-                        that.setWorkspaceActive(workspace);
-                    });
+            let workspacesToDelete: Workspace[] = [workspace];
+            if (workspace.isFolder) {
+                workspacesToDelete = workspacesToDelete.concat(workspace.getFolderContentsRecursively(this.workspaceTreeview.getAllExternalObjects()));
+                if (workspacesToDelete.length > 1) {
+                    if (!confirm(ProjectExplorerMessages.confirmDeleteWorkspaceFolderRecursively(workspacesToDelete.length)))
+                        return false;
                 }
             }
 
-        this.workspaceListPanel.newFolderCallback = (newElement: AccordionElement, successCallback) => {
-            let owner_id: number = that.main.user.id;
-            if (that.main.workspacesOwnerId != null) {
-                owner_id = that.main.workspacesOwnerId;
-            }
-
-            let folder: Workspace = new Workspace(newElement.name, that.main, owner_id);
-            folder.isFolder = true;
-
-            folder.path = newElement.path.join("/");
-            folder.panelElement = newElement;
-            newElement.externalElement = folder;
-            that.main.workspaceList.push(folder);
-
-            let wd: CreateWorkspaceData = {
-                id: -1,
-                isFolder: true,
-                name: folder.name,
-                path: folder.path
-            }
-
-            that.main.networkManager.sendCreateWorkspace(wd, that.main.workspacesOwnerId, (error: string) => {
-                if (error == null) {
-                    folder.id = wd.id;
-                    successCallback(folder);
-
-                } else {
-                    alert("Fehler: " + error);
-                    that.workspaceListPanel.removeElement(newElement);
+            let success = this.main.user.is_testuser || await this.main.networkManager
+                .sendDeleteWorkspaceOrFileAsync("workspace", workspacesToDelete.map(w => w.id));
+            if (success) {
+                for (let ws of workspacesToDelete) {
+                    this.main.removeWorkspace(ws);
                 }
-            });
 
-        }
+                if (this.main.workspaceList.indexOf(this.main.currentWorkspace) < 0) {
+                    this.setWorkspaceActive(null);
+                }
 
-        this.workspaceListPanel.moveCallback = (ae: AccordionElement | AccordionElement[]) => {
-            if (!Array.isArray(ae)) ae = [ae];
-            for (let a of ae) {
-                let ws: Workspace = a.externalElement;
-                ws.path = a.path.join("/");
-                ws.saved = false;
             }
-            this.main.networkManager.sendUpdates();
+            return success;
         }
 
-        this.workspaceListPanel.dropElementCallback = (dest: AccordionElement, droppedElement: AccordionElement, dropEffekt: "copy" | "move") => {
-            let workspace: Workspace = dest.externalElement;
-            let module: Module = droppedElement.externalElement;
-
-            if (workspace.moduleStore.getModules(false).indexOf(module) >= 0) return; // module is already in destination workspace
-
-            let f: File = {
-                name: module.file.name,
-                dirty: true,
-                saved: false,
-                text: module.file.text,
-                text_before_revision: null,
-                submitted_date: null,
-                student_edited_after_revision: false,
-                version: module.file.version,
-                panelElement: null
-            };
-
-            if (dropEffekt == "move") {
-                // move file
-                let oldWorkspace = that.main.currentWorkspace;
-                oldWorkspace.moduleStore.removeModule(module);
-                that.fileListPanel.removeElement(module);
-                that.main.networkManager.sendDeleteWorkspaceOrFile("file", module.file.id, () => { });
+        this.workspaceTreeview.nodeClickedCallback = async (workspace) => {
+            if (workspace != null && !workspace.isFolder) {
+                this.setWorkspaceActive(workspace, false, false);
+                this.fileTreeview.addElementsButton.setVisible(true);
+                this.fileTreeview.addFolderButton.setVisible(true);
             }
-
-            let m = new Module(f, that.main);
-            let modulStore = workspace.moduleStore;
-            modulStore.putModule(m);
-            that.main.networkManager.sendCreateFile(m, workspace, that.main.workspacesOwnerId,
-                (error: string) => {
-                    if (error == null) {
-                    } else {
-                        alert('Der Server ist nicht erreichbar!');
-
-                    }
-                });
-
         }
 
+        this.workspaceTreeview.dropEventCallback = (sourceTreeview, destinationNode, destinationChildIndex, dragKind) => {
+            if (sourceTreeview == this.workspaceTreeview) {
+                this.moveOrCopyWorkspaces(this.workspaceTreeview.getOrderedListOfCurrentlySelectedNodes(), destinationNode, destinationChildIndex, dragKind);
+            } else if (sourceTreeview == this.fileTreeview) {
+                this.moveOrCopyFilesToOtherWorkspaces(this.fileTreeview.getOrderedListOfCurrentlySelectedNodes(), destinationNode, dragKind);
+            }
+        }
 
+        this.workspaceTreeview.contextMenuProvider =
+            (workspace, node) => {
 
-        this.$homeAction = jQuery('<div class="img_home-dark jo_button jo_active" style="margin-right: 4px"' +
-            ' title="Meine eigenen Workspaces anzeigen">');
+                let mousePointer = window.PointerEvent ? "pointer" : "mouse";
 
-        this.$homeAction.on(mousePointer +'down', (e) => {
-            e.stopPropagation();
+                let cmiList: TreeviewContextMenuItem<Workspace, number>[] = [];
 
-            that.main.networkManager.sendUpdates(() => {
-                that.onHomeButtonClicked();
-            });
+                if (workspace.readonly) return cmiList;
 
-            that.main.bottomDiv.hideHomeworkTab();
-
-        })
-
-        this.workspaceListPanel.addAction(this.$homeAction);
-        this.$homeAction.hide();
-
-        this.workspaceListPanel.contextMenuProvider = (workspaceAccordionElement: AccordionElement) => {
-
-            let cmiList: AccordionContextMenuItem[] = [];
-
-            if (this.main.user.is_teacher && this.main.teacherExplorer.classPanel.elements.length > 0) {
-                cmiList.push({
-                    caption: "An Klasse austeilen...",
-                    callback: (element: AccordionElement) => { },
-                    subMenu: this.main.teacherExplorer.classPanel.elements.map((ae) => {
-                        return {
-                            caption: ae.name,
-                            callback: (element: AccordionElement) => {
-                                let klasse = <any>ae.externalElement;
-
-                                let workspace: Workspace = element.externalElement;
-
-                                this.main.networkManager.sendDistributeWorkspace(workspace, klasse, null, (error: string) => {
-                                    if (error == null) {
-                                        let networkManager = this.main.networkManager;
-                                        let dt = networkManager.updateFrequencyInSeconds * networkManager.forcedUpdateEvery;
-                                        alert("Der Workspace " + workspace.name + " wurde an die Klasse " + klasse.name + " ausgeteilt. Er wird in maximal " +
-                                            dt + " s bei jedem Schüler ankommen.");
-                                    } else {
-                                        alert(error);
-                                    }
-                                });
-
-                            }
-                        }
-                    })
-                },
+                cmiList.push(
                     {
-                        caption: "An einzelne Schüler/innen austeilen...",
-                        callback: (element: AccordionElement) => {
-                            let classes: ClassData[] = this.main.teacherExplorer.classPanel.elements.map(ae => ae.externalElement);
-                            let workspace: Workspace = element.externalElement;
-                            new DistributeToStudentsDialog(classes, workspace, this.main);
+                        caption: ProjectExplorerMessages.newDatabase() + "...",
+                        callback: () => {
+                            while (!node.isFolder && !node.isRootNode && node != null) {
+                                node = node.getParent();
+                            }
+                            this.workspaceTreeview.selectNodeAndSetFocus(node, false);
+
+                            let owner_id: number = this.main.user.id;
+                            if (this.main.workspacesOwnerId != null) {
+                                owner_id = this.main.workspacesOwnerId;
+                            }
+
+                            new NewDatabaseDialog(this.main, owner_id, node)
+
                         }
+                    });
+
+                if (!node.isFolder) {
+                    if (this.main.user.is_teacher && this.main.teacherExplorer.classPanel.size(true) > 0) {
+                        cmiList.push({ caption: '-', callback: () => { } });
+
+                        cmiList.push(
+                            {
+                                caption: ProjectExplorerMessages.distributeToClass() + "...",
+                                callback: () => { },
+                                subMenu: this.main.teacherExplorer.classPanel.nodes
+                                    .filter(node => !node.isRootNode()).map((classNode) => {
+                                        let classData = <ClassData>classNode.externalObject;
+                                        return {
+                                            caption: classData.name,
+                                            callback: () => {
+
+                                                this.main.networkManager.sendDistributeWorkspace(workspace, classData, null, (error: string) => {
+                                                    if (error == null) {
+                                                        let networkManager = this.main.networkManager;
+                                                        let dt = networkManager.updateFrequencyInSeconds * networkManager.forcedUpdateEvery;
+                                                        alert(ProjectExplorerMessages.workspaceDistributed(workspace.name, classData.name));
+                                                    } else {
+                                                        alert(error);
+                                                    }
+                                                });
+
+                                            }
+                                        }
+                                    })
+                            },
+                            {
+                                caption: ProjectExplorerMessages.distributeToStudents(),
+                                callback: () => {
+                                    let classes: ClassData[] = <any>this.main.teacherExplorer.classPanel.getAllExternalObjects();
+                                    new DistributeToStudentsDialog(classes, workspace, this.main);
+                                }
+                            }
+                        );
                     }
-                );
+
+                }
+
+                return cmiList;
             }
 
-            return cmiList;
+        this.workspaceTreeview.orderChangedCallback = async (nodesWithNewOrder) => {
+            // we don't await response to increase gui responsiveness
+            // damage due to failed request would be low.
+            this.main.networkManager.sendUpdateWorkspaceOrder(nodesWithNewOrder.map(node => node.externalObject));
+            return true;
         }
 
     }
 
-    onHomeButtonClicked() {
-        this.main.teacherExplorer.restoreOwnWorkspaces();
-        this.main.networkManager.updateFrequencyInSeconds = this.main.networkManager.ownUpdateFrequencyInSeconds;
-        this.$homeAction.hide();
-        this.fileListPanel.enableNewButton(this.main.workspaceList.length > 0);
+    async moveOrCopyFilesToOtherWorkspaces(filesToMoveOrCopy: TreeviewNode<GUIFile, number>[], destinationWorkspaceNode: TreeviewNode<Workspace, number>, dragKind: DragKind) {
+        if (destinationWorkspaceNode.isFolder) {
+            alert(ProjectExplorerMessages.cantMoveFilesToDatabaseFolder());
+            return;
+        }
+
+        let destinationWorkspace = destinationWorkspaceNode.externalObject;
+        let sourceWorkspace = this.main.getCurrentWorkspace();
+
+        if (sourceWorkspace == destinationWorkspace) return;
+
+        switch (dragKind) {
+            case "move":
+                let fileIds = filesToMoveOrCopy.map(node => node.externalObject.id);
+
+                for (let fileNode of filesToMoveOrCopy) {
+                    let file = fileNode.externalObject;
+
+                    if (fileIds.indexOf(file.parent_folder_id) < 0) {
+                        file.parent_folder_id = null;
+                    }
+
+                    file.sorting_order = 10000;
+
+                    let success = this.main.user.is_testuser || await this.main.networkManager.moveFile(file.id, destinationWorkspace.id);
+                    if (success) {
+                        sourceWorkspace.removeFile(file);
+                        destinationWorkspace.addFile(file);
+                        this.fileTreeview.removeNodeAndItsFolderContents(fileNode);
+                    }
+                }
+                break;
+            case "copy":
+                // filesToMoveOrCopy are already ordered "parents first"
+                let oldIdToNewIdMap: Map<number, number> = new Map();
+
+                for (let fileNode of filesToMoveOrCopy) {
+                    let file = fileNode.externalObject;
+                    let oldFileId = file.id;
+
+                    let newParentId = oldIdToNewIdMap.get(file.parent_folder_id) || null;
+                    let newFile = new GUIFile(this.main, file.name, file.getText());
+                    newFile.parent_folder_id = newParentId;
+                    newFile.isFolder = file.isFolder;
+                    newFile.sorting_order = 10000;
+
+                    let success = this.main.user.is_testuser || await this.main.networkManager.sendCreateFile(newFile, destinationWorkspace, destinationWorkspace.owner_id);
+                    if (success) destinationWorkspace.addFile(newFile);
+
+                    oldIdToNewIdMap.set(oldFileId, newFile.id);
+                }
+                break;
+        }
+
     }
+
+    async moveOrCopyWorkspaces(nodesToCopyOrMove: TreeviewNode<Workspace, number>[], destinationFolderNode: TreeviewNode<Workspace, number>, destinationChildIndex: number, dragKind: DragKind) {
+        switch (dragKind) {
+            case "move":
+                let new_parent_folder_id = destinationFolderNode.ownKey;
+                nodesToCopyOrMove = this.workspaceTreeview.reduceNodesToMove(nodesToCopyOrMove);
+                for (let node of nodesToCopyOrMove) {
+                    let ws = node.externalObject;
+                    if (ws) ws.parent_folder_id = new_parent_folder_id;
+                    ws.saved = false;
+                }
+
+                if (this.main.user.is_testuser || await this.main.networkManager.sendUpdatesAsync(true)) {
+                    destinationFolderNode.insertNodes(destinationChildIndex, nodesToCopyOrMove);
+                    destinationFolderNode.reorder();
+                }
+                break;
+            case "copy":
+                // Not yet implemented!
+                break;
+        }
+
+    }
+
+
 
     renderFiles(workspace: Workspace) {
 
-        let name = workspace == null ? "Kein Workspace vorhanden" : workspace.name;
+        let name = workspace == null ? ProjectExplorerMessages.noWorkspace() : workspace.name;
 
-        this.fileListPanel.setCaption(name);
-        this.fileListPanel.clear();
-
-        if (this.main.getCurrentWorkspace() != null) {
-            for (let module of this.main.getCurrentWorkspace().moduleStore.getModules(false)) {
-                module.file.panelElement = null;
-            }
-        }
+        this.fileTreeview.setCaption(name);
+        this.fileTreeview.clear();
 
         if (workspace != null) {
-            let moduleList: Module[] = [];
+            let files: GUIFile[] = workspace.getFiles().slice();
 
-            for (let m of workspace.moduleStore.getModules(false)) {
-                moduleList.push(m);
+            // Todo: necessary?
+            // files.sort((a, b) => { return a.name > b.name ? 1 : a.name < b.name ? -1 : 0 });
+
+            for (let file of files) {
+
+                this.fileTreeview.addNode(file.isFolder, file.name,
+                    file.isFolder ? undefined : FileTypeManager.filenameToFileType(file.name).iconclass, file);
+
+                this.renderHomeworkButton(file);
             }
 
-            moduleList.sort((a, b) => { return a.file.name > b.file.name ? 1 : a.file.name < b.file.name ? -1 : 0 });
+            this.fileTreeview.sort();
 
-            for (let m of moduleList) {
+            workspace.createMonacoModels();
 
-                m.file.panelElement = {
-                    name: m.file.name,
-                    externalElement: m,
-                    isFolder: false,
-                    path: []
-                };
-
-                this.fileListPanel.addElement(m.file.panelElement, true);
-                this.renderHomeworkButton(m.file);
+            if (workspace.currentlyOpenFile != null) {
+                this.setFileActive(workspace.currentlyOpenFile);
+            } else if (files.length > 0) {
+                this.setFileActive(files[0]);
+            } else {
+                this.setFileActive(null);
             }
 
-            this.fileListPanel.sortElements();
+            if (files.length == 0 && !this.main.user.sql_gui_state.helperHistory.newFileHelperDone) {
+
+                Helper.showHelper("newSQLFileHelper", this.main, jQuery(this.fileTreeview.addElementsButton.parent));
+
+            }
 
         }
     }
 
     renderWorkspaces(workspaceList: Workspace[]) {
 
-        this.fileListPanel.clear();
-        this.workspaceListPanel.clear();
+        this.fileTreeview.clear();
+        this.workspaceTreeview.clear();
 
-        for (let w of workspaceList) {
-            let path = w.path.split("/");
-            if (path.length == 1 && path[0] == "") path = [];
-            w.panelElement = {
-                name: w.name,
-                externalElement: w,
-                iconClass: 'workspace',
-                isFolder: w.isFolder,
-                path: path
-            };
+        for (let ws of workspaceList) {
+            let iconClass = "img_database-dark";
+            if (ws.isFolder) iconClass = undefined;
+            let node = this.workspaceTreeview.addNode(ws.isFolder, ws.name, iconClass, ws)
 
-            this.workspaceListPanel.addElement(w.panelElement, false);
-            w.renderSettingsButton(w.panelElement);
+            if (ws.name == '_Prüfungen' && ws.readonly) {
+                node.renderCaptionAsHtml = true;
+                node.caption = '<span class="jo_explorer_pruefungCaption">Prüfungen</span>'
+                node.readOnly = true;
+            }
+
+            if (ws.pruefung_id) {
+                node.readOnly = true;
+            }
+
         }
 
-        this.workspaceListPanel.sortElements();
-        this.fileListPanel.enableNewButton(workspaceList.length > 0);
-
-
-
+        this.workspaceTreeview.sort();
+        this.workspaceTreeview.collapseAllButRootnode();
     }
 
-    renderErrorCount(workspace: Workspace, errorCountMap: Map<Module, number>) {
+    renderErrorCount(workspace: Workspace, errorCountMap: Map<GUIFile, number>) {
         if (errorCountMap == null) return;
-        for (let m of workspace.moduleStore.getModules(false)) {
-            let errorCount: number = errorCountMap.get(m);
+        for (let f of workspace.getFiles()) {
+            let errorCount: number = errorCountMap.get(f);
             let errorCountS: string = ((errorCount == null || errorCount == 0) ? "" : "(" + errorCount + ")");
-
-            this.fileListPanel.setTextAfterFilename(m.file.panelElement, errorCountS, 'jo_errorcount');
+            this.fileTreeview.findNodeByElement(f)?.setRightPartOfCaptionErrors(errorCountS);
         }
     }
 
-    setWorkspaceActive(w: Workspace, callback?: () => void, scrollIntoView: boolean = false) {
+    setWorkspaceActive(w: Workspace, scrollIntoView: boolean = false,
+         selectElement: boolean = true, callback: () => void = null) {
 
-        if(callback == null) callback = () => {}
+        /*
+        * monaco editor counts LanguageChangedListeners and issues ugly warnings in console if more than
+        * 200, 300, ... are created. Unfortunately it creates one each time a monaco.editor.ITextModel is created.
+        * To keep monaco.editor.ITextModel instance count low we instantiate it only when needed and dispose of it
+        * when switching to another workspace.
+        */
+        this.main.editor.editor.setModel(null); // detach current model from editor
+        this.main.getCurrentWorkspace()?.disposeMonacoModels();
 
-        if(w == this.main.getCurrentWorkspace()){
-            if(callback != null) callback();
+        this.main.currentWorkspace = w;
+
+        if (w == null) {
+            this.fileTreeview.addElementsButton.setVisible(false);
+            this.fileTreeview.addFolderButton.setVisible(false);
+            this.main.getMonacoEditor().setModel(null);
+            this.fileTreeview.setCaption(ProjectExplorerMessages.selectDatabase());
+            this.setFileActive(null);
+            this.renderFiles(w);
             return;
         }
 
-        if (w != null) {
-            if(w.isFolder){
-                this.main.currentWorkspace = null;
-                this.main.databaseTool.initializeWorker(null, [], null, () => {
-                    this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
-                });
-                this.setModuleActive(null);
-                return;
-            } else {
-                this.fileListPanel.$buttonNew.show();
-            }
-        }
-
-        this.workspaceListPanel.select(w, false, scrollIntoView);
+        if (selectElement) this.workspaceTreeview.selectElement(w, false);
 
         let callbackAfterDatabaseFetched = (error: string) => {
             if (error != null) {
                 alert(error);
                 this.main.waitOverlay.hide();
-                if(callback != null) callback();
+                if(callback) callback();
             } else {
                 this.main.waitOverlay.show("Bitte warten, initialisiere Datenbank ...");
                 this.initializeDatabaseTool(w, callback)
             }
         };
 
-        if(w == null) return;
+        if (w == null) return;
 
         if (w.database == null) {
             this.main.waitOverlay.show("Bitte warten, hole Datenbank vom Server ...");
@@ -557,8 +715,8 @@ export class ProjectExplorer {
 
     initializeDatabaseTool(w: Workspace, callback?: () => void) {
 
-        if(!w.database){
-            if(callback) callback();
+        if (!w.database) {
+            if (callback) callback();
             return;
         }
 
@@ -577,90 +735,57 @@ export class ProjectExplorer {
 
                 this.renderFiles(w);
 
-                if (w != null) {
-                    let nonSystemModules = w.moduleStore.getModules(false);
-
-                    if (w.currentlyOpenModule != null) {
-                        this.setModuleActive(w.currentlyOpenModule);
-                    } else if (nonSystemModules.length > 0) {
-                        this.setModuleActive(nonSystemModules[0]);
-                    } else {
-                        this.setModuleActive(null);
-                    }
-
-                    for (let m of nonSystemModules) {
-                        m.file.dirty = true;
-                    }
-
-                    if (nonSystemModules.length == 0) {
-
-                        Helper.showHelper("newSQLFileHelper", this.main, this.fileListPanel.$captionElement);
-
-                    }
-
-                    
-                } else {
-                    this.setModuleActive(null);
-                }
-                
                 this.main.notifier.connect(w);
             },
             () => {
                 this.main.databaseExplorer.refreshAfterRetrievingDBStructure();
                 this.main.getHistoryViewer().clearAndShowStatements(w.database.statements);
-                if(callback != null) callback();
+                if (callback != null) callback();
             });
 
     }
 
-    writeEditorTextToFile() {
-        let cem = this.getCurrentlyEditedModule();
-        if (cem != null)
-            cem.file.text = cem.getProgramTextFromMonacoModel(); // 29.03. this.main.monaco.getValue();
-    }
 
-
-    lastOpenModule: Module = null;
-    setModuleActive(m: Module) {
+    lastOpenFile: GUIFile = null;
+    dontScrollIntoViewOnNextSetActive: boolean = false;
+    setFileActive(file: GUIFile) {
 
         this.main.bottomDiv.homeworkManager.hideRevision();
 
-        if (this.lastOpenModule != null) {
-            this.lastOpenModule.file.text = this.lastOpenModule.getProgramTextFromMonacoModel(); // this.main.monaco.getValue();
-            this.lastOpenModule.editorState = this.main.getMonacoEditor().saveViewState();
+        if (this.lastOpenFile != null) {
+            this.lastOpenFile.saveViewState(this.main.getMonacoEditor());
         }
 
-        if (m == null) {
-            this.main.getMonacoEditor().setModel(monaco.editor.createModel("Keine Datei vorhanden.", "text"));
+        if (file == null) {
+            this.main.getMonacoEditor().setModel(monaco.editor.createModel(ProjectExplorerMessages.noFile(), "text"));
             this.main.getMonacoEditor().updateOptions({ readOnly: true });
         } else {
             this.main.getMonacoEditor().updateOptions({ readOnly: false });
-            this.main.getMonacoEditor().setModel(m.model);
+            this.main.getMonacoEditor().setModel(file.getMonacoModel());
 
-            if (m.file.text_before_revision != null) {
+            if (file.text_before_revision != null) {
                 this.main.bottomDiv.homeworkManager.showHomeWorkRevisionButton();
             } else {
                 this.main.bottomDiv.homeworkManager.hideHomeworkRevisionButton();
             }
         }
 
-
     }
 
-    setActiveAfterExternalModelSet(m: Module) {
-        this.fileListPanel.select(m, false);
-
-        this.lastOpenModule = m;
-
-        if (m.editorState != null) {
-            this.main.editor.dontPushNextCursorMove++;
-            this.main.getMonacoEditor().restoreViewState(m.editorState);
-            this.main.editor.dontPushNextCursorMove--;
+    setActiveAfterExternalModelSet(f: GUIFile) {   // MP Aug. 24: Ändern zu file: File!
+        if (this.dontScrollIntoViewOnNextSetActive) {
+            this.dontScrollIntoViewOnNextSetActive = false;
+        } else {
+            this.fileTreeview.selectElement(f, false);
         }
 
-        this.setCurrentlyEditedModule(m);
+        this.lastOpenFile = f;
 
-        this.showProgramPointer();
+        this.main.editor.dontPushNextCursorMove++;
+        f.restoreViewState(this.main.getMonacoEditor());
+        this.main.editor.dontPushNextCursorMove--;
+
+        this.setCurrentlyEditedFile(f);
 
         setTimeout(() => {
             if (!this.main.getMonacoEditor().getOptions().get(monaco.editor.EditorOption.readOnly)) {
@@ -673,7 +798,7 @@ export class ProjectExplorer {
 
     private showProgramPointer() {
 
-        if (this.programPointerModule == this.getCurrentlyEditedModule() && this.getCurrentlyEditedModule() != null) {
+        if (this.programPointerFile == this.getCurrentlyEditedFile() && this.getCurrentlyEditedFile() != null) {
             let position = this.programPointerPosition;
             let range = {
                 startColumn: position.column, startLineNumber: position.line,
@@ -705,23 +830,18 @@ export class ProjectExplorer {
         }
     }
 
-    showProgramPointerPosition(file: File, position: TextPosition) {
+    showProgramPointerPosition(file: GUIFile, position: TextPosition) {
 
         // console statement execution:
         if (file == null) {
             return;
         }
 
-        let module = this.main.currentWorkspace.moduleStore.findModuleByFile(file);
-        if (module == null) {
-            return;
-        }
-
-        this.programPointerModule = module;
+        this.programPointerFile = file;
         this.programPointerPosition = position;
 
-        if (module != this.getCurrentlyEditedModule()) {
-            this.setModuleActive(module);
+        if (file != this.getCurrentlyEditedFile()) {
+            this.setFileActive(file);
         } else {
             this.showProgramPointer();
         }
@@ -729,48 +849,108 @@ export class ProjectExplorer {
     }
 
     hideProgramPointerPosition() {
-        if (this.getCurrentlyEditedModule() == this.programPointerModule) {
+        if (this.getCurrentlyEditedFile() == this.programPointerFile) {
             this.main.getMonacoEditor().deltaDecorations(this.programPointerDecoration, []);
         }
-        this.programPointerModule = null;
+        this.programPointerFile = null;
         this.programPointerDecoration = [];
     }
 
-    getCurrentlyEditedModule(): Module {
+    getCurrentlyEditedFile(): GUIFile {
         let ws = this.main.currentWorkspace;
         if (ws == null) return null;
 
-        return ws.currentlyOpenModule;
+        return ws.currentlyOpenFile;
     }
 
-    setCurrentlyEditedModule(m: Module) {
-        if (m == null) return;
+    setCurrentlyEditedFile(file: GUIFile) {
+        if (file == null) return;
         let ws = this.main.currentWorkspace;
-        if (ws.currentlyOpenModule != m) {
-            ws.currentlyOpenModule = m;
+        if (ws.currentlyOpenFile != file) {
+            ws.currentlyOpenFile = file;
             ws.saved = false;
-            m.file.dirty = true;
         }
     }
 
-    setExplorerColor(color: string) {
+    setExplorerColor(color: string, usersFullName?: string) {
         let caption: string;
 
         if (color == null) {
             color = "transparent";
-            caption = "Meine Datenbanken";
+            caption = ProjectExplorerMessages.myWorkspaces();
         } else {
-            caption = "Schüler-DB";
+            caption = usersFullName;
         }
 
-        this.fileListPanel.$listElement.parent().css('background-color', color);
-        this.workspaceListPanel.$listElement.parent().css('background-color', color);
+        this.fileTreeview.getNodeDiv().style.backgroundColor = color;
+        this.workspaceTreeview.getNodeDiv().style.backgroundColor = color;
 
-        this.workspaceListPanel.setCaption(caption);
+        this.workspaceTreeview.setCaption(caption);
     }
 
-    getNewModule(file: File): Module {
-        return new Module(file, this.main);
+    async fetchAndRenderOwnWorkspaces() {
+        await this.fetchAndRenderWorkspaces(this.main.user);
     }
+
+    async fetchAndRenderWorkspaces(ae: UserData, teacherExplorer?: TeacherExplorer, pruefung: Pruefung = null) {
+
+
+        await this.main.networkManager.sendUpdatesAsync();
+
+        let request: GetWorkspacesRequest = {
+            ws_userId: ae.id,
+            userId: this.main.user.id
+        }
+
+        let response: GetWorkspacesResponse = await ajaxAsync("/servlet/getWorkspaces", request);
+
+        if (response.success == true) {
+
+            if (this.main.workspacesOwnerId == this.main.user.id && teacherExplorer != null) {
+                teacherExplorer.ownWorkspaces = this.main.workspaceList.slice();
+                teacherExplorer.currentOwnWorkspace = this.main.currentWorkspace;
+            }
+
+            let isTeacherAndInPruefungMode = teacherExplorer?.classPanelMode == "tests";
+
+            if (ae.id != this.main.user.id) {
+
+                if (isTeacherAndInPruefungMode) {
+                    response.workspaces.workspaces = response.workspaces.workspaces.filter(w => w.pruefung_id == pruefung.id);
+                }
+
+            }
+
+            this.main.workspacesOwnerId = ae.id;
+            this.main.restoreWorkspaces(response.workspaces);
+
+            if (ae.id != this.main.user.id) {
+                this.main.projectExplorer.setExplorerColor("rgba(255, 0, 0, 0.2", ae.familienname + ", " + ae.rufname);
+                this.main.teacherExplorer.homeButton.setVisible(true);
+                Helper.showHelper("homeButtonHelperNew", this.main, jQuery(this.main.teacherExplorer.homeButton.divElement));
+                this.main.networkManager.updateFrequencyInSeconds = this.main.networkManager.teacherUpdateFrequencyInSeconds;
+                this.main.networkManager.secondsTillNextUpdate = this.main.networkManager.teacherUpdateFrequencyInSeconds;
+
+                if (!isTeacherAndInPruefungMode) {
+                    this.main.bottomDiv.homeworkManager.attachToWorkspaces(this.main.workspaceList);
+                    this.main.bottomDiv.showHomeworkTab();
+                }
+            }
+
+            if (pruefung != null) {
+                this.addDatabaseButton.setVisible(false);
+                this.workspaceTreeview.addFolderButton.setVisible(false);
+            } else {
+                this.addDatabaseButton.setVisible(true);
+                this.workspaceTreeview.addFolderButton.setVisible(true);
+            }
+        }
+
+    }
+
+    getNewFile(fileData: FileData): GUIFile {
+        return GUIFile.restoreFromData(this.main, fileData);
+    }
+
 
 }

@@ -11,7 +11,7 @@ export class MyReferenceProvider implements monaco.languages.ReferenceProvider {
     provideReferences(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.ReferenceContext, token: monaco.CancellationToken):
         monaco.languages.ProviderResult<monaco.languages.Location[]> {
 
-        let module: Module = this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
+        let module: Module = this.main.getCurrentWorkspace().getModuleForMonacoModel(model);
 
         if (module == null) return null;
 

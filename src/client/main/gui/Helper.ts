@@ -73,13 +73,13 @@ export class Helper {
         let user = main.user;
         if(user == null) return;
 
-        let helperHistory = user.settings!.helperHistory;
+        let helperHistory = user.sql_gui_state!.helperHistory;
 
         let flag = id + "Done";
 
         if (helperHistory != null && (helperHistory[flag] == null || !helperHistory[flag])) {
             helperHistory[flag] = true;
-            main.networkManager.sendUpdateUserSettings(() => { });
+            main.networkManager.sendUpdateGuiState(false);
 
             let text: string = "";
             let direction: HelperDirection = "left";

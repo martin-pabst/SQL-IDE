@@ -4,7 +4,7 @@ import '/assets/css/icons.css';
 import { ExpandCollapseState } from '../ExpandCollapseComponent.ts';
 import { IconButtonComponent } from '../IconButtonComponent.ts';
 import { TreeviewNode, TreeviewNodeOnClickHandler } from './TreeviewNode.ts';
-import { ContextMenuItem, makeEditable, openContextMenu } from '../../HtmlTools.ts';
+import { ContextMenuItem, makeEditable, openContextMenu } from '../HtmlTools.ts';
 import { TreeviewMessages } from './TreeviewMessages.ts';
 import { enableDragDropTouch } from "@dragdroptouch/drag-drop-touch";
 import { AccordionElement } from './AccordionElement.ts';

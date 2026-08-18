@@ -1,7 +1,5 @@
-import { DOM } from "../../DOM";
-import { AccordionElement } from "./AccordionElement";
+import { DOM } from "../DOM";
 import { AccordionElementInterface } from "./AccordionElementInterface";
-import { Treeview } from "./Treeview";
 import { TreeviewAccordion } from "./TreeviewAccordion";
 
 export class TreeviewSplitter {

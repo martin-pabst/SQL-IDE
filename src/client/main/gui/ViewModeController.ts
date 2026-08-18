@@ -75,7 +75,7 @@ export class ViewModeController {
         this.$buttonMap[mode].addClass("jo_pressed");
         this.$buttonMap[otherMode].removeClass("jo_pressed");
 
-        let settings = this.main.user.settings;
+        let settings = this.main.user.sql_gui_state;
         let viewModes = settings.viewModes;
 
         let viewMode = viewModes[mode];
@@ -117,16 +117,16 @@ export class ViewModeController {
     }
 
     getChosenViewMode(): ViewMode {
-        let viewModes = this.main.user.settings.viewModes;
+        let viewModes = this.main.user.sql_gui_state.viewModes;
         return viewModes[viewModes.viewModeChosen];
     }
 
     saveSettings() {
-        this.main.userDataDirty = true;
+        this.main.gui_state_dirty = true;
     }
 
     initViewMode() {
-        let settings = this.main.user.settings;
+        let settings = this.main.user.sql_gui_state;
 
         if (settings["viewModes"] == null) {
             settings["viewModes"] = {

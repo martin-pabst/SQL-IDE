@@ -131,7 +131,8 @@ export class DatabaseSettingsDialog {
         let newDescription = <string>jQuery('.jo_ds_settings_description').val();
 
         this.workspace.name = newName;
-        this.workspace.panelElement.$htmlFirstLine.find('.jo_filename').text(newName);
+        let node = this.main.projectExplorer.workspaceTreeview.findNodeByElement(this.workspace);
+        if(node) node.caption = newName;
         this.workspace.saved = false;
 
         let database = this.workspace.database;

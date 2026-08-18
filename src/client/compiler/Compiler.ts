@@ -1,5 +1,5 @@
 import { Error, Lexer } from "./lexer/Lexer.js";
-import { File, Module, ModuleStore } from "./parser/Module.js";
+import {  ModuleStore } from "./parser/Module.js";
 import { Parser } from "./parser/Parser.js";
 import { Main } from "../main/Main.js";
 import { MainBase } from "../main/MainBase.js";
@@ -27,8 +27,8 @@ export class Compiler {
         let lexer = new Lexer();
 
         // 1st pass: lexing
-        for (let m of moduleStore.getModules(false)) {
-            m.file.dirty = false;
+        for (let m of moduleStore.getModules()) {
+            m.setDirty(false);
             m.clear();
 
             let lexed = lexer.lex(m.getProgramTextFromMonacoModel());
@@ -43,7 +43,7 @@ export class Compiler {
 
         let parser: Parser = new Parser();
 
-        for (let m of moduleStore.getModules(false)) {
+        for (let m of moduleStore.getModules()) {
             parser.parse(m);
         }
         
@@ -51,7 +51,7 @@ export class Compiler {
         let databaseTool = this.main.getDatabaseTool();
         let symbolResolver: SymbolResolver = new SymbolResolver(databaseTool);
 
-        for(let m of moduleStore.getModules(false)){
+        for(let m of moduleStore.getModules()){
             symbolResolver.start(m);
         }
 

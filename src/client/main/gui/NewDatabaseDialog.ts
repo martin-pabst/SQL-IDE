@@ -1,14 +1,16 @@
-import { CreateWorkspaceData, WorkspaceData } from "../../communication/Data.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
 import { LoadableDatabase } from "../../tools/DatabaseLoader.js";
 import { DatabaseTool } from "../../sqljs-worker/DatabaseTools.js";
 import { makeTabs } from "../../tools/HtmlTools.js";
 import { TemplateUploader } from "../../tools/TemplateUploader.js";
 import { Main } from "../Main.js";
-import { AccordionElement } from "./Accordion.js";
 import pako from 'pako'
 
 import jQuery from "jquery";
+import type { TreeviewNode } from "../../tools/treeview/TreeviewNode.js";
+import type { Workspace } from "../../workspace/Workspace.js";
+import type { CreateWorkspaceData } from "../../communication/Data.js";
+import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";
 
 type CreateMode = "emptyDatabase" | "fromTemplate" | "useExistingDatabase" | "useDumpFile";
 
@@ -17,7 +19,7 @@ export class NewDatabaseDialog {
     $dialog: JQuery<HTMLElement>;
     database: LoadableDatabase;
 
-    constructor(private main: Main, private owner_id: number, private path: string[]) {
+    constructor(private main: Main, private owner_id: number, private currentlySelectedFolder: TreeviewNode<Workspace, number>) {
         this.init();
     }
 
@@ -166,7 +168,7 @@ export class NewDatabaseDialog {
                 id: null,
                 isFolder: false,
                 name: <string>jQuery('.dialog-input.jo_databasename').val(),
-                path: this.path.join("/"),
+                parent_folder_id: this.currentlySelectedFolder.isRootNode() ? null : this.currentlySelectedFolder.externalObject.id
             }
 
             switch (createMode) {
@@ -221,28 +223,15 @@ export class NewDatabaseDialog {
             if (error != null) { alert(error); return; }
 
             let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
-            w.path = workspaceData.path;
+            w.parent_folder_id = workspaceData.parent_folder_id;
             w.id = workspaceData.id;
             w.sql_history = "";
 
             let projectExplorer = this.main.projectExplorer;
 
             this.main.workspaceList.push(w);
-            let accordionElement: AccordionElement = {
-                name: workspaceData.name,
-                externalElement: w,
-                iconClass: "workspace",
-                isFolder: false,
-                path: this.path
-            };
 
-            projectExplorer.workspaceListPanel.addElement(accordionElement, true);
-
-            w.panelElement = accordionElement;
-            w.renderSettingsButton(accordionElement);
-
-            projectExplorer.workspaceListPanel.sortElements();
-            projectExplorer.fileListPanel.sortElements();
+            projectExplorer.workspaceTreeview.addNode(false, ProjectExplorerMessages.NewDatabaseName(), "img_database-dark", w, workspaceData.parent_folder_id);
 
             projectExplorer.setWorkspaceActive(w);
 

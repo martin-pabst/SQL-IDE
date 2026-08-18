@@ -1,11 +1,18 @@
 import jQuery from "jquery";
 
-export type UserSettings = {
+export type Application = 1 | 2;    // 1 == OnlineIDE, 2 == SQLIDE
+
+export interface BaseResponse {
+    success: boolean;
+    message: string;
+}
+
+export type GuiState = {
     helperHistory: {
+        newFileHelperDone: boolean,
     },
-    //    theme: string,  // old!
     viewModes: ViewModes,
-    classDiagram: any
+    language: string
 }
 
 export type ViewModes = {
@@ -22,7 +29,7 @@ export type ViewMode = {
 
 
 export type WorkspaceSettings = {
-    libraries: string[]
+
 }
 
 export type FileData = {
@@ -33,38 +40,56 @@ export type FileData = {
     submitted_date: string,
     student_edited_after_revision: boolean,
     version: number,
+    is_copy_of_id: number,
+    repository_file_version: number,
+    identical_to_repository_version: boolean,
     workspace_id: number,
     forceUpdate: boolean,
-    file_type: number
+    isFolder: boolean,
+    parent_folder_id: number,
+    sorting_order: number
 }
 
 export type WorkspaceData = {
     id: number,
     name: string,
-    path: string,
     isFolder: boolean,
+    parent_folder_id: number | null,
+    sorting_order: number,
+
     owner_id: number,
     files: FileData[],
-    currentFileId?: number,
+    current_file_id?: number,
     settings?: string,       // serialized WorkspaceSettings
+    version: number,
+
+
     sql_history: string,
+    database_id: number,
     permissions: number,
-    database_id: number
+
+    // Pruefung:
+    pruefung_id?: number,
+    readonly: boolean,
+    grade?: string,
+    points?: string,
+    comment?: string
+
 }
 
 export type CreateWorkspaceData = {
-    id: number,
     name: string,
-    path: string,
     isFolder: boolean,
-
+    parent_folder_id: number | null,
+    id: number | null,
+      
+    // needed when new workspace is created
     template_database_id?: number,
     template_id?: number,
     secret?: string,
     otherDatabaseId?: number
+
 }
-
-
 
 export type Workspaces = {
     workspaces: WorkspaceData[]
@@ -82,7 +107,7 @@ export type UserData = {
     familienname: string,
     rufname: string,
     currentWorkspace_id?: number,
-    settings?: UserSettings,
+    sql_gui_state?: GuiState,
     password?: string,
     is_testuser?: boolean,
 
@@ -93,12 +118,12 @@ export type UserData = {
 }
 
 export function getUserDisplayName(user: UserData, lastNameFirst: boolean = false): string {
-    if(user.vidis_akronym){
-        if(user.username && user.username.length > 0) return user.username;
+    if (user.vidis_akronym) {
+        if (user.username && user.username.length > 0) return user.username;
         return user.vidis_akronym;
     }
-    if(user.familienname?.length > 0 && user.rufname?.length > 0){
-        if(lastNameFirst) return user.familienname + ", " + user.rufname;
+    if (user.familienname?.length > 0 && user.rufname?.length > 0) {
+        if (lastNameFirst) return user.familienname + ", " + user.rufname;
         return user.rufname + " " + user.familienname;
     }
     return user.username;
@@ -168,7 +193,7 @@ export type TeacherData = {
 export type LoginRequest = {
     username: string,
     password: string,
-    language: number,
+    application: Application,
     singleUseToken: string | null
 }
 
@@ -177,14 +202,22 @@ export type TicketLoginRequest = {
     language: number
 }
 
+// Dummy... -> Remove when Settings-Module is implemented
+type SettingValues = {}
+
 export type LoginResponse = {
     success: boolean,
     user: UserData,
     classdata: ClassData[], // null if !is_teacher
     workspaces: Workspaces,
-    csrfToken: string,
     isTestuser: boolean,
-    vidis_id_token?: string
+    activePruefung: Pruefung,
+    sqlIdeForOnlineIdeClient: string,
+    userSettings: SettingValues,   // new user settings
+    classSettings: SettingValues, // settings for class if user is student
+    schoolSettings: SettingValues, // settings for school
+    vidis_id_token?: string,
+    penaltyTimeInSeconds: number,
 }
 
 export type LogoutRequest = {
@@ -200,24 +233,23 @@ export type SendUpdatesRequest = {
     files: FileData[],
     owner_id: number,
     userId: number,
-    language: number,
     currentWorkspaceId: number,
     getModifiedWorkspaces: boolean
 }
 
 export type SendUpdatesResponse = {
+    success: boolean,
     workspaces: Workspaces,
     filesToForceUpdate: FileData[],
-    success: boolean
+    activePruefung: Pruefung
 }
 
-export type UpdateUserSettingsRequest = {
-    settings: UserSettings,
-    current_workspace_id: number
+export type UpdateGuiStateRequest = {
+    gui_state: GuiState,
     userId: number
 }
 
-export type UpdateUserSettingsResponse = {
+export type UpdateGuiStateResponse = {
     success: boolean;
 
 }
@@ -227,9 +259,14 @@ export type CreateOrDeleteFileOrWorkspaceRequest = {
     entity: "workspace" | "file",
     type: "create" | "delete",
     data?: CreateWorkspaceData | FileData, // in case of create
-    id?: number, // in case of delete
+    ids?: number[], // in case of delete
     owner_id?: number, // in case of create
     userId: number
+}
+
+export type MoveFileRequest = {
+    file_id: number,
+    destination_workspace_id: number
 }
 
 export type CRUDResponse = {
@@ -257,7 +294,7 @@ export type CRUDSchoolRequest = {
 }
 
 export type BulkCreateUsersRequest = {
-    onlyCheckUsernames: boolean, 
+    onlyCheckUsernames: boolean,
     users: UserData[],
     schule_id: number
 }
@@ -270,8 +307,7 @@ export type BulkCreateUsersResponse = {
 
 export type GetWorkspacesRequest = {
     ws_userId: number,
-    userId: number,
-    language: number
+    userId: number
 }
 
 export type GetWorkspacesResponse = {
@@ -294,8 +330,7 @@ export type ChangeClassOfStudentsResponse = {
  * Copies Workspace and returns copy.
  */
 export type DuplicateWorkspaceRequest = {
-    workspace_id: number, // Workspace to copy
-    language: number
+    workspace_id: number // Workspace to copy
 }
 
 export type DuplicateWorkspaceResponse = {
@@ -327,7 +362,7 @@ export type DeleteRepositoryResponse = { success: boolean, message?: string };
  */
 export type DistributeWorkspaceRequest = {
     workspace_id: number, // Workspace to copy
-    database_as_template_id: number, 
+    database_as_template_id: number,
     class_id: number,
     student_ids: number[]
 }
@@ -537,7 +572,7 @@ export type WebSocketRequestConnect = {
     command: 1,
     token: string,
     databaseId: number,
-    workspaceId: number, 
+    workspaceId: number,
     databaseVersion: number
 }
 
@@ -554,8 +589,8 @@ export type WebSocketRequestKeepAlive = {
     command: 5
 }
 
-export type WebSocketResponse = WebSocketResponseSendingStatements | WebSocketResponseDisconnect | 
-   WebSocketResponseKeepAlive | WebSocketResponseRollback;
+export type WebSocketResponse = WebSocketResponseSendingStatements | WebSocketResponseDisconnect |
+    WebSocketResponseKeepAlive | WebSocketResponseRollback;
 
 export type WebSocketResponseSendingStatements = {
     command: 2,
@@ -620,11 +655,11 @@ export type AddDatabaseStatementsRequest = {
 }
 
 export type AddDatabaseStatementsResponse = {
-        success: Boolean,
-        statements_before: string[],
-        new_version: number
+    success: Boolean,
+    statements_before: string[],
+    new_version: number
 }
-    
+
 export type TemplateListEntry = {
     id: number,
     name: string,
@@ -694,7 +729,7 @@ export type GetTemplateRequest = {
 
 export type RollbackRequest = {
     workspaceId: number,
-    version: number 
+    version: number
 }
 
 export type RollbackResponse = {
@@ -704,7 +739,7 @@ export type RollbackResponse = {
 }
 
 export type UploadTemplateResponse = {
-    success: boolean, 
+    success: boolean,
     newTemplateId?: number
 }
 
@@ -729,3 +764,140 @@ export type DatabaseChangedPushMessage = {
     newStatements?: string[],
     rollbackToVersion?: number
 }
+
+
+export type FileOrder = {
+    fileId: number,
+    order: number
+}
+
+export type UpdateFileOrderRequest = {
+    fileOrderList: FileOrder[]
+}
+
+export type WorkspaceOrder = {
+    workspaceId: number,
+    order: number
+}
+
+export type UpdateWorkspaceOrderRequest = {
+    workspaceOrderList: WorkspaceOrder[]
+}
+
+/*
+ * Pruefung
+ */
+
+export type PruefungState = "preparing" | "running" | "correcting" | "opening";
+export var PruefungCaptions: { [index: string]: string } = {
+    "preparing": "Vorbereitung",
+    "running": "Prüfung läuft",
+    "correcting": "Korrektur",
+    "opening": "Herausgabe"
+}
+
+export type PruefungStudentModeWithId = {
+    student_id: number,
+    mode: PruefungStudentMode
+}
+
+export type PruefungStudentGroupWithId = {
+    student_id: number,
+    group: string
+}
+
+export type Pruefung = {
+    id: number,
+    name: string,
+    datum?: string,
+    klasse_id: number,
+    template_workspace_a_id: number,
+    template_workspace_b_id: number,
+    pruefungStudentGroups?: {studentGroups: PruefungStudentGroupWithId[]},
+    pruefungStudentModes?: {studentModes: PruefungStudentModeWithId[]},
+    state: PruefungState;
+}
+
+export type CRUDPruefungRequest = {
+    pruefung?: Pruefung,
+    requestType: "create" | "update" | "delete"
+}
+
+export type CRUDPruefungResponse = {
+    success: boolean,
+    newPruefungWithIds?: Pruefung,
+    message: string
+}
+
+
+
+export type StudentPruefungStateInfo = {
+    studentId: number,
+    timestamp: number,
+    state: string,
+    running: boolean
+}
+
+export type GetPruefungStudentStatesRequest = {
+    pruefungId: number
+}
+
+export type GetPruefungStudentStatesResponse = {
+    success: boolean,
+    pruefungState: string,
+    pruefungStudentStates: StudentPruefungStateInfo[],
+    message: string
+}
+
+
+// data class ReportPruefungStudentStateRequest(var pruefungId: Int, var clientState: String);
+// data class ReportPruefungStudentStateResponse(var success: Boolean, var pruefungState: String, var message: String);
+
+export type ReportPruefungStudentStateRequest = {
+    pruefungId: number,
+    running: Boolean
+}
+
+export type ReportPruefungStudentStateResponse = {
+    success: boolean,
+    pruefungState: string,
+    message: string
+}
+
+export type GetPruefungStudentModeRequest = {
+    pruefung_id: number
+}
+
+export type PruefungStudentMode = "automatic" | "manualOn" | "manualOff";
+
+export type PruefungTableStudentData = {
+    id: number,
+    name: string,
+    username: string,
+    grade: string,
+    points: string,
+    comment: string,
+    mode: PruefungStudentMode | {id: PruefungStudentMode, text: string}
+    group: string | {id: string, text: string},
+}
+
+export type GetPruefungStudentTableDataRequest = {
+    pruefung_id: number
+}
+
+export type GetPruefungStudentTableDataResponse = {
+    success: boolean,
+    message: string,
+    studentDataList: PruefungTableStudentData[]
+}
+
+export type SetPruefungStudentModeRequest = {
+    pruefung_id: number,
+    student_id: number,
+    mode: PruefungStudentMode
+}
+
+export type CheckIfPruefungIsRunningResponse = {
+    runningPruefung: Pruefung | null
+}
+

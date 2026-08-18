@@ -42,7 +42,7 @@ export class MySignatureHelpProvider implements monaco.languages.SignatureHelpPr
         let isConsole = (model != this.main.getMonacoEditor().getModel());
 
         let module: Module = 
-            this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
+            this.main.getCurrentWorkspace().getModuleForMonacoModel(model);
 
         if (module == null) {
             return null;

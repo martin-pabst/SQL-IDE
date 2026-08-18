@@ -1,27 +1,44 @@
-import { AccordionPanel, AccordionElement } from "./Accordion.js";
 import { Main } from "../Main.js";
-import { ClassData, UserData, CRUDUserRequest, CRUDClassRequest, GetWorkspacesResponse, GetWorkspacesRequest, Workspaces, getUserDisplayName } from "../../communication/Data.js";
-import { ajax } from "../../communication/AjaxHelper.js";
+import { ClassData, UserData, Pruefung, PruefungCaptions, getUserDisplayName, GetClassesDataResponse } from "../../communication/Data.js";
+import { ajaxAsync, csrfToken } from "../../communication/AjaxHelper.js";
 import { Workspace } from "../../workspace/Workspace.js";
-import { Helper } from "./Helper.js";
+import jQuery from "jquery";
+import { PushClientManager } from "../../communication/pushclient/PushClientManager.js";
+import * as monaco from 'monaco-editor'
+import { Treeview } from "../../tools/treeview/Treeview.js";
+import type { IconButtonComponent } from "../../tools/IconButtonComponent.js";
+import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";
+import { TeacherExplorerMessages } from "./language/TeacherExplorerMessages.js";
+import { GUIToggleButton } from "../../tools/GUIToggleButton.js";
+import '/assets/css/teacherexplorer.css';
 
 
 export class TeacherExplorer {
 
-    studentPanel: AccordionPanel;
-    classPanel: AccordionPanel;
+    studentPanel: Treeview<UserData, UserData>;
+    classPanel: Treeview<ClassData | Pruefung, ClassData | Pruefung>;
 
     // save them here when displaying pupils workspaces:
     ownWorkspaces: Workspace[];
     currentOwnWorkspace: Workspace;
 
-    constructor(private main: Main, private classData: ClassData[]) {
+    pruefungen: Pruefung[] = [];
 
+    classPanelMode: "classes" | "tests" = "classes";
+
+    currentPruefung: Pruefung = null;
+
+    homeButton: IconButtonComponent;
+
+
+
+    constructor(private main: Main, public classData: ClassData[]) {
+        this.fetchPruefungen();
     }
 
     removePanels() {
-        this.classPanel.remove();
-        this.studentPanel.remove();
+        this.classPanel.setVisible(false);
+        this.studentPanel.setVisible(false);
     }
 
     initGUI() {
@@ -30,52 +47,88 @@ export class TeacherExplorer {
 
         this.initClassPanel();
 
+        this.main.projectExplorer.accordion.onResize(true);
+
         this.renderClasses(this.classData);
+
+        PushClientManager.subscribe("onPruefungChanged", async () => {
+            await this.fetchPruefungen()
+            if (this.classPanelMode == "tests") {
+                this.renderPruefungen();
+            }
+        });
+
+        PushClientManager.subscribe("onClassesChanged", async () => {
+            let response: GetClassesDataResponse = await ajaxAsync("/servlet/getClassesData", {wholeSchool: false})
+            this.classData = response.classDataList;  
+            if (this.classPanelMode == "classes") {
+                let currentClass: ClassData = null;
+                let selectedNodes = this.classPanel.getCurrentlySelectedNodes();
+                if(selectedNodes?.length > 0){
+                    currentClass = selectedNodes[0].externalObject as ClassData;
+                }
+                this.renderClasses(this.classData);
+                if(currentClass != null){
+                    let newCurrentClass = this.classData.find(c => c.id == currentClass.id);
+                    if(newCurrentClass != null){
+                        this.classPanel.selectElement(newCurrentClass, false);
+                        this.renderStudents(newCurrentClass.students);
+                    }
+                }
+                if(this.main.currentWorkspace.owner_id != this.main.user.id){
+                    this.onHomeButtonClicked();
+                }
+            }
+        });
+
+        this.homeButton = this.studentPanel.captionLineAddIconButton(
+            "img_home-dark", "right", () => {
+                this.onHomeButtonClicked();
+            }, ProjectExplorerMessages.displayOwnDatabases()
+        )
+
+        this.homeButton.setVisible(false);
 
     }
 
     initStudentPanel() {
 
-        let that = this;
-
-        this.studentPanel = new AccordionPanel(this.main.projectExplorer.accordion,
-            "Schüler/innen", "2", null,
-            "", "student", false, false, "student", false, []);
-
-        this.studentPanel.selectCallback = (ae: UserData) => {
-
-            that.main.networkManager.sendUpdates(() => {
-
-                let request: GetWorkspacesRequest = {
-                    ws_userId: ae.id,
-                    userId: this.main.user.id,
-                    language: 1
-                }
-
-                ajax("getWorkspaces", request, (response: GetWorkspacesResponse) => {
-                    if (response.success == true) {
-
-                        if (that.main.workspacesOwnerId == that.main.user.id) {
-                            that.ownWorkspaces = that.main.workspaceList.slice();
-                            that.currentOwnWorkspace = that.main.currentWorkspace;
-                        }
-
-                        that.main.restoreWorkspaces(response.workspaces);
-                        that.main.workspacesOwnerId = ae.id;
-                        that.main.projectExplorer.setExplorerColor("rgba(255, 0, 0, 0.2");
-                        that.main.projectExplorer.$homeAction.show();
-                        Helper.showHelper("homeButtonHelper", this.main);
-
-                        that.main.bottomDiv.showHomeworkTab();
-                        that.main.bottomDiv.homeworkManager.attachToWorkspaces(that.main.workspaceList);
+        this.studentPanel = new Treeview(this.main.projectExplorer.accordion,
+            {
+                captionLine: {
+                    enabled: true,
+                    text: TeacherExplorerMessages.students()
+                },
+                withSelection: true,
+                selectMultiple: false,
+                isDragAndDropSource: false,
+                buttonAddElements: false,
+                withDeleteButtons: false,
+                buttonAddFolders: false,
+                defaultIconClass: "img_user-dark",
+                flexWeight: "1",
+                minHeight: 100,
+                withFolders: false,
+                comparator: (a, b) => {
+                    if (a.vidis_akronym && b.vidis_akronym) {
+                        return getUserDisplayName(a) > getUserDisplayName(b) ? 1 : -1;
                     }
+                    if (a.familienname > b.familienname) return 1;
+                    if (b.familienname > a.familienname) return -1;
+                    if (a.rufname > b.rufname) return 1;
+                    if (b.rufname > a.rufname) return -1;
+                    return 0;
+                },
+                orderBy: "comparator"
+            }
+        );
 
-                    this.main.networkManager.updateFrequencyInSeconds = this.main.networkManager.teacherUpdateFrequencyInSeconds;
-                    this.main.networkManager.secondsTillNextUpdate = this.main.networkManager.teacherUpdateFrequencyInSeconds;
-
-                });
-
-            });
+        this.studentPanel.nodeClickedCallback = (student: UserData) => {
+            if (this.classPanelMode == "classes") {
+                this.main.projectExplorer.fetchAndRenderWorkspaces(student, this);
+            } else {
+                this.main.projectExplorer.fetchAndRenderWorkspaces(student, this, this.currentPruefung);
+            }
         }
 
     }
@@ -83,10 +136,10 @@ export class TeacherExplorer {
     restoreOwnWorkspaces() {
         let main = this.main;
 
-        // main.monaco.setModel(monaco.editor.createModel("Keine Datei vorhanden.", "text"));
         main.getMonacoEditor().updateOptions({ readOnly: true });
 
         main.workspaceList = this.ownWorkspaces;
+        main.currentWorkspace = this.currentOwnWorkspace;
         main.workspacesOwnerId = main.user.id;
         main.projectExplorer.setExplorerColor(null);
 
@@ -96,81 +149,195 @@ export class TeacherExplorer {
             main.currentWorkspace = main.workspaceList[0];
         }
 
-        if (this.currentOwnWorkspace != null) {
-            main.projectExplorer.setWorkspaceActive(this.currentOwnWorkspace);
+        if (main.currentWorkspace != null) {
+            main.projectExplorer.setWorkspaceActive(main.currentWorkspace, true);
         }
-        main.currentWorkspace = this.currentOwnWorkspace;
 
-        this.studentPanel.select(null, false);
+        this.studentPanel.selectElement(null, false);
 
     }
 
     initClassPanel() {
         let that = this;
 
-        this.classPanel = new AccordionPanel(this.main.projectExplorer.accordion,
-            "Klassen", "1", null, "", "class", false, false, "class", false, []);
+        let $buttonContainer = jQuery('<div class="joe_teacherExplorerClassButtons"></div>');
+        let toggleButtonClass = new GUIToggleButton(TeacherExplorerMessages.classes(), $buttonContainer, true);
+        let toggleButtonTest = new GUIToggleButton(TeacherExplorerMessages.tests(), $buttonContainer, false);
+        toggleButtonClass.linkTo(toggleButtonTest);
 
-        this.classPanel.selectCallback = (ea) => {
-            that.main.networkManager.sendUpdates(() => {
+        this.classPanel = new Treeview(this.main.projectExplorer.accordion, {
+            captionLine: {
+                enabled: true,
+                element: $buttonContainer[0]
+            },
+            withSelection: true,
+            selectMultiple: false,
+            isDragAndDropSource: false,
+            buttonAddElements: false,
+            withDeleteButtons: false,
+            buttonAddFolders: false,
+            defaultIconClass: "img_class-dark",
+            flexWeight: "1",
+            minHeight: 100,
+            withFolders: false,
+            orderBy: "comparator"
 
-                let classData = <ClassData>ea;
-                if (classData != null) {
-                    this.renderStudents(classData.students);
+        })
+
+        let buttonPruefungAdministration = this.classPanel.captionLineAddIconButton("img_gear-dark", "right",
+            () => {
+                window.open(`administration_mc.html?csrfToken=${csrfToken}&menuItem=manageTests`, '_blank').focus();
+            }, TeacherExplorerMessages.createNewTest());
+
+        buttonPruefungAdministration.setVisible(false);
+
+        this.classPanel.nodeClickedCallback = (classOrPruefung) => {
+
+            that.main.networkManager.sendUpdatesAsync().then(() => {
+
+                if (this.classPanelMode == "classes") {
+
+                    let classData = <ClassData>classOrPruefung;
+                    if (classData != null) {
+                        this.renderStudents(classData.students);
+                    }
+
+                } else {
+                    this.onSelectPruefung(<Pruefung>classOrPruefung);
                 }
-
             });
+
         }
 
+        toggleButtonTest.onChange(async (checked) => {
+            buttonPruefungAdministration.setVisible(true);
+            that.classPanelMode = checked ? "tests" : "classes";
+            that.main.networkManager.sendUpdatesAsync().then(() => {
+                if (checked) {
+                    if (that.main.workspacesOwnerId == that.main.user.id) {
+                        that.ownWorkspaces = that.main.workspaceList.slice();
+                        that.currentOwnWorkspace = that.main.currentWorkspace;
+                    }
+                    this.renderPruefungen();
+                    let firstPruefung = this.pruefungen.find(p => ["preparing", "running"].indexOf(p.state) < 0);
+                    if (firstPruefung != null) {
+                        this.classPanel.selectElement(firstPruefung, true);
+                    }
+                } else {
+                    this.renderClasses(this.classData);
+                    this.onHomeButtonClicked();
+                }
+            })
+        })
+
+    }
+
+    onSelectPruefung(p: Pruefung) {
+
+        this.currentPruefung = p;
+        let projectExplorer = this.main.projectExplorer;
+
+        if (p.state == "preparing" || p.state == "running") {
+            alert(TeacherExplorerMessages.testIsInState(PruefungCaptions[p.state]));
+
+            projectExplorer.fileTreeview.clear();
+            projectExplorer.fileTreeview.setCaption("---");
+            projectExplorer.workspaceTreeview.clear();
+            this.studentPanel.clear();
+            this.main.getMonacoEditor().setModel(monaco.editor.createModel(TeacherExplorerMessages.noFile(), "text"));
+
+
+        } else {
+            let klass = this.classData.find(c => c.id == p.klasse_id);
+            if (klass != null) {
+                this.renderStudents(klass.students);
+                if (klass.students.length > 0) {
+                    this.studentPanel.selectElement(klass.students[0], true);
+                }
+            }
+        }
 
     }
 
     renderStudents(userDataList: UserData[]) {
         this.studentPanel.clear();
 
-        userDataList.sort((a, b) => {
-            if(a.vidis_akronym && b.vidis_akronym){
-                return getUserDisplayName(a) > getUserDisplayName(b) ? 1 : -1;
-            }
-            if (a.familienname > b.familienname) return 1;
-            if (b.familienname > a.familienname) return -1;
-            if (a.rufname > b.rufname) return 1;
-            if (b.rufname > a.rufname) return -1;
-            return 0;
-        })
+        this.studentPanel.setCaption(userDataList.length + " " + TeacherExplorerMessages.students());
 
-        for (let ud of userDataList) {
-            let ae: AccordionElement = {
-                name: getUserDisplayName(ud, true),
-                sortName: ud.vidis_akronym ? getUserDisplayName(ud) : ud.familienname + " " + ud.rufname,
-                externalElement: ud,
-                isFolder: false,
-                path: []
-            }
-            this.studentPanel.addElement(ae, true);
+        userDataList.sort(this.studentPanel.config.comparator);
+
+        for (let i = 0; i < userDataList.length; i++) {
+
+            let ud = userDataList[i];
+            this.studentPanel.addNode(false, getUserDisplayName(ud, true), "img_user-dark", ud);
+
         }
 
     }
 
     renderClasses(classDataList: ClassData[]) {
         this.studentPanel.clear();
+        this.studentPanel.setCaption(TeacherExplorerMessages.students());
+        this.classPanel.clear();
 
         classDataList.sort((a, b) => {
-            if (a.name > b.name) return 1;
-            if (b.name > a.name) return -1;
-            return 0;
+            return a.name.localeCompare(b.name);
         })
 
         for (let cd of classDataList) {
-            let ae: AccordionElement = {
-                name: cd.name,
-                externalElement: cd,
-                isFolder: false,
-                path: []
-            }
-            this.classPanel.addElement(ae, true);
+            this.classPanel.addNode(false, cd.name, "img_class-dark", cd);
         }
 
+    }
+
+    renderPruefungen() {
+        this.classPanel.clear();
+
+        this.pruefungen.forEach(p => this.addPruefungToClassPanel(p));
+    }
+
+    addPruefungToClassPanel(p: Pruefung) {
+
+        this.classPanel.addNode(false, p.name, "img_test-state-preparing", p);
+        this.updateClassNameAndState(p);
+
+    }
+
+    updateClassNameAndState(p: Pruefung) {
+        let node = this.classPanel.findNodeByElement(p);
+        if (!node) return;
+        let klasse = this.classData.find(c => c.id == p.klasse_id);
+        if (klasse != null) {
+            node.renderCaptionAsHtml = true;
+            node.caption = `<span class="joe_pruefung_name">${p.name} </span>` +
+             `<span class="joe_pruefung_klasse" style="margin: 0 4px">(${klasse.name})</span>`;
+        }
+
+        node.iconClass = "img_test-state-" + p.state;
+        node.iconTooltip = PruefungCaptions[p.state];
+    }
+
+    async fetchPruefungen() {
+
+        let response = await ajaxAsync("/servlet/getPruefungenForLehrkraft", {})
+        this.pruefungen = response.pruefungen;
+
+    }
+
+    async onHomeButtonClicked() {
+        let projectExplorer = this.main.projectExplorer;
+        await this.main.networkManager.sendUpdatesAsync();
+
+        this.main.bottomDiv.hideHomeworkTab();
+
+        projectExplorer.addDatabaseButton.setVisible(true);
+        projectExplorer.workspaceTreeview.addFolderButton.setVisible(true);
+        this.homeButton.setVisible(false);
+        projectExplorer.fileTreeview.addElementsButton.setVisible(this.main.workspaceList.length > 0);
+        projectExplorer.fileTreeview.addFolderButton.setVisible(this.main.workspaceList.length > 0);
+
+        this.main.teacherExplorer.restoreOwnWorkspaces();
+        this.main.networkManager.updateFrequencyInSeconds = this.main.networkManager.ownUpdateFrequencyInSeconds;
     }
 
 

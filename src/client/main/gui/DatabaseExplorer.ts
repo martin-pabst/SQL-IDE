@@ -30,8 +30,8 @@ export class DatabaseExplorer {
         let dbTool = this.main.getDatabaseTool();
         let workspace = this.main.getCurrentWorkspace();
         if (workspace != null) {
-            for (let m of workspace.moduleStore.getModules(false)) {
-                m.file.dirty = true;
+            for (let m of workspace.moduleStore.getModules()) {
+                m.setDirty(true);
             }
         }
 

@@ -1,115 +1,174 @@
-import { WorkspaceData } from "../communication/Data.js";
-import { Module, ModuleStore } from "../compiler/parser/Module.js";
-import { AccordionElement } from "../main/gui/Accordion.js";
-import { DatabaseSettingsDialog } from "../main/gui/DatabaseSettingsDialog.js";
-import { Main } from "../main/Main.js";
+import { WorkspaceData, WorkspaceSettings } from "../communication/Data.js";
 import { MainBase } from "../main/MainBase.js";
-import { WDatabase } from "./WDatabase.js";
-import * as monaco from 'monaco-editor'
-import jQuery from "jquery";
+import type * as monaco from 'monaco-editor'
+import { GUIFile } from '../compiler/parser/GUIFile.js';
+import type { WDatabase } from './WDatabase.js';
+import { Module, ModuleStore } from '../compiler/parser/Module.js';
+
 
 export class Workspace {
-    
-    name: string;
-    path: string = "";
+
     isFolder: boolean;
+    parent_folder_id: number | null;
+    sorting_order: number;
+    readonly: boolean;
     id: number;
-    owner_id: number;
 
     version: number;
-    
-    moduleStore: ModuleStore;
-    panelElement: AccordionElement;
-    currentlyOpenModule: Module;
+    // published_to 0: none; 1: class; 2: school; 3: all
+    published_to: number;
+
+    repository_id: number;    // id of repository-workspace
+    has_write_permission_to_repository: boolean; // true if owner of this working copy has write permission to repository workspace
+
+    spritesheetId: number;
+
+    grade?: string;
+    points?: string;
+    comment?: string;
+
+    private files: GUIFile[] = [];
+
+    currentlyOpenFile: GUIFile;
     saved: boolean = true;
+
+    pruefung_id: number;
+
+    sql_history: string;
+    databaseId: number;
+    database: WDatabase;
+    permissions: number; // 0: read-only, 1: read-write, 2: ddl
+
+    moduleStore: ModuleStore;
 
     compilerMessage: string;
 
-    databaseId: number;
-    database: WDatabase;
+    settings: WorkspaceSettings = {
+    };
 
-    sql_history: string;
-
-    permissions: number;
-
-    constructor(name: string, private main: MainBase, owner_id: number){
-        this.name = name;
-        this.owner_id = owner_id;
-        this.moduleStore = new ModuleStore(main);
+    constructor(public name: string, private main: MainBase, public owner_id: number) {
         this.sql_history = "";
+        this.moduleStore = new ModuleStore(main);
     }
-    
+
+    getFiles(): GUIFile[] {
+        return this.files;
+    }
+
+    getPath(file: GUIFile): string[] {
+
+        let path: string[] = [];
+        let parent: GUIFile | undefined;
+        while (parent = file.parent_folder_id ? this.files.find(f => f.id == file.parent_folder_id) : undefined) {
+            path.unshift(parent.name);
+            file = parent;
+        }
+
+        return path;
+
+    }
+
+    static pathsEqual(path1: string[], path2: string[]) {
+        if (path1.length != path2.length) return false;
+        for (let i = 0; i < path1.length; i++) {
+            if (path1[i] != path2[i]) return false;
+        }
+        return true;
+    }
+
+
+    removeAllFiles() {
+        for (let file of this.files.filter(f => f.hasMonacoModel())) {
+            file.getMonacoModel().dispose();
+        }
+        this.files = [];
+    }
+
+    addFile(file: GUIFile) {
+        this.files.push(file);
+    }
+
+    removeFile(file: GUIFile) {
+        let index = this.files.indexOf(file);
+        if (index >= 0) this.files.splice(index, 1);
+    }
+
+
     getWorkspaceData(withFiles: boolean): WorkspaceData {
         let wd: WorkspaceData = {
             name: this.name,
+            isFolder: this.isFolder,
+            parent_folder_id: this.parent_folder_id,
+            sorting_order: this.sorting_order,
             id: this.id,
             owner_id: this.owner_id,
-            currentFileId: this.currentlyOpenModule == null ? null : this.currentlyOpenModule.file.id,
+            current_file_id: this.currentlyOpenFile == null ? null : this.currentlyOpenFile.id,
             files: [],
+            version: this.version,
+            settings: JSON.stringify(this.settings),
+
+            // Pruefung
+            pruefung_id: this.pruefung_id,
+            readonly: this.readonly,
+            grade: this.grade,
+            points: this.points,
+            comment: this.comment,
+
+            // Database
             sql_history: this.sql_history,
-            path: this.path,
-            isFolder: false,  
-            permissions: this.permissions,
-            database_id: this.databaseId
+            database_id: this.databaseId,
+            permissions: this.permissions
         }
 
-        if(withFiles){
-            for(let m of this.moduleStore.getModules(false)){
-    
-                wd.files.push(m.getFileData(this));
-    
+        if (withFiles) {
+            for (let file of this.files) {
+                wd.files.push(file.getFileData(this));
             }
         }
 
         return wd;
     }
 
-    renderSettingsButton(panelElement: AccordionElement) {
-        let $buttonDiv = panelElement?.$htmlFirstLine?.find('.jo_additionalButtonSettings');
-        if ($buttonDiv == null) return;
-        
-        // let myMain: Main = <Main>this.main;
+    static restoreFromData(wd: WorkspaceData, main: MainBase): Workspace {
 
-            let $button = jQuery('<div class="jo_settingsButton img_settings jo_button jo_active" title="Datenbank-Einstellungen..."></div>');
-            $buttonDiv.append($button);
-            let that = this;
-            $button.on('pointerdown', (e) => e.stopPropagation());
-            $button.on('pointerup', (e) => {
-                e.stopPropagation();
+        let settings: WorkspaceSettings = (wd.settings != null && wd.settings.startsWith("{")) ? JSON.parse(wd.settings) : { libraries: [] };
 
-                new DatabaseSettingsDialog(<any>that.main, that);
+        //@ts-ignore
+        if (settings.libaries) {
+            //@ts-ignore
+            settings.libraries = settings.libaries;
+        }
 
-            });
+        let w = new Workspace(wd.name, main, wd.owner_id);
+        w.id = wd.id;
+        w.isFolder = wd.isFolder;
+        w.parent_folder_id = wd.parent_folder_id;
+        w.sorting_order = wd.sorting_order;
+        w.owner_id = wd.owner_id;
+        w.version = wd.version;
+        w.settings = settings;
+        w.pruefung_id = wd.pruefung_id;
 
-            $button[0].addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-            }, false);
+        w.readonly = wd.readonly;
 
-        // } else {
-        //     $buttonDiv.find('.jo_startButton').remove();
-        // }
-    }
+        w.grade = wd.grade;
+        w.points = wd.points;
+        w.comment = wd.comment;
+
+        w.sql_history = wd.sql_history;
+        w.databaseId = wd.database_id;
+        w.permissions = wd.permissions;
 
 
-    static restoreFromData(ws: WorkspaceData, main: Main): Workspace {
+        for (let f of wd.files) {
 
-        let w = new Workspace(ws.name, main, ws.owner_id);
-        w.id = ws.id;
-        w.path = ws.path;
-        w.isFolder = ws.isFolder;
-        w.owner_id = ws.owner_id;
-        w.sql_history = ws.sql_history;
-        w.permissions = ws.permissions;
-        w.databaseId = ws.database_id;
+            let file = GUIFile.restoreFromData(main, f);
+            w.files.push(file);
 
-        for(let f of ws.files){
+            w.moduleStore.putModule(new Module(file, main));
 
-            let m: Module = Module.restoreFromData(f, main);
-            w.moduleStore.putModule(m);
-
-            if(f.id == ws.currentFileId){
-                w.currentlyOpenModule = m;
+            if (f.id == wd.current_file_id) {
+                w.currentlyOpenFile = file;
             }
 
         }
@@ -118,20 +177,90 @@ export class Workspace {
 
     }
 
-    hasErrors(): boolean {
-        
-        return this.moduleStore.hasErrors();
-        
+    findFileById(id: number): GUIFile {
+        return this.files.find(f => f.id == id);
     }
 
-    getModuleByMonacoModel(model: monaco.editor.ITextModel): Module {
-        for(let m of this.moduleStore.getModules(false)){
-            if(m.model == model){
-                return m;
+    getFirstFile(): GUIFile | undefined {
+        if (this.files.length > 0) return this.files[0];
+        return undefined;
+    }
+
+    getIdentifier(): string {
+        return this.name;
+    }
+
+    getModuleForMonacoModel(model: monaco.editor.ITextModel | null): Module | undefined {
+        if (model == null) return undefined;
+
+        let compiler = this.main?.getCompiler();
+        if (!compiler) return undefined;
+
+        for (let file of this.getFiles()) {
+            if (file.getMonacoModel() == model) {
+                return this.moduleStore.findModuleByFile(file);
             }
         }
-        
-        return null;
+
+        return undefined;
     }
+
+    // async ensureModuleIsCompiled(module: Module) {
+    //     if (module.isReplModule()) {
+    //         this.main.getRepl().compile(module.file.getText(), false);
+    //     } else {
+    //         await this.main.getCompiler().updateSingleModuleForCodeCompletion(module);
+    //     }
+    // }
+
+    getCurrentlyEditedModule(): Module | undefined {
+        let model = this.main.getMonacoEditor().getModel();
+        if (!model) return;
+        return this.getModuleForMonacoModel(model);
+    }
+
+    getFileForMonacoModel(model: monaco.editor.ITextModel | null): GUIFile | undefined {
+        if (model == null) return undefined;
+
+        for (let file of this.getFiles()) {
+            if (file.getMonacoModel() == model) {
+                return file;
+            }
+        }
+
+        return undefined;
+    }
+
+    getCurrentlyEditedFile(): GUIFile | undefined {
+        let model = this.main.getMonacoEditor().getModel();
+        if (!model) return;
+        return this.getFileForMonacoModel(model);
+    }
+
+    /*
+     * monaco editor counts LanguageChangedListeners and issues ugly warnings in console if more than
+     * 200, 300, ... are created. Unfortunately it creates one each time a monaco.editor.ITextModel is created.
+     * To keep monaco.editor.ITextModel instance count low we instantiate it only when needed and dispose of it
+     * when switching to another workspace.
+     */
+
+    disposeMonacoModels() {
+        this.getFiles().forEach(file => file.disposeMonacoModel());
+    }
+
+    createMonacoModels() {
+        this.getFiles().forEach(file => file.getMonacoModel());
+    }
+
+    getFolderContentsRecursively(allWorkspaces: Workspace[]): Workspace[] {
+        let ret: Workspace[] = allWorkspaces.filter(w => w.parent_folder_id == this.id);
+        for (let workspace of ret.slice()) {
+            if (workspace.isFolder) {
+                ret = ret.concat(workspace.getFolderContentsRecursively(allWorkspaces));
+            }
+        }
+        return ret;
+    }
+
 }
 

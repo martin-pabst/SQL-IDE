@@ -1,16 +1,19 @@
 import * as monaco from 'monaco-editor';
 import { ajax } from "../communication/AjaxHelper.js";
-import { getUserDisplayName, LoginRequest, LoginResponse, LogoutRequest, UserData } from "../communication/Data.js";
+import { getUserDisplayName, LoginRequest, LoginResponse, LogoutRequest, UserData, type Application } from "../communication/Data.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
 import { AutoLogout } from "./AutoLogout.js";
 import { Main } from "./Main.js";
 import { UserMenu } from "./gui/UserMenu.js";
 import jQuery from "jquery";
+import { PruefungManagerForStudents } from './pruefung/PruefungManagerForStudents.js';
 
 export class Login {
 
     loggedInWithVidis: boolean = false;
     vidis_id_token: string = "";
+
+    static ApplicationSQLIde: Application = 2;
 
     constructor(private main: Main) {
         new AutoLogout(this);
@@ -102,58 +105,37 @@ export class Login {
         this.main.waitOverlay.show('Bitte warten, der letzte Bearbeitungsstand wird noch gespeichert ...');
 
         if (this.main.workspacesOwnerId != this.main.user.id) {
-            this.main.projectExplorer.onHomeButtonClicked();
+            this.main.teacherExplorer.onHomeButtonClicked();
         }
 
         PushClientManager.getInstance().close();
 
-        this.main.networkManager.sendUpdates(() => {
+        this.main.notifier.connect(null);
 
-            this.main.notifier.connect(null);
+        let logoutRequest: LogoutRequest = {
+            currentWorkspaceId: this.main.currentWorkspace?.id
+        }
 
-            let logoutRequest: LogoutRequest = {
-                currentWorkspaceId: this.main.currentWorkspace?.id
-            }
+        this.main.networkManager.sendUpdatesAsync().then(() => {
 
-            this.main.networkManager.sendUpdateUserSettings(() => {
+            this.main.pruefungManagerForStudents?.stopPruefung(false);
 
-                ajax('logout', logoutRequest, () => {
-                    // window.location.href = 'index.html';
+            ajax('logout', logoutRequest, () => {
+                // window.location.href = 'index.html';
 
-                    if (this.loggedInWithVidis) {
-                        // window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fonline-ide.de/vidisLogout");
-                        window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fsql-ide.de/vidisLogout");
-                    } else {
-                        window.location.assign("/" + (isSilent ? "?silent=true" : ""));
+                if (this.loggedInWithVidis) {
+                    // window.location.assign("https://aai-test.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fonline-ide.de/vidisLogout");
+                    window.location.assign("https://aai.vidis.schule/auth/realms/vidis/protocol/openid-connect/logout?ID_TOKEN_HINT=" + this.vidis_id_token + "&post_logout_redirect_uri=https%3A%2F%2Fsql-ide.de/vidisLogout");
+                } else {
+                    window.location.assign("/" + (isSilent ? "?silent=true" : ""));
 
-                        // jQuery('#login').show();
-                        // this.main.waitOverlay.hide();
-                        // jQuery('#login-message').empty();
-                        // this.main.getMonacoEditor().setModel(monaco.editor.createModel("", "myJava"));
-                        // this.main.projectExplorer.fileListPanel.clear();
-                        // this.main.projectExplorer.workspaceListPanel.clear();
-
-                        // this.main.databaseExplorer.clear();
-                        // this.main.resultsetPresenter.clear();
-
-                        // if (this.main.user.is_teacher) {
-                        //     this.main.teacherExplorer.removePanels();
-                        //     this.main.teacherExplorer = null;
-                        // }
-
-
-                        // this.main.currentWorkspace = null;
-                        // this.main.user = null;
-                    }
-
-
-
-                });
-
+                }
 
             });
 
-        }, true);
+
+        });
+
 
     }
 
@@ -167,7 +149,7 @@ export class Login {
         let loginRequest: LoginRequest = {
             username: singleUseToken ? "" : <string>jQuery('#login-username').val(),
             password: singleUseToken ? "" : <string>jQuery('#login-password').val(),
-            language: 1, 
+            application: Login.ApplicationSQLIde,
             singleUseToken: singleUseToken || null
         }
 
@@ -192,12 +174,13 @@ export class Login {
                 this.main.waitOverlay.show('Bitte warten...');
 
                 let user: UserData = response.user;
-                if (user.settings == null || user.settings.helperHistory == null) {
-                    user.settings = {
+                if (user.sql_gui_state == null || user.sql_gui_state.helperHistory == null) {
+                    user.sql_gui_state = {
                         helperHistory: {
+                            newFileHelperDone: false
                         },
                         viewModes: null,
-                        classDiagram: null
+                        language: "de"
                     }
                 }
 
@@ -224,13 +207,23 @@ export class Login {
 
                     that.main.networkManager.initializeTimer();
 
-                    that.main.projectExplorer.fileListPanel.setFixed(!user.is_teacher);
-                    that.main.projectExplorer.workspaceListPanel.setFixed(!user.is_teacher);
-
                     that.main.viewModeController.initViewMode();
                     that.main.bottomDiv.hideHomeworkTab();
 
-                    that.main.networkManager.initializeSSE();
+                    that.main.networkManager.initializePushClientManager();
+
+                    this.main.pruefungManagerForStudents?.close();
+
+                    if (!user.is_teacher && !user.is_admin && !user.is_schooladmin) {
+                        this.main.pruefungManagerForStudents = new PruefungManagerForStudents(this.main);
+                        if (response.activePruefung != null) {
+
+                            let workspaceData = this.main.workspaceList.filter(w => w.pruefung_id == response.activePruefung.id)[0].getWorkspaceData(true);
+
+                            this.main.pruefungManagerForStudents.startPruefung(response.activePruefung);
+                        }
+                    }
+
 
                 }
 

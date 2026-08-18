@@ -27,6 +27,7 @@ import { WriteQueryManager } from "./WriteQueryManager.js";
 import gridUrl from '/include/graphics/grid.svg';
 
 import jQuery from "jquery";
+import { GUIFile } from '../compiler/parser/GUIFile.js';
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -276,7 +277,7 @@ export class MainEmbedded implements MainBase {
             readOnly: false,
             lineNumbersMinChars: 4
         });
-        this.editor.editor.setModel(module.model);
+        this.editor.editor.setModel(module.file.getMonacoModel());
 
 
         if (module.editorState != null) {
@@ -289,7 +290,7 @@ export class MainEmbedded implements MainBase {
 
     readScripts() {
 
-        let modules = this.currentWorkspace.moduleStore.getModules(false);
+        let modules = this.currentWorkspace.moduleStore.getModules();
 
         let that = this;
 
@@ -332,7 +333,7 @@ export class MainEmbedded implements MainBase {
                             }, 1000);
                             that.fileExplorer?.setFirstFileActive();
                             if (that.fileExplorer == null) {
-                                let modules = that.currentWorkspace.moduleStore.getModules(false);
+                                let modules = that.currentWorkspace.moduleStore.getModules();
                                 if (modules.length > 0) that.setModuleActive(modules[0]);
                             }
                         }
@@ -350,12 +351,12 @@ export class MainEmbedded implements MainBase {
 
     saveScripts() {
 
-        let modules = this.currentWorkspace.moduleStore.getModules(false);
+        let modules = this.currentWorkspace.moduleStore.getModules();
 
         let scriptList: string[] = [];
         let oneNotSaved: boolean = false;
 
-        modules.forEach(m => oneNotSaved = oneNotSaved || !m.file.saved);
+        modules.forEach(m => oneNotSaved = oneNotSaved || !m.file.isSaved());
 
         if (oneNotSaved) {
 
@@ -363,7 +364,7 @@ export class MainEmbedded implements MainBase {
                 scriptList.push(module.file.name);
                 let scriptId = this.config.id + module.file.name;
                 this.indexedDB.writeScript(scriptId, module.getProgramTextFromMonacoModel());
-                module.file.saved = true;
+                module.file.setSaved(true);
                 // console.log("Saving script " + scriptId);
             }
 
@@ -409,8 +410,9 @@ export class MainEmbedded implements MainBase {
     }
 
     addModule(script: JOScript): Module {
-        let module: Module = Module.restoreFromData({
-            id: this.currentWorkspace.moduleStore.getModules(true).length,
+
+        let file: GUIFile = GUIFile.restoreFromData(this, {
+            id: this.currentWorkspace.moduleStore.getModules().length,
             name: script.title,
             text: script.text,
             text_before_revision: null,
@@ -419,14 +421,21 @@ export class MainEmbedded implements MainBase {
             version: 1,
             workspace_id: 0,
             forceUpdate: false,
-            file_type: 11
-        }, this);
+            identical_to_repository_version: true,
+            isFolder: false,
+            parent_folder_id: null,
+            is_copy_of_id: null,
+            repository_file_version: null,
+            sorting_order: 0
+        });
+
+        let module: Module = new Module(file, this);
 
         this.currentWorkspace.moduleStore.putModule(module);
 
         let that = this;
 
-        module.model.onDidChangeContent(() => {
+        module.file.getMonacoModel().onDidChangeContent(() => {
             that.considerShowingCodeResetButton();
         });
 

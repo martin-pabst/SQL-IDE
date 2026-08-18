@@ -14,8 +14,8 @@ export class AllDatabaseExporterImporter {
     async saveWorkspaceToZipFile(workspace: Workspace, jsZip: JSZip, main: Main): Promise<void>{
         let folder = jsZip.folder(workspace.name);
 
-        for(let module of workspace.moduleStore.getModules(false)){
-            let content = module.file.text;
+        for(let module of workspace.moduleStore.getModules()){
+            let content = module.file.getText();
             let filename = module.file.name;
             folder.file(filename, content);
         }

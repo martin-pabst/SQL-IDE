@@ -25,6 +25,7 @@
     "vite": "^5.4.10"
   },
   "dependencies": {
+    "@dragdroptouch/drag-drop-touch": "^2.0.3",
     "@zip.js/zip.js": "^2.8.2",
     "diff": "^5.1.0",
     "diff-match-patch": "^1.0.5",

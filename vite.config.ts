@@ -41,13 +41,13 @@ export default {
   },
   server: {
     proxy: {
-      '/servlet': 'http://localhost:6500',
-      '/servlet/websocket': { target: 'ws://localhost:6500', ws: true },
-      '/servlet/pushWebsocket': { target: 'ws://localhost:6500', ws: true },
-      '/worker': {
-        rewrite: (path) => path.replace('/worker', '/dist/worker'),
-        target: "http://localhost:4000"
-      }
+      '/servlet': 'http://localhost:5500',
+      '/servlet/websocket': { target: 'ws://localhost:5500', ws: true },
+      '/servlet/pushWebsocket': { target: 'ws://localhost:5500', ws: true },
+      // '/worker': {
+      //   rewrite: (path) => path.replace('/worker', '/dist/worker'),
+      //   target: "http://localhost:4000"
+      // }
     }
   },
 

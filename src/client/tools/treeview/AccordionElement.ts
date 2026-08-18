@@ -1,4 +1,4 @@
-import { DOM } from "../../DOM";
+import { DOM } from "../DOM";
 import { ExpandCollapseComponent, ExpandCollapseState } from "../ExpandCollapseComponent";
 import { IconButtonComponent } from "../IconButtonComponent";
 import { AccordionElementInterface } from "./AccordionElementInterface";

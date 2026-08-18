@@ -1,11 +1,10 @@
-import { AccordionMessages } from "../../../client/main/gui/language/GUILanguage.ts";
-import { DOM } from "../../DOM.ts";
-import { ContextMenuItem, isIPad, makeEditable, openContextMenu, preventTouchDefault } from "../../HtmlTools.ts";
-import { TabletConsoleLog } from "../../TabletConsoleLog.ts";
+import { DOM } from "../DOM.ts";
+import { ContextMenuItem, isIPad, makeEditable, openContextMenu } from "../HtmlTools.ts";
 import { ExpandCollapseComponent, ExpandCollapseListener, ExpandCollapseState } from "../ExpandCollapseComponent.ts";
 import { IconButtonComponent } from "../IconButtonComponent.ts";
 import { DragKind, Treeview } from "./Treeview.ts";
 import { TreeviewMessages } from "./TreeviewMessages.ts";
+import { AccordionMessages } from "../../main/gui/language/AccordionMessages.ts";
 
 export type TreeviewNodeOnClickHandler<E> = (element: E | undefined) => void;
 

@@ -1,0 +1,13 @@
+.joeCssFence {
+    .joe_teacherExplorerClassButtons {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        line-height: 14px;
+        align-items: center;
+    }
+
+    .joe_teacherExplorerClassButtons>.joe_toggleButton {
+        margin-right: 6px;
+    }
+}

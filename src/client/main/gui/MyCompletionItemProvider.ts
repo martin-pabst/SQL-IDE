@@ -22,7 +22,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
 
 
         let module: Module =
-            this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
+            this.main.getCurrentWorkspace().getModuleForMonacoModel(model);
 
         if (module == null || module.mainSymbolTable == null) {
             return null;
@@ -32,7 +32,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             let that = this;
 
             let wfc = function waitForCompiler(){
-                if(module.file.dirty){
+                if(module.isDirty()){
                     setTimeout(() => {
                         wfc();
                     }, 100);
@@ -63,7 +63,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         // }, 500);
 
         let module: Module =
-            this.main.getCurrentWorkspace().getModuleByMonacoModel(model);
+            this.main.getCurrentWorkspace().getModuleForMonacoModel(model);
 
         if (module == null || module.mainSymbolTable == null) {
             return null;

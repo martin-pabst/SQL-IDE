@@ -8,6 +8,7 @@ import { MainBase } from "../main/MainBase.js";
 import { LoadableDatabase } from "./DatabaseLoader.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import * as zip from "@zip.js/zip.js";
+import { GUIFile } from "../compiler/parser/GUIFile.js";
 
 export class MySqlImporter {
 
@@ -100,16 +101,9 @@ export class MySqlImporter {
         let lexOutput = lexer.lex(text);
 
         let parser: Parser = new Parser();
-        let m: Module = new Module({
-            dirty: false,
-            name: "",
-            saved: true,
-            student_edited_after_revision: false,
-            submitted_date: null,
-            text: text,
-            text_before_revision: null,
-            version: 0
-        }, this.main);
+
+        let file = new GUIFile(this.main, "imported.sql", text);
+        let m: Module = new Module(file, this.main);
         m.tokenList = lexOutput.tokens;
 
         parser.parse(m);
