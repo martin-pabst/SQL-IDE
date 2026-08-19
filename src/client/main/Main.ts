@@ -32,6 +32,7 @@ import { setCookie } from "../tools/HttpTools.js";
 import jQuery from "jquery";
 import type { PruefungManagerForStudents } from "./pruefung/PruefungManagerForStudents.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
+import type { GUIFile } from "../compiler/parser/GUIFile.js";
 
 export class Main implements MainBase {
     isEmbedded(): boolean {
@@ -53,7 +54,10 @@ export class Main implements MainBase {
         return this.bottomDiv;
     }
 
-    // VORSICHT: ggf. Module -> any
+    getCurrentlyEditedFile(): GUIFile {
+        return this.currentWorkspace.getCurrentlyEditedModule().file;
+    }
+
     getCurrentlyEditedModule(): Module {
         return this.currentWorkspace.getCurrentlyEditedModule();
     }
@@ -66,8 +70,8 @@ export class Main implements MainBase {
         return this.compiler;
     }
 
-    setModuleActive(module: Module) {
-        this.projectExplorer.setFileActive(module.file);
+    setFileActive(file: GUIFile) {
+        this.projectExplorer.setFileActive(file);
     }
 
     getSemicolonAngel(): SemicolonAngel {

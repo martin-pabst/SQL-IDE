@@ -1,6 +1,5 @@
 import * as monaco from 'monaco-editor';
 import { Compiler } from "../compiler/Compiler.js";
-import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { Workspace } from "../workspace/Workspace.js";
@@ -11,20 +10,23 @@ import { HistoryViewer } from "./gui/HistoryViewer.js";
 import { ResultsetPresenter } from "./gui/ResultsetPresenter.js";
 import { RightDiv } from "./gui/RightDiv.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
+import type { GUIFile } from '../compiler/parser/GUIFile.js';
+import type { Module } from '../compiler/parser/Module.js';
 
 export interface MainBase {
     compileIfDirty();
 
     version: number;
 
-    getCurrentlyEditedModule(): import("../compiler/parser/Module").Module;
+    getCurrentlyEditedFile(): GUIFile;
+    getCurrentlyEditedModule(): Module;
     getMonacoEditor(): monaco.editor.IStandaloneCodeEditor;
     getCurrentWorkspace(): Workspace;
     getRightDiv(): RightDiv;
     getBottomDiv(): BottomDiv;
     getActionManager(): ActionManager;
     getCompiler(): Compiler;
-    setModuleActive(module: Module);
+    setFileActive(file: GUIFile);
     getSemicolonAngel(): SemicolonAngel;
     isEmbedded(): boolean;
 

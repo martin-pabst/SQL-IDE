@@ -19,10 +19,7 @@ import '/assets/css/embedded.css';
 
 // declare const require: any;
 
-export type ScriptType = "sql" | "hint";
-
 export type JOScript = {
-    type: ScriptType;
     title: string;
     text: string;
 }
@@ -97,10 +94,7 @@ export class EmbeddedStarter {
             let scriptList: JOScript[] = [];
             $div.find('script').each((index: number, element: HTMLElement) => {
                 let $script = jQuery(element);
-                let type: ScriptType = "sql";
-                if ($script.data('type') != null) type = <ScriptType>($script.data('type'));
                 let script: JOScript = {
-                    type: type,
                     title: $script.attr('title'),
                     text: $script.text().trim()
                 };
@@ -115,7 +109,9 @@ export class EmbeddedStarter {
 
     initDiv($div: JQuery<HTMLElement>, scriptList: JOScript[]) {
 
-        let me: MainEmbedded = new MainEmbedded($div, scriptList);
+        $div.addClass('joeCssFence');
+
+        new MainEmbedded($div, scriptList);
 
     }
 

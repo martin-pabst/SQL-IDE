@@ -412,7 +412,7 @@ export class Editor {
 
         if (position == null) position = this.editor.getPosition();
 
-        let module = this.getCurrentlyEditedModule();
+        let module = this.main.getCurrentlyEditedModule();
         if (module == null) {
             this.elementDecoration = this.editor.deltaDecorations(this.elementDecoration, []);
             return;
@@ -494,9 +494,6 @@ export class Editor {
 
     }
 
-    getCurrentlyEditedModule(): Module {
-        return this.main.getCurrentlyEditedModule();
-    }
 
 
 }

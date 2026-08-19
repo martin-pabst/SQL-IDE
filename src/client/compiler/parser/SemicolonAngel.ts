@@ -37,14 +37,14 @@ export class SemicolonAngel {
         let time = new Date().getTime();
         this.semicolonPositions = this.semicolonPositions.filter(p => p.isThereAgain);
 
-        let currentlyEditedModule = this.main.getCurrentlyEditedModule();
+        let currentlyEditedFile = this.main.getCurrentlyEditedFile();
         let cursorLine = this.main.getMonacoEditor().getPosition()?.lineNumber;
 
         if(typeof cursorLine == "undefined") return;
 
         this.semicolonPositions.filter(p => time - p.firstSeenMs > 2000).forEach(p => {
 
-            let isCurrentModule = p.module.file.id != null && p.module.file.id == currentlyEditedModule.file.id;
+            let isCurrentModule = p.module.file.id != null && p.module.file.id == currentlyEditedFile.id;
 
             let editOperations: monaco.editor.IIdentifiedSingleEditOperation[] = [
                 {

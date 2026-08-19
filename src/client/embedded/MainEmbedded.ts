@@ -17,17 +17,17 @@ import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
 import { makeTabs, openContextMenu } from "../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
-import { EmbeddedFileExplorer } from "./EmbeddedFileExplorer.js";
 import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
 import { EmbeddedSlider } from "./EmbeddedSlider.js";
 import { JOScript } from "./EmbeddedStarter.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
 
-import gridUrl from '/include/graphics/grid.svg';
+import gridUrl from '/assets/graphics/grid.svg';
 
 import jQuery from "jquery";
 import { GUIFile } from '../compiler/parser/GUIFile.js';
+import { EmbeddedFileExplorer } from './EmbeddedFileExplorer.js';
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -64,12 +64,16 @@ export class MainEmbedded implements MainBase {
         return this.actionManager;
     }
 
-    getCurrentlyEditedModule(): Module {
-        if (this.config.withFileList) {
-            return this.fileExplorer.currentFile?.module;
+    getCurrentlyEditedFile(): GUIFile {
+        if (this.config.withFileList && this.lastActiveFile != null) {
+            return this.lastActiveFile;
         } else {
-            return this.currentWorkspace.moduleStore.getFirstModule();
+            return this.currentWorkspace.moduleStore.getFirstModule().file;
         }
+    }
+
+    getCurrentlyEditedModule(): Module {
+        return this.currentWorkspace.getCurrentlyEditedModule();
     }
 
     getDatabaseTool(): DatabaseTool {
@@ -148,6 +152,9 @@ export class MainEmbedded implements MainBase {
     initialTemplateDump: Uint8Array;
     initialStatements: string[];
 
+    lastActiveFile?: GUIFile;
+
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
@@ -156,6 +163,7 @@ export class MainEmbedded implements MainBase {
 
         this.initGUI($div);
 
+        this.currentWorkspace = new Workspace("Embedded-Workspace", this, 0);
 
         this.databaseExplorer = new DatabaseExplorer(this, this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
@@ -184,14 +192,13 @@ export class MainEmbedded implements MainBase {
 
     initDatabase() {
         this.resetDatabase(() => {
-            this.initScripts();
 
             this.indexedDB = new EmbeddedIndexedDB("SQL-IDE");
             this.indexedDB.open(() => {
 
                 if (this.config.id != null) {
                     this.writeQueryManager.indexedDBReady(this.indexedDB);
-                    this.readScripts();
+                    this.readScripts(() => { });
                 }
 
             });
@@ -207,21 +214,40 @@ export class MainEmbedded implements MainBase {
         })
     }
 
+    showFirstFile() {
+
+        if (this.config.withFileList) {
+            let firstFile = this.fileExplorer.selectFirstFileIfPresent();
+            this.setFileActive(firstFile);
+        } else {
+            this.setFileActive(this.currentWorkspace.getFirstFile());
+        }
+
+    }
+
     initScripts() {
 
         this.fileExplorer?.removeAllFiles();
 
-        this.initWorkspace(this.scriptList);
+        this.currentWorkspace = new Workspace("Embedded-Workspace", this, 0);
 
-        if (this.config.withFileList) {
-            this.fileExplorer = new EmbeddedFileExplorer(this.currentWorkspace.moduleStore, this.$filesListDiv, this);
-            this.fileExplorer.setFirstFileActive();
-            this.scriptList.filter((script) => script.type == "hint").forEach((script) => this.fileExplorer.addHint(script));
-        } else {
-            this.setModuleActive(this.currentWorkspace.moduleStore.getFirstModule());
+        let i = 0;
+        for (let script of this.scriptList) {
+            this.addFile(script);
         }
 
+        if (this.config.withFileList) {
+            for (let file of this.currentWorkspace.getFiles()) {
+                this.fileExplorer.addFile(file);
+            }
+        } else {
+            this.setFileActive(this.currentWorkspace.getFirstFile());
+        }
+
+        this.showFirstFile();
+
     }
+
 
 
     readConfig($div: JQuery<HTMLElement>) {
@@ -257,19 +283,23 @@ export class MainEmbedded implements MainBase {
 
     }
 
-    setModuleActive(module: Module) {
+    setFileActive(file: GUIFile) {
 
-        if (this.config.withFileList && this.fileExplorer.currentFile != null) {
-            this.fileExplorer.currentFile.module.editorState = this.getMonacoEditor().saveViewState();
+        if (!file) return;
+
+        if (this.lastActiveFile) {
+            this.lastActiveFile.saveViewState(this.getMonacoEditor());
         }
 
         if (this.config.withFileList) {
-            this.fileExplorer.markFile(module);
+            this.fileExplorer.markAsSelectedButDontInvokeCallback(file);
         }
+
+        this.lastActiveFile = file;
 
         /**
          * WICHTIG: Die Reihenfolge der beiden Operationen ist extrem wichtig.
-         * Falls das Model im readonly-Zustand gesetzt wird, funktioniert <Strg + .> 
+         * Falls das Model im readonly-Zustand gesetzt wird, funktioniert <Strg + .>
          * nicht und die Lightbulbs werden nicht angezeigt, selbst dann, wenn
          * später readonly = false gesetzt wird.
          */
@@ -277,37 +307,45 @@ export class MainEmbedded implements MainBase {
             readOnly: false,
             lineNumbersMinChars: 4
         });
-        this.editor.editor.setModel(module.file.getMonacoModel());
 
-
-        if (module.editorState != null) {
-            this.getMonacoEditor().restoreViewState(module.editorState);
+        try {
+            this.editor.editor.setModel(file.getMonacoModel());
+        } catch (e) {
+            console.log("Caught!");
         }
+
+        file.restoreViewState(this.getMonacoEditor());
 
     }
 
 
+    readScripts(callback: () => void) {
 
-    readScripts() {
-
-        let modules = this.currentWorkspace.moduleStore.getModules();
+        let files = this.currentWorkspace.getFiles();
+        files.forEach(f => {
+            f.getMonacoModel();
+            f.setSaved(true);
+        })
 
         let that = this;
 
         this.indexedDB.getScript(this.config.id, (scriptListJSon) => {
             if (scriptListJSon == null) {
-                setInterval(() => {
-                    that.saveScripts();
-                }, 1000);
+                setTimeout(() => {
+                    setInterval(() => {
+                        that.saveScripts();
+                    }, 1000);
+                }, 2000);
+                callback();
             } else {
 
                 let scriptList: string[] = JSON.parse(scriptListJSon);
                 let countDown = scriptList.length;
 
-                for (let module of modules) {
-                    that.fileExplorer?.removeModule(module);
-                    that.removeModule(module);
+                for (let file of files.slice()) {
+                    that.fileExplorer?.removeFile(file, false);  // calls MainEmbedded.removeFile subsequently
                 }
+                that.currentWorkspace.removeAllFiles();
 
                 for (let name of scriptList) {
 
@@ -315,14 +353,16 @@ export class MainEmbedded implements MainBase {
                     this.indexedDB.getScript(scriptId, (script) => {
                         if (script != null) {
 
-                            let module = that.addModule({
-                                title: name,
-                                text: script,
-                                type: "sql"
-                            });
+                            script = this.eraseDokuwikiSearchMarkup(script);
 
-                            that.fileExplorer?.addModule(module);
-                            that.$codeResetButton.fadeIn(1000);
+                            let file = new GUIFile(this, name, script);
+                            file.getMonacoModel();
+                            file.setSaved(true);
+
+                            that.fileExplorer?.addFile(file);
+                            that.currentWorkspace.addFile(file);
+                            that.currentWorkspace.moduleStore.putModule(new Module(file, that));
+                            that.showResetButton();
 
                             // console.log("Retrieving script " + scriptId);
                         }
@@ -330,45 +370,52 @@ export class MainEmbedded implements MainBase {
                         if (countDown == 0) {
                             setInterval(() => {
                                 that.saveScripts();
+                                that.showFirstFile();
                             }, 1000);
-                            that.fileExplorer?.setFirstFileActive();
-                            if (that.fileExplorer == null) {
-                                let modules = that.currentWorkspace.moduleStore.getModules();
-                                if (modules.length > 0) that.setModuleActive(modules[0]);
-                            }
+                            callback();
                         }
                     })
 
                 }
+
 
             }
 
 
         });
 
-
     }
+
+    eraseDokuwikiSearchMarkup(text: string): string {
+        return text.replace(/<span class="search\whit">(.*?)<\/span>/g, "$1");
+    }
+
+    showResetButton() {
+        this.$codeResetButton.fadeIn(1000);
+    }
+
 
     saveScripts() {
 
-        let modules = this.currentWorkspace.moduleStore.getModules();
+        let files = this.currentWorkspace.getFiles();
 
         let scriptList: string[] = [];
         let oneNotSaved: boolean = false;
 
-        modules.forEach(m => oneNotSaved = oneNotSaved || !m.file.isSaved());
+        files.forEach(file => oneNotSaved = oneNotSaved || !file.isSaved());
 
         if (oneNotSaved) {
 
-            for (let module of modules) {
-                scriptList.push(module.file.name);
-                let scriptId = this.config.id + module.file.name;
-                this.indexedDB.writeScript(scriptId, module.getProgramTextFromMonacoModel());
-                module.file.setSaved(true);
+            for (let file of files) {
+                scriptList.push(file.name);
+                let scriptId = this.config.id + file.name;
+                this.indexedDB.writeScript(scriptId, file.getText());
+                file.setSaved(true);
                 // console.log("Saving script " + scriptId);
             }
 
             this.indexedDB.writeScript(this.config.id, JSON.stringify(scriptList));
+
         }
 
     }
@@ -396,54 +443,25 @@ export class MainEmbedded implements MainBase {
 
     }
 
-    initWorkspace(scriptList: JOScript[]) {
-        this.currentWorkspace = new Workspace("Embedded-Workspace", this, 0);
+    addFile(script: JOScript): GUIFile {
 
-        let i = 0;
-        for (let script of scriptList) {
-            if (script.type == "sql") {
-                this.addModule(script);
-            }
+        let file = new GUIFile(this, script.title, script.text);
+        file.id = this.currentWorkspace.getFiles().length;
 
-        }
-
-    }
-
-    addModule(script: JOScript): Module {
-
-        let file: GUIFile = GUIFile.restoreFromData(this, {
-            id: this.currentWorkspace.moduleStore.getModules().length,
-            name: script.title,
-            text: script.text,
-            text_before_revision: null,
-            submitted_date: null,
-            student_edited_after_revision: false,
-            version: 1,
-            workspace_id: 0,
-            forceUpdate: false,
-            identical_to_repository_version: true,
-            isFolder: false,
-            parent_folder_id: null,
-            is_copy_of_id: null,
-            repository_file_version: null,
-            sorting_order: 0
-        });
-
-        let module: Module = new Module(file, this);
-
-        this.currentWorkspace.moduleStore.putModule(module);
+        this.currentWorkspace.addFile(file);
+        this.currentWorkspace.moduleStore.putModule(new Module(file, this));
 
         let that = this;
 
-        module.file.getMonacoModel().onDidChangeContent(() => {
+        file.getMonacoModel().onDidChangeContent(() => {
             that.considerShowingCodeResetButton();
         });
 
-        return module;
+        return file;
     }
 
-    removeModule(module: Module) {
-        this.currentWorkspace.moduleStore.removeModule(module);
+    removeFile(file: GUIFile) {
+        this.currentWorkspace.removeFile(file);
     }
 
 
@@ -503,6 +521,7 @@ export class MainEmbedded implements MainBase {
             let $filesDiv = this.makeFilesDiv();
             $bottomDiv.prepend($filesDiv);
             new EmbeddedSlider($filesDiv, false, false, () => { });
+            this.fileExplorer = new EmbeddedFileExplorer($filesDiv, this);
         }
         // makeTabs($bottomDivInner);
         $div.append($bottomDiv);
@@ -726,13 +745,7 @@ export class MainEmbedded implements MainBase {
     makeFilesDiv(): JQuery<HTMLElement> {
 
 
-        let $filesDiv = jQuery('<div class="joe_bottomDivFiles jo_scrollable"></div>');
-
-        let $filesHeader = jQuery('<div class="joe_filesHeader jo_tabheading jo_active"  style="line-height: 24px">Dateien</div>');
-
-        this.$filesListDiv = jQuery('<div class="joe_filesList jo_scrollable"></div>');
-
-        $filesDiv.append($filesHeader, this.$filesListDiv);
+        let $filesDiv: JQuery<HTMLDivElement> = jQuery('<div class="joe_bottomDivFiles"></div>');
 
         return $filesDiv;
     }
