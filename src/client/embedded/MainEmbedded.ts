@@ -370,8 +370,8 @@ export class MainEmbedded implements MainBase {
                         if (countDown == 0) {
                             setInterval(() => {
                                 that.saveScripts();
-                                that.showFirstFile();
                             }, 1000);
+                            that.showFirstFile();
                             callback();
                         }
                     })
