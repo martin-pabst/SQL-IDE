@@ -7,6 +7,7 @@ import { Main } from "./Main.js";
 import { UserMenu } from "./gui/UserMenu.js";
 import jQuery from "jquery";
 import { PruefungManagerForStudents } from './pruefung/PruefungManagerForStudents.js';
+import { LoginMessages } from './gui/language/LoginMessages.js';
 
 export class Login {
 
@@ -158,6 +159,12 @@ export class Login {
             if (!response.success) {
                 jQuery('#login-message').html('Fehler: Benutzername und/oder Passwort ist falsch.');
             } else {
+
+                if (response.penaltyTimeInSeconds > 0) {
+                    jQuery('#login-message').html(LoginMessages.penaltyTime(response.penaltyTimeInSeconds));
+                    jQuery('#login-spinner>img').hide();
+                    return;
+                }
 
                 this.loggedInWithVidis = response.vidis_id_token != null;
                 this.vidis_id_token = response.vidis_id_token;
