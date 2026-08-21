@@ -8,7 +8,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     websocket: WebSocket;
 
-    isClosed: boolean;
+    state: "closed" | "connecting" | "open" = "closed";
 
     openedTimestamp: number;
 
@@ -20,7 +20,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
     open(): void {
 
-        this.isClosed = false;
+        this.state = "connecting";
 
         try {
 
@@ -29,13 +29,14 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
             this.websocket = new WebSocket(url);
     
             this.websocket.onopen = (event) => {
+                this.state = "open";
                 this.openedTimestamp = performance.now();
             }
     
             this.websocket.onclose = (event) => {
                 console.log("Websocket has been closed, code: " + event.code + ", reason: " + event.reason);
 
-                this.isClosed = true;
+                this.state = "closed";
                 
                 if(event.code == 1001 && performance.now() - this.openedTimestamp > 1e4){
                     // timeout? => reopen
@@ -43,7 +44,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
                     this.open();
                 } else {
                     this.manager.onStrategyFailed(this);
-                    this.isClosed = true;
+                    this.state = "closed";
                 }
                 
             }
@@ -52,7 +53,7 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
                 console.log("Error on websocket, type: " + event.type);
                 this.websocket.close();
                 this.manager.onStrategyFailed(this);
-                this.isClosed = true;
+                this.state = "closed";
             }
     
             this.websocket.onmessage = (event) => {
@@ -69,26 +70,30 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
 
         } catch (ex){
             this.manager.onStrategyFailed(this);
-            this.isClosed = true;
+            this.state = "closed";
         }
 
     }
 
     doPing(){
         this.currentTimer = setTimeout(() => {
-            if(!this.isClosed){
-                this.websocket.send("ping");
-                this.doPing();
-            } else {
-                this.currentTimer = null;
-            }            
+            switch(this.state){
+                case "closed":
+                    this.currentTimer = null;
+                    return;
+                case "connecting":
+                    this.doPing();
+                    break;
+                case "open":
+                    this.websocket.send("ping");
+                    this.doPing();
+                    break;
+            }
         }, 25000);
-
     }
 
-
     async close() {
-        this.isClosed = true;
+        this.state = "closed";
         this.websocket.close();
     }
 
