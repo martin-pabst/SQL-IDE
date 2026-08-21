@@ -55,11 +55,11 @@ export class Main implements MainBase {
     }
 
     getCurrentlyEditedFile(): GUIFile {
-        return this.currentWorkspace.getCurrentlyEditedModule().file;
+        return this.currentWorkspace?.getCurrentlyEditedModule()?.file;
     }
 
     getCurrentlyEditedModule(): Module {
-        return this.currentWorkspace.getCurrentlyEditedModule();
+        return this.currentWorkspace?.getCurrentlyEditedModule();
     }
 
     getActionManager(): ActionManager {

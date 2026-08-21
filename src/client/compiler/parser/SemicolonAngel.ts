@@ -38,6 +38,7 @@ export class SemicolonAngel {
         this.semicolonPositions = this.semicolonPositions.filter(p => p.isThereAgain);
 
         let currentlyEditedFile = this.main.getCurrentlyEditedFile();
+        if(currentlyEditedFile == null) return;
         let cursorLine = this.main.getMonacoEditor().getPosition()?.lineNumber;
 
         if(typeof cursorLine == "undefined") return;
