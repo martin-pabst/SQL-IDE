@@ -1,13 +1,13 @@
 import { Main } from "../Main.js";
 import { UserData } from "../../communication/Data.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
-import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
+import { DatabaseImportExport } from "../../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
 import { ajax } from "../../communication/AjaxHelper.js";
-import { TemplateUploader } from "../../tools/TemplateUploader.js";
+import { TemplateUploader } from "../../../tools/TemplateUploader.js";
 import jQuery from "jquery";
-import { AllDatabaseExporterImporter } from "../../tools/AllDatabaseExporterImporter.js";
-import { downloadFile } from "../../tools/HtmlTools.js";
+import { AllDatabaseExporterImporter } from "../../../tools/AllDatabaseExporterImporter.js";
+import { downloadFile } from "../../../tools/HtmlTools.js";
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -161,7 +161,7 @@ export class MainMenu {
                                     new NewDatabaseDialog(that.main, owner_id, null);
                                 }
                             },
-                            { identifier: "Einstellungen...", action: () => { new DatabaseSettingsDialog(this.main, this.main.currentWorkspace) } },
+                            { identifier: "Einstellungen...", action: () => { this.main.projectExplorer.showSettings(this.main.currentWorkspace) } },
                             {
                                 identifier: "Export als Binärdump (.sqLite-File)...", action: () => {
                                     new DatabaseImportExport().saveToFile(this.main.getDatabaseTool());

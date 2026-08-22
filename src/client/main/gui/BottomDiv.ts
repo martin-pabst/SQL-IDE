@@ -1,4 +1,4 @@
-import { makeTabs } from "../../tools/HtmlTools.js";
+import { makeTabs } from "../../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
 import { ErrorManager } from "./ErrorManager.js";
 import { HomeworkManager } from "./HomeworkManager.js";

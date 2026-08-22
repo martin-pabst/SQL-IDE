@@ -1,5 +1,5 @@
 import { MainEmbedded } from "../../embedded/MainEmbedded.js";
-import { copyTextToClipboard, openContextMenu } from "../../tools/HtmlTools.js";
+import { copyTextToClipboard, openContextMenu } from "../../../tools/HtmlTools.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";

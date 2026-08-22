@@ -90,7 +90,12 @@ export class DatabaseTool {
         } else {
             // see https://v3.vitejs.dev/guide/features.html#web-workers
             // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
-            this.worker = new Worker(new URL("sqljsWorker.ts", import.meta.url), { type: 'module' });
+            // this.worker = new Worker(new URL("sqljsWorker.ts", import.meta.url), { type: 'module' });
+
+            if(this.worker != null){
+                this.worker.terminate();
+            }
+
             this.worker = new Worker(workerUrl, { type: 'module' });
         }
         let that = this;

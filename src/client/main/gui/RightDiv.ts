@@ -1,4 +1,4 @@
-import { makeTabs } from "../../tools/HtmlTools.js";
+import { makeTabs } from "../../../tools/HtmlTools.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
 

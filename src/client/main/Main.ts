@@ -4,7 +4,7 @@ import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
 import { SemicolonAngel } from "../compiler/parser/SemicolonAngel.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
-import { checkIfMousePresent, findGetParameter, getCookieValue } from "../tools/HtmlTools.js";
+import { checkIfMousePresent, findGetParameter, getCookieValue } from "../../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { ActionManager } from "./gui/ActionManager.js";
 import { BottomDiv } from "./gui/BottomDiv.js";
@@ -28,7 +28,7 @@ import { MainBase } from "./MainBase.js";
 
 import * as monaco from 'monaco-editor';
 import { NewNotifier } from "../communication/NewNotifier.js";
-import { setCookie } from "../tools/HttpTools.js";
+import { setCookie } from "../../tools/HttpTools.js";
 import jQuery from "jquery";
 import type { PruefungManagerForStudents } from "./pruefung/PruefungManagerForStudents.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";

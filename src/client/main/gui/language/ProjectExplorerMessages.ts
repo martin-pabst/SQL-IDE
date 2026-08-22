@@ -1,4 +1,4 @@
-import { lm } from "../../../tools/language/LanguageManager";
+import { lm } from "../../../../tools/language/LanguageManager";
 
 export class ProjectExplorerMessages {
 
@@ -14,16 +14,21 @@ Are you sure?`
     });
 
     static confirmDeleteWorkspaceFolderRecursively = (numberOfWorkspacesToDelete: number) => lm({
-        'de': `Sie sind dabei, einen Ordner mitsamt aller darin enthaltenen Workspaces und Unterordner rekursiv zu löschen.
-Insgesamt betrifft dies ${numberOfWorkspacesToDelete} Workspaces und Ordner.
+        'de': `Sie sind dabei, einen Ordner mitsamt aller darin enthaltenen Datenbanken und Unterordner rekursiv zu löschen.
+Insgesamt betrifft dies ${numberOfWorkspacesToDelete} Datenbanken und Ordner.
 Diese Opertion kann nicht wieder rückgängig gemacht werden!
 Sind Sie sicher?`,
-        'en': `You are about to delete a folder with all its workspaces and subfolders recursively.
-This affects a total of ${numberOfWorkspacesToDelete} workspaces and folders.
+        'en': `You are about to delete a folder with all its databases and subfolders recursively.
+This affects a total of ${numberOfWorkspacesToDelete} databases and folders.
 This operation cannot be undone!
 Are you sure?`
     });
 
+
+    static databaseSettings = () => lm({
+        'de': 'Datenbank-Einstellungen',
+        'en': 'Database settings'
+    });
 
     static noWorkspaceSelected = () => lm({
         'de': 'Kein Workspace ausgewählt',

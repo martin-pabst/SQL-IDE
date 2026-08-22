@@ -1,5 +1,5 @@
 import { DatabaseTool } from "../../sqljs-worker/DatabaseTools.js";
-import { isDate, isDateTime, isTime } from "../../tools/StringTools.js";
+import { isDate, isDateTime, isTime } from "../../../tools/StringTools.js";
 import { Error, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
 import { AlterTableNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";

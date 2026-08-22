@@ -34,7 +34,6 @@ export class Workspace {
 
     pruefung_id: number;
 
-    sql_history: string;
     databaseId: number;
     database: WDatabase;
     permissions: number; // 0: read-only, 1: read-write, 2: ddl
@@ -47,7 +46,6 @@ export class Workspace {
     };
 
     constructor(public name: string, private main: MainBase, public owner_id: number) {
-        this.sql_history = "";
         this.moduleStore = new ModuleStore(main);
     }
 
@@ -86,6 +84,9 @@ export class Workspace {
 
     addFile(file: GUIFile) {
         this.files.push(file);
+        if(!file.isFolder){
+            this.moduleStore.putModule(new Module(file, this.main));
+        }
     }
 
     removeFile(file: GUIFile) {
@@ -115,7 +116,6 @@ export class Workspace {
             comment: this.comment,
 
             // Database
-            sql_history: this.sql_history,
             database_id: this.databaseId,
             permissions: this.permissions
         }
@@ -155,7 +155,6 @@ export class Workspace {
         w.points = wd.points;
         w.comment = wd.comment;
 
-        w.sql_history = wd.sql_history;
         w.databaseId = wd.database_id;
         w.permissions = wd.permissions;
 

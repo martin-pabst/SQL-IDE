@@ -1,7 +1,7 @@
 import * as monaco from 'monaco-editor';
 import { Module } from "../../compiler/parser/Module.js";
-import { makeDiv } from "../../tools/HtmlTools.js";
-import { dateToStringWithoutTime, stringToDate } from "../../tools/StringTools.js";
+import { makeDiv } from "../../../tools/HtmlTools.js";
+import { dateToStringWithoutTime, stringToDate } from "../../../tools/StringTools.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import jQuery from "jquery";

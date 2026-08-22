@@ -4,8 +4,8 @@ import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, Creat
 import { Workspace } from "../workspace/Workspace.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { CacheManager } from "./CacheManager.js";
-import { TemplateUploader } from "../tools/TemplateUploader.js";
-import { FileTool } from "../tools/FileTool.js";
+import { TemplateUploader } from "../../tools/TemplateUploader.js";
+import { FileTool } from "../../tools/FileTool.js";
 import { PushClientManager } from "./pushclient/PushClientManager.js";
 import pako from 'pako'
 import jQuery from "jquery";
@@ -210,12 +210,11 @@ export class NetworkManager {
 
     }
 
-    sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number, callback: (error: string) => void) {
+    async sendCreateWorkspace(wd: CreateWorkspaceData, owner_id: number): Promise<boolean> {
 
         if (this.main.user.is_testuser) {
             wd.id = Math.round(Math.random() * 10000000);
-            callback(null);
-            return;
+            return null;
         }
 
         let request: CreateOrDeleteFileOrWorkspaceRequest = {
@@ -226,11 +225,12 @@ export class NetworkManager {
             userId: this.main.user.id
         }
 
-        ajax("createOrDeleteFileOrWorkspace", request, (response: CRUDResponse) => {
+        let response: CRUDResponse = await ajaxAsync("servlet/createOrDeleteFileOrWorkspace", request);
+        if (response.success) {
             wd.id = response.id;
-            callback(null);
-        }, callback);
-
+            return true;
+        }
+        return false;
     }
 
 

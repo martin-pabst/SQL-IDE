@@ -10,8 +10,8 @@ type FileType = {
 
 export class FileTypeManager {
     static filetypes: FileType[] = [
-        { name: "Textdatei", file_type: 1, iconclass: "img_file-dark-text", language: "text", suffix: ".txt" },
-        { name: "SQL-Quelltext", file_type: 0, iconclass: "img_file-dark-sql", language: "vscSQL", suffix: ".sql"},
+        { name: "Textdatei", file_type: 1, iconclass: "img_file-text-dark", language: "text", suffix: ".txt" },
+        { name: "SQL-Quelltext", file_type: 0, iconclass: "img_file-sql-dark", language: "vscSQL", suffix: ".sql"},
     ];
 
     static fileTypeToIconClass(file_type: number): string {

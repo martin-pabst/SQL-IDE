@@ -1,4 +1,4 @@
-import { Main } from "../../main/Main";
+import { Main } from "../../client/main/Main";
 import { openContextMenu } from "../HtmlTools";
 import { LanguageManagerMessages } from "./LanguagemanagerMessages";
 

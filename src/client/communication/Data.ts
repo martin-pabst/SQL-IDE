@@ -64,7 +64,6 @@ export type WorkspaceData = {
     version: number,
 
 
-    sql_history: string,
     database_id: number,
     permissions: number,
 

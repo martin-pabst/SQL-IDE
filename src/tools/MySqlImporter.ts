@@ -1,14 +1,14 @@
-import { Lexer } from "../compiler/lexer/Lexer.js";
-import { TokenType } from "../compiler/lexer/Token.js";
-import { AlterTableNode, CreateTableNode, InsertNode } from "../compiler/parser/AST.js";
-import { Module } from "../compiler/parser/Module.js";
-import { Parser, SQLStatement } from "../compiler/parser/Parser.js";
-import { StatementCleaner } from "../compiler/parser/StatementCleaner.js";
-import { MainBase } from "../main/MainBase.js";
+import { Lexer } from "../client/compiler/lexer/Lexer.js";
+import { TokenType } from "../client/compiler/lexer/Token.js";
+import { AlterTableNode, CreateTableNode, InsertNode } from "../client/compiler/parser/AST.js";
+import { Module } from "../client/compiler/parser/Module.js";
+import { Parser, SQLStatement } from "../client/compiler/parser/Parser.js";
+import { StatementCleaner } from "../client/compiler/parser/StatementCleaner.js";
+import { MainBase } from "../client/main/MainBase.js";
 import { LoadableDatabase } from "./DatabaseLoader.js";
-import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
+import { DatabaseTool } from "../client/sqljs-worker/DatabaseTools.js";
 import * as zip from "@zip.js/zip.js";
-import { GUIFile } from "../compiler/parser/GUIFile.js";
+import { GUIFile } from "../client/compiler/parser/GUIFile.js";
 
 export class MySqlImporter {
 

@@ -4,7 +4,7 @@ import { ExpandCollapseComponent, ExpandCollapseListener, ExpandCollapseState } 
 import { IconButtonComponent } from "../IconButtonComponent.ts";
 import { DragKind, Treeview } from "./Treeview.ts";
 import { TreeviewMessages } from "./TreeviewMessages.ts";
-import { AccordionMessages } from "../../main/gui/language/AccordionMessages.ts";
+import { AccordionMessages } from "../../client/main/gui/language/AccordionMessages.ts";
 
 export type TreeviewNodeOnClickHandler<E> = (element: E | undefined) => void;
 

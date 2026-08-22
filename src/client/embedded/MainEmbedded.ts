@@ -12,10 +12,10 @@ import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { RightDiv } from "../main/gui/RightDiv.js";
 import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { MainBase } from "../main/MainBase.js";
-import { DatabaseImportExport } from "../tools/DatabaseImportExport.js";
-import { DatabaseFetcher } from "../tools/DatabaseLoader.js";
+import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
+import { DatabaseFetcher } from "../../tools/DatabaseLoader.js";
 import { DatabaseTool } from "../sqljs-worker/DatabaseTools.js";
-import { makeTabs, openContextMenu } from "../tools/HtmlTools.js";
+import { makeTabs, openContextMenu } from "../../tools/HtmlTools.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { EmbeddedIndexedDB } from "./EmbeddedIndexedDB.js";
 import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
@@ -361,7 +361,6 @@ export class MainEmbedded implements MainBase {
 
                             that.fileExplorer?.addFile(file);
                             that.currentWorkspace.addFile(file);
-                            that.currentWorkspace.moduleStore.putModule(new Module(file, that));
                             that.showResetButton();
 
                             // console.log("Retrieving script " + scriptId);
@@ -449,7 +448,6 @@ export class MainEmbedded implements MainBase {
         file.id = this.currentWorkspace.getFiles().length;
 
         this.currentWorkspace.addFile(file);
-        this.currentWorkspace.moduleStore.putModule(new Module(file, this));
 
         let that = this;
 

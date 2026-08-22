@@ -5,11 +5,11 @@ import { Workspace } from "../../workspace/Workspace.js";
 import jQuery from "jquery";
 import { PushClientManager } from "../../communication/pushclient/PushClientManager.js";
 import * as monaco from 'monaco-editor'
-import { Treeview } from "../../tools/treeview/Treeview.js";
-import type { IconButtonComponent } from "../../tools/IconButtonComponent.js";
+import { Treeview } from "../../../tools/treeview/Treeview.js";
+import type { IconButtonComponent } from "../../../tools/IconButtonComponent.js";
 import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";
 import { TeacherExplorerMessages } from "./language/TeacherExplorerMessages.js";
-import { GUIToggleButton } from "../../tools/GUIToggleButton.js";
+import { GUIToggleButton } from "../../../tools/GUIToggleButton.js";
 import '/assets/css/teacherexplorer.css';
 
 

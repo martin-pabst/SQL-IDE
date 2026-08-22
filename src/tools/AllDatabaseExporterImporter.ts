@@ -1,6 +1,6 @@
 import JSZip from "jszip";
-import type { Main } from "../main/Main";
-import type { Workspace } from "../workspace/Workspace";
+import type { Main } from "../client/main/Main";
+import type { Workspace } from "../client/workspace/Workspace";
 
 export class AllDatabaseExporterImporter {
     async saveAllWorkspacesToZipFile(main: Main): Promise<JSZip>{

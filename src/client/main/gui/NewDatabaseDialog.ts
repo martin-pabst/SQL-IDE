@@ -1,13 +1,13 @@
-import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
-import { LoadableDatabase } from "../../tools/DatabaseLoader.js";
+import { DatabaseImportExport } from "../../../tools/DatabaseImportExport.js";
+import { LoadableDatabase } from "../../../tools/DatabaseLoader.js";
 import { DatabaseTool } from "../../sqljs-worker/DatabaseTools.js";
-import { makeTabs } from "../../tools/HtmlTools.js";
-import { TemplateUploader } from "../../tools/TemplateUploader.js";
+import { makeTabs } from "../../../tools/HtmlTools.js";
+import { TemplateUploader } from "../../../tools/TemplateUploader.js";
 import { Main } from "../Main.js";
 import pako from 'pako'
 
 import jQuery from "jquery";
-import type { TreeviewNode } from "../../tools/treeview/TreeviewNode.js";
+import type { TreeviewNode } from "../../../tools/treeview/TreeviewNode.js";
 import type { Workspace } from "../../workspace/Workspace.js";
 import type { CreateWorkspaceData } from "../../communication/Data.js";
 import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";
@@ -94,7 +94,7 @@ export class NewDatabaseDialog {
             templatelist.sort((t1, t2) => {
                 return t1.name.localeCompare(t2.name);
             })
-            
+
             templatelist.forEach(tle => {
 
                 let $tle = jQuery('<div class="jo_templateListEntry"></div>')
@@ -103,7 +103,7 @@ export class NewDatabaseDialog {
                 $tle.data('templateId', tle.id);
                 $tle.data('name', tle.name);
 
-                if(tle.ownerId == myUserId){
+                if (tle.ownerId == myUserId) {
                     $templatelist_mine.append($tle);
                 } else {
                     $templatelist_others.append($tle);
@@ -168,7 +168,7 @@ export class NewDatabaseDialog {
                 id: null,
                 isFolder: false,
                 name: <string>jQuery('.dialog-input.jo_databasename').val(),
-                parent_folder_id: this.currentlySelectedFolder.isRootNode() ? null : this.currentlySelectedFolder.externalObject.id
+                parent_folder_id: this.currentlySelectedFolder?.isRootNode() === false ? this.currentlySelectedFolder.externalObject.id : null
             }
 
             switch (createMode) {
@@ -202,10 +202,10 @@ export class NewDatabaseDialog {
                         new TemplateUploader().uploadCurrentDatabase(-1, this.main, this.database.binDump,
                             "uploadBaseTemplateForWorkspace",
                             (response) => {
-                            workspaceData.template_id = response.newTemplateId;
-                            this.createWorkspace(workspaceData);
-                            alert("Die Datenbank wurde erfolgreich angelegt und hochgeladen.");
-                        });
+                                workspaceData.template_id = response.newTemplateId;
+                                this.createWorkspace(workspaceData);
+                                alert("Die Datenbank wurde erfolgreich angelegt und hochgeladen.");
+                            });
 
                     } else {
                         alert('Bitte laden Sie zuerst den Binärdump einer Datenbank hoch.')
@@ -218,26 +218,28 @@ export class NewDatabaseDialog {
 
     }
 
-    private createWorkspace(workspaceData: CreateWorkspaceData) {
-        this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id, (error?: string) => {
-            if (error != null) { alert(error); return; }
+    private async createWorkspace(workspaceData: CreateWorkspaceData) {
+        let success = await this.main.networkManager.sendCreateWorkspace(workspaceData, this.owner_id);
+        if (!success) {
+            alert("Fehler beim Erstellen der Datenbank.");
+            return;
+        }
 
-            let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
-            w.parent_folder_id = workspaceData.parent_folder_id;
-            w.id = workspaceData.id;
-            w.sql_history = "";
+        let w = this.main.createNewWorkspace(workspaceData.name, this.owner_id);
+        w.parent_folder_id = workspaceData.parent_folder_id;
+        w.id = workspaceData.id;
 
-            let projectExplorer = this.main.projectExplorer;
+        let projectExplorer = this.main.projectExplorer;
 
-            this.main.workspaceList.push(w);
+        this.main.workspaceList.push(w);
 
-            projectExplorer.workspaceTreeview.addNode(false, ProjectExplorerMessages.NewDatabaseName(), "img_database-dark", w, workspaceData.parent_folder_id);
+        let node = projectExplorer.workspaceTreeview.addNode(false, workspaceData.name, "img_database-dark", w, workspaceData.parent_folder_id);
+        projectExplorer.addSettingsIconToWorkspaceOrFolderNode(node);
 
-            projectExplorer.setWorkspaceActive(w);
+        projectExplorer.setWorkspaceActive(w);
 
-            this.showMainWindow();
+        this.showMainWindow();
 
-        });
     }
 
     async importFile(files: FileList) {

@@ -103,7 +103,7 @@
    background-image: url('../icons/database-dark.svg');
 }
 
-.img_delete {
+.img_delete-dark {
    width: 16px;
    height: 16px;
    background-repeat: no-repeat;
@@ -193,6 +193,21 @@
    background-repeat: no-repeat;
    background-image: url('../icons/file.svg');
 }
+
+.img_file-sql-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/file-sql-dark.svg');
+}
+
+.img_file-text-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/file-text-dark.svg');
+}
+
 
 .img_foreign_key {
    width: 16px;
@@ -362,7 +377,7 @@
    background-image: url('../icons/save-dark.svg');
 }
 
-.img_settings {
+.img_settings-dark {
    width: 16px;
    height: 16px;
    background-repeat: no-repeat;
@@ -521,4 +536,88 @@
    height: 16px;
    background-repeat: no-repeat;
    background-image: url('../icons/workspace-dark.svg');
+}
+
+.img_chevron-down-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-down-dark.svg');
+}
+
+.img_chevron-down {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-down.svg');
+}
+
+.img_chevron-left-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-left-dark.svg');
+}
+
+.img_chevron-left {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-left.svg');
+}
+
+.img_chevron-next-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-next-dark.svg');
+}
+
+.img_chevron-next-light {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-next-light.svg');
+}
+
+.img_chevron-previous-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-previous-dark.svg');
+}
+
+.img_chevron-previous-light {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-previous-light.svg');
+}
+
+.img_chevron-right-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-right-dark.svg');
+}
+
+.img_chevron-right {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-right.svg');
+}
+
+.img_chevron-up-dark {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-up-dark.svg');
+}
+
+.img_chevron-up {
+   width: 16px;
+   height: 16px;
+   background-repeat: no-repeat;
+   background-image: url('../icons/chevron-up.svg');
 }
