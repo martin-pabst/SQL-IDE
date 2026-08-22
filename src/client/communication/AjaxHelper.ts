@@ -1,6 +1,10 @@
-import { PerformanceData } from "./Data.js";
-import jQuery from "jquery";
+import { LoginRequest, PerformanceData } from "./Data.js";
+import jQuery from 'jquery';
 import { PushClientManager } from "./pushclient/PushClientManager.js";
+import { currentLanguageId, setLanguageId } from "../../tools/language/LanguageManager.js";
+// export var credentials: { username: string, password: string } = { username: null, password: null };
+
+export var SINGLEUSETOKEN: string = "singleUseToken";
 
 export class PerformanceCollector {
     static performanceData: PerformanceData[] = [];
@@ -38,24 +42,23 @@ export class PerformanceCollector {
 
 }
 
-
-
 export var csrfToken: string = "";
+
 
 export function ajax(url: string, request: any, successCallback: (response: any) => void,
 
     errorCallback?: (message: string) => void) {
 
-        if(!url.startsWith("http")){
-            url = "servlet/" + url;
-        }
-   
+    if (!url.startsWith("http")) {
+        url = "servlet/" + url;
+    }
+
 
     showNetworkBusy(true);
     let time = performance.now();
 
-    let headers: {[key: string]: string;} = {};
-    if(csrfToken != null) headers = {"x-token-pm": csrfToken};
+    let headers: { [key: string]: string; } = {};
+    if (csrfToken != null) headers = { "x-token-pm": csrfToken };
 
     jQuery.ajax({
         type: 'POST',
@@ -68,20 +71,24 @@ export function ajax(url: string, request: any, successCallback: (response: any)
 
             PerformanceCollector.registerPerformanceEntry(url, time);
 
-            if(response["csrfToken"] != null)
-            {
+            if (response["csrfToken"] != null) {
                 csrfToken = response["csrfToken"];
+                PushClientManager.getInstance().open();
             }
+
 
             showNetworkBusy(false);
             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
                 let error = "Fehler bei der Bearbeitung der Anfrage"
                 if (response.message != null) error = response.message;
+                if (response.error != null) error = response.error;
 
-                if (error == "Not logged in") {
+                if (error.indexOf("Not logged in") >= 0) {
                     // setTimeout(() => newLogin(url, request, successCallback, errorCallback), 10000);
                     // location.reload();
                 }
+
+                console.log("Netzwerkfehler: " + error);
 
                 if (errorCallback) errorCallback(error);
             } else {
@@ -106,29 +113,76 @@ export function ajax(url: string, request: any, successCallback: (response: any)
 
 export function showNetworkBusy(busy: boolean) {
     if (busy) {
-        jQuery('.jo_network-busy').css('visibility','visible');
+        jQuery('.jo_network-busy').css('display', 'block');
     } else {
-        jQuery('.jo_network-busy').css('visibility','hidden');
+        jQuery('.jo_network-busy').css('display', 'none');
     }
 }
 
-
-export function extractCsrfTokenFromGetRequest(){
+export async function extractCsrfTokenFromGetRequest(retrieveNewCsrfToken: boolean = false) {
     let url = window.location.href;
-    let tokenIndex = url.indexOf("csrfToken=");
-    if(tokenIndex >= 0){
-        let token = url.substring(tokenIndex + "csrfToken=".length);
-        if(token != null && token.length > 0){
-            csrfToken = token;
-        }
+    let token = fetchGetParameterValueIntern(url, "csrfToken");
+    if (token != null && token.length > 0) {
+        csrfToken = token;
+    }
+
+    if (retrieveNewCsrfToken) {
+        await ajaxAsync("/servlet/retrieveNewCsrfToken", {});
     }
 }
+
+export async function extractSingleUseSessionTokenFromGetRequestAndRetrieveNewCsrfToken() {
+    let url = window.location.href;
+
+    let csrfTokenFromGetRequest = fetchGetParameterValueIntern(url, "csrfToken");
+    if(csrfTokenFromGetRequest == null) {
+        let token = fetchGetParameterValueIntern(url, SINGLEUSETOKEN);
+    
+        await ajaxAsync("/servlet/retrieveNewCsrfToken?" + SINGLEUSETOKEN + "=" + token, {});
+
+        let index = url.indexOf("?");
+        let newUrl = url.substring(0, index) + "?csrfToken=" + csrfToken;
+
+        let menuItem = fetchGetParameterValueIntern(url, "menuItem");
+        if(menuItem != null) {
+            newUrl += "&menuItem=" + menuItem;
+        }
+
+        window.location.href = newUrl;
+    } else {
+        csrfToken = csrfTokenFromGetRequest;
+    }
+
+}
+export function fetchGetParameterValue(parameterIdentifier: string): string | null {
+    let url = window.location.href;
+    return fetchGetParameterValueIntern(url, parameterIdentifier);
+}
+
+function fetchGetParameterValueIntern(url: string, parameterIdentifier: string): string | null {
+    let index = url.indexOf(parameterIdentifier + "=");
+    if (index >= 0) {
+        let endIndex = url.indexOf('&', index);
+        if (endIndex < 0) endIndex = url.length;
+        return url.substring(index + (parameterIdentifier + "=").length, endIndex);
+    }
+    return null;
+}
+
+export async function extractLanguageFromGetRequest(retrieveNewCsrfToken: boolean = false) {
+    let url = window.location.href;
+    let lang = fetchGetParameterValueIntern(url, 'lang');
+    if (lang != null) {
+        setLanguageId(lang);
+    }
+}
+
 
 
 export async function ajaxAsync(url: string, data: any): Promise<any> {
     let headers: [string, string][] = [["content-type", "text/json"]];
 
-    if (csrfToken != null) {
+    if (csrfToken != null && csrfToken.length > 0) {
         headers.push(["x-token-pm", csrfToken]);
     }
 
@@ -142,8 +196,8 @@ export async function ajaxAsync(url: string, data: any): Promise<any> {
 
         let obj: any = await response.json()
 
-        if (obj["token"] != null) {
-            csrfToken = obj["token"];
+        if (obj["csrfToken"] != null) {
+            csrfToken = obj["csrfToken"];
             PushClientManager.getInstance().open();
         }
 

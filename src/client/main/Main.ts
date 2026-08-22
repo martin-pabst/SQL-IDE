@@ -87,7 +87,7 @@ export class Main implements MainBase {
     }
 
     getResultsetPresenter(): ResultsetPresenter {
-        return this.resultsetPresenter;
+        return this.bottomDiv.resultsetPresenter;
     }
 
     getWaitOverlay(): WaitOverlay {
@@ -95,7 +95,7 @@ export class Main implements MainBase {
     }
 
     getHistoryViewer(): HistoryViewer {
-        return this.historyViewer;
+        return this.bottomDiv.historyViewer;
     }
 
     workspaceList: Workspace[] = [];
@@ -140,12 +140,11 @@ export class Main implements MainBase {
 
     databaseExplorer: DatabaseExplorer;
 
-    resultsetPresenter: ResultsetPresenter;
+    // resultsetPresenter: ResultsetPresenter;
 
     notifier: NewNotifier;
 
     waitOverlay: WaitOverlay = new WaitOverlay(jQuery('.bitteWarten'));
-    historyViewer: HistoryViewer = new HistoryViewer(this, jQuery('.jo_historyTab'));
 
     initGUI() {
 
@@ -170,15 +169,14 @@ export class Main implements MainBase {
         this.actionManager = new ActionManager(null, this);
         this.actionManager.init();
 
-        this.networkManager = new NetworkManager(this, jQuery('#bottomdiv-outer .jo_updateTimerDiv'));
+        this.bottomDiv = new BottomDiv(this, jQuery('#bottomdiv-outer>.jo_bottomdiv-inner'), jQuery('body'), true, false);
+        this.networkManager = new NetworkManager(this, this.bottomDiv.$updateTimer);
 
         let sliders = new Sliders(this);
         sliders.initSliders();
         this.mainMenu = new MainMenu(this);
         this.projectExplorer = new ProjectExplorer(this, jQuery('#leftpanel>.jo_projectexplorer'));
         this.projectExplorer.initGUI();
-
-        this.bottomDiv = new BottomDiv(this, jQuery('#bottomdiv-outer>.jo_bottomdiv-inner'), jQuery('body'));
 
         this.rightDiv = new RightDiv(this, jQuery('#rightdiv-inner'));
         this.rightDiv.initGUI();
@@ -193,7 +191,7 @@ export class Main implements MainBase {
 
         new ProgramControlButtons(this, jQuery('#controls'));
 
-        this.resultsetPresenter = new ResultsetPresenter(this, jQuery('.jo_bottomdiv-inner'));
+        // this.resultsetPresenter = new ResultsetPresenter(this, jQuery('.jo_bottomdiv-inner'));
 
         this.notifier = new NewNotifier(this);
 

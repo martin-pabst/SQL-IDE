@@ -81,7 +81,7 @@ export type CreateWorkspaceData = {
     isFolder: boolean,
     parent_folder_id: number | null,
     id: number | null,
-      
+
     // needed when new workspace is created
     template_database_id?: number,
     template_id?: number,
@@ -102,6 +102,7 @@ export type UserData = {
     is_teacher: boolean,
     is_admin: boolean,
     is_schooladmin: boolean,
+    locked: boolean,
     username: string,
     familienname: string,
     rufname: string,
@@ -109,11 +110,11 @@ export type UserData = {
     sql_gui_state?: GuiState,
     password?: string,
     is_testuser?: boolean,
+    sql_settings?: SettingValues,
 
     vidis_sub?: string,
     vidis_klasse?: string,
     vidis_akronym?: string
-
 }
 
 export function getUserDisplayName(user: UserData, lastNameFirst: boolean = false): string {
@@ -136,7 +137,8 @@ export type GetUserDataResponse = {
     success: boolean,
     user: UserData,
     classdata: ClassData[], // null if !is_teacher
-    schoolName: string
+    schoolName: string,
+    vidisSchoolId: string | null
 }
 
 export type GetSchoolDataRequest = {
@@ -149,7 +151,7 @@ export type GetSchoolDataResponse = {
 }
 
 export type GetClassesDataRequest = {
-    school_id: number
+    wholeSchool: boolean // if true, get all classes of school, else only classes of teacher
 }
 
 export type GetClassesDataResponse = {
@@ -163,12 +165,14 @@ export type GetTeacherDataRequest = {
 
 export type GetTeacherDataResponse = {
     success: boolean,
-    teacherData?: TeacherData[]
+    teacherData?: TeacherData[],
+    classesWithoutTeacher: ClassData[]
 }
 
 export type ClassData = {
     id: number,
     lehrkraft_id: number,
+    zweitlehrkraft_id: number,
     schule_id: number,
     name: string,
     students: UserData[],
@@ -179,9 +183,13 @@ export type ClassData = {
 export type SchoolData = {
     id: number,
     name: string,
+    text?: string, // only form w2ui...
     kuerzel: string,
-    classes: ClassData[]
-    usersWithoutClass: UserData[]
+    classes: ClassData[],
+    usersWithoutClass: UserData[],
+    userMinutesLastMonth: number,
+    userMinutesLastYear: number,
+    userMinutesOverall: number
 }
 
 export type TeacherData = {
@@ -812,8 +820,8 @@ export type Pruefung = {
     klasse_id: number,
     template_workspace_a_id: number,
     template_workspace_b_id: number,
-    pruefungStudentGroups?: {studentGroups: PruefungStudentGroupWithId[]},
-    pruefungStudentModes?: {studentModes: PruefungStudentModeWithId[]},
+    pruefungStudentGroups?: { studentGroups: PruefungStudentGroupWithId[] },
+    pruefungStudentModes?: { studentModes: PruefungStudentModeWithId[] },
     state: PruefungState;
 }
 
@@ -876,8 +884,8 @@ export type PruefungTableStudentData = {
     grade: string,
     points: string,
     comment: string,
-    mode: PruefungStudentMode | {id: PruefungStudentMode, text: string}
-    group: string | {id: string, text: string},
+    mode: PruefungStudentMode | { id: PruefungStudentMode, text: string }
+    group: string | { id: string, text: string },
 }
 
 export type GetPruefungStudentTableDataRequest = {
@@ -898,5 +906,69 @@ export type SetPruefungStudentModeRequest = {
 
 export type CheckIfPruefungIsRunningResponse = {
     runningPruefung: Pruefung | null
+}
+
+export type GetSingleUseSessionTokenResponse = {
+    success: boolean,
+    singleUseSessionToken: string,
+    message: string
+}
+
+export type KlassData = {
+    id: number;
+    text: string;
+}
+
+export type WorkspaceShortData = {
+    id: number,
+    parent_folder_id?: number,
+    sorting_order: number,
+    isFolder: boolean,
+    name: string,
+    text?: string,
+    files: string[]
+}
+
+export type GetPruefungenForLehrkraftResponse = {
+    pruefungen: Pruefung[];
+    klassen: KlassData[];
+    workspaces: WorkspaceShortData[];
+}
+
+export type UpdatePruefungSchuelerDataRequest = {
+    schuelerId: number;
+    pruefungId: number;
+    grade: string;
+    points: string;
+    mode: PruefungStudentMode;
+    group: string;
+    attributesToUpdate: string;
+}
+
+export type GetGradeRequest = {
+    schuelerId: number;
+    pruefungId: number;
+}
+
+export type GradeData = {
+    user_id: number;
+    pruefung_id: number;
+    grade: string;
+    points: string;
+    comment: string;
+}
+
+export type CreateOrUpdateGradeRequest = {
+    schuelerId: number;
+    pruefungId: number;
+    grade: string;
+    points: string;
+    comment: string;
+}
+
+export type GetGradeResponse = {
+    grade: GradeData;
+    success: boolean;
+    message: string;
 }
 

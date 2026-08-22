@@ -749,6 +749,9 @@ export class ProjectExplorer {
         if (selectElement) this.workspaceTreeview.selectElement(w, false);
 
         let callbackAfterDatabaseFetched = (error: string) => {
+            
+            this.main.bottomDiv.gradingManager?.setValues(w.pruefung_id);
+
             if (error != null) {
                 alert(error);
                 this.main.waitOverlay.hide();

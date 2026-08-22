@@ -1,0 +1,81 @@
+.jo_resultTab {
+    height: 100%;
+    overflow: visible;
+}
+
+.jo_result-inner{
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    height: 100%;
+    width: 100%;
+    padding-left: 5px;
+    box-sizing: border-box;
+}
+
+.jo_result-body{
+    flex-grow: 1;
+    overflow: auto;
+    background-color: var(--console-top-background);
+    padding-right: 5px;
+    width: calc(100%-5px);
+}
+
+.jo_result-header{
+    height: 2em;
+    position: relative;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+}
+
+.jo_result-body table {
+  text-align: left;
+  position: relative;
+  border-collapse: collapse;
+}
+
+.jo_result-body th {
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
+    padding: 0;
+    background-color: var(--table-heading);
+    user-select: none;
+}
+
+.jo_result-body th>div {
+    padding: 0.25rem;
+    border-bottom: 2px solid #444;    
+    border-top: 2px solid #444;    
+}
+
+.jo_result-body td {
+    padding: 0.25rem;
+    border: 1px solid #444;
+    user-select: none;
+  }
+
+.jo_result-body th {
+    position: sticky;
+    top: 0; /* Don't forget this, required for the stickiness */
+  }
+
+.jo_result-body tr:nth-child(even) {background: var(--table-even)}
+
+.jo_pagination {
+    display: flex;
+    flex-direction: row;
+}
+
+.jo_pagination_info {
+    padding: 0 4px;
+    color: var(--fontColorNormal);
+    font-family: Consolas, "Roboto Mono";
+    user-select: none;
+}
+
+.jo_pagination_info>span{
+    color: var(--fontColorLight);
+    font-weight: bold;
+}
+

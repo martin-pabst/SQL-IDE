@@ -4,20 +4,64 @@ import { ErrorManager } from "./ErrorManager.js";
 import { HomeworkManager } from "./HomeworkManager.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
+import { TabManager } from "../../../tools/TabManager.js";
+import { GradingManager } from "./GradingManager.js";
+import { DOM } from "../../../tools/DOM.js";
+import compileGIF from '/assets/graphics/compile.gif';
+import { ResultsetPresenter } from "./ResultsetPresenter.js";
+import { HistoryViewer } from "./HistoryViewer.js";
 
 export class BottomDiv {
 
+    tabManager: TabManager;
+
     errorManager: ErrorManager;
     homeworkManager: HomeworkManager;
+    gradingManager: GradingManager;
+    resultsetPresenter: ResultsetPresenter;
+    historyViewer: HistoryViewer;
 
-    constructor(private main: MainBase, public $bottomDiv: JQuery<HTMLElement>, public $mainDiv: JQuery<HTMLElement>) {
+    $updateTimer: JQuery<HTMLElement>;
+
+    networkBusy: HTMLImageElement;
 
 
-        if (this.$bottomDiv.find('.jo_tabheadings>.jo_homeworkTabheading').length > 0) {
-            this.homeworkManager = new HomeworkManager(<Main>main, $bottomDiv);
+    constructor(private main: MainBase, public $bottomDiv: JQuery<HTMLElement>, public $mainDiv: JQuery<HTMLElement>,
+        withErrors: boolean,
+        isEmbedded: boolean
+    ) {
+
+        this.tabManager = new TabManager($bottomDiv[0]);
+
+        this.resultsetPresenter = new ResultsetPresenter(<Main>main, this.tabManager);
+
+        if (!isEmbedded) {
+            this.homeworkManager = new HomeworkManager(<Main>main, this.tabManager);
+            this.gradingManager = new GradingManager(<Main>main, this.tabManager);
         }
 
-        this.errorManager = new ErrorManager(main, $bottomDiv, $mainDiv);
+        if (withErrors) {
+            this.errorManager = new ErrorManager(main, this.tabManager);
+            this.errorManager.tab.show();
+        }
+
+        this.historyViewer = new HistoryViewer(main, this.tabManager);
+
+        if (!isEmbedded) {
+            this.networkBusy = DOM.makeElement(this.tabManager.tabheadingRightDiv, 'img', 'jo_network_busy') as HTMLImageElement;
+            this.networkBusy.setAttribute('src', compileGIF);
+            this.hideNetworkBusy();
+
+            this.$updateTimer = jQuery(`<div class="jo_updateTimerDiv">
+                <svg width="30" height="16">
+                <rect class="jo_updateTimerRect" x="0" y="4" width="30" height="8"
+                style="stroke:none;fill:#008000;fill-opacity:0.8">
+                </rect>
+                </svg>
+                </div>`);
+            this.tabManager.insertIntoRightDiv(this.$updateTimer[0]);
+        }
+
     }
 
     initGUI() {
@@ -30,17 +74,22 @@ export class BottomDiv {
 
     showHomeworkTab() {
 
-        jQuery('.jo_homeworkTabheading').css('visibility', 'visible');
-        jQuery('.jo_homeworkTabheading').trigger("mousedown");
+        this.homeworkManager.tab.setVisible(true);
 
     }
 
     hideHomeworkTab() {
 
-        jQuery('.jo_homeworkTabheading').css('visibility', 'hidden');
-        jQuery('.jo_tabheadings').children().first().trigger("mousedown");
+        this.homeworkManager.tab.setVisible(false);
 
     }
 
+    showNetworkBusy() {
+        this.networkBusy.style.display = 'block';
+    }
+
+    hideNetworkBusy() {
+        this.networkBusy.style.display = 'none';
+    }
 
 }

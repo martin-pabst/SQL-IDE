@@ -114,7 +114,7 @@ export class Login {
         this.main.notifier.connect(null);
 
         let logoutRequest: LogoutRequest = {
-            currentWorkspaceId: this.main.currentWorkspace?.id
+            currentWorkspaceId: this.main.currentWorkspace?.pruefung_id == null ? this.main.currentWorkspace?.id : null
         }
 
         this.main.networkManager.sendUpdatesAsync().then(() => {

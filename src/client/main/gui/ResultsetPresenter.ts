@@ -11,6 +11,8 @@ import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
+import { Tab, TabManager } from '../../../tools/TabManager.js';
+import '/assets/css/resulttab.css'
 
 type RuntimeError = {
     statement: SQLStatement,
@@ -38,11 +40,31 @@ export class ResultsetPresenter {
 
     writeQueryListeners: WriteQueryListener[] = [];
 
+    $resultHeader: JQuery<HTMLDivElement>;
+    $resultBody: JQuery<HTMLDivElement>;
+
+
+    tab: Tab;
+
     public static StatementDelimiter: string = ";\n\n"
 
-    constructor(private main: MainBase, private $bottomDiv: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, private tabManager: TabManager) {
 
-        this.$paginationDiv = <any>$bottomDiv.find('.jo_pagination');
+        this.tab = new Tab('Results', "Ausgabe", ["jo_scrollable", "jo_editorFontSize", "jo_resultTab"])
+        tabManager.addTab(this.tab);
+        let $resultDiv = jQuery(this.tab.bodyDiv);
+
+        let $resultInner = jQuery('<div class="jo_result-inner"></div>');
+        this.$resultHeader = jQuery('<div class="jo_result-header"></div>');
+        this.$resultBody = jQuery('<div class="jo_result-body jo_scrollable"></div>');
+
+        $resultDiv.append($resultInner);
+        $resultInner.append(this.$resultHeader, this.$resultBody);
+
+        this.$paginationDiv = jQuery('<div class="jo_pagination"></div>');
+
+        tabManager.tabheadingRightDiv.append(this.$paginationDiv[0]);
+
         const $exportCsvButton = jQuery('<div class="jo_button jo_active img_export-csv-dark"></div>')
         this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
         this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto"></span>/<span class="jo_pagination_all"></span></div>');
@@ -53,14 +75,13 @@ export class ResultsetPresenter {
 
         this.$paginationDiv.hide();
 
-        const resultTab =  <any>$bottomDiv.find('.jo_resultTab');
-        resultTab.on('myshow', (e) => {
+        this.tab.onShow = () => {
             this.$paginationDiv.show();
-        })
+        };
 
-        resultTab.on('myhide', (e) => {
+        this.tab.onHide = () => {
             this.$paginationDiv.hide();
-        })
+        };
 
         let mousePointer = (window.PointerEvent ? "pointer" : "mouse") + 'up';
 
@@ -364,8 +385,11 @@ export class ResultsetPresenter {
 
 
     showErrors(errors: RuntimeError[]) {
-        let $runtimeErrorsTab = this.$bottomDiv.find('.jo_errorsTab');
-        let $runtimeErrorsTabHeading = this.$bottomDiv.find('.jo_errorsTabheading');
+
+        let errorsTab = this.tabManager.getTabByName('Errors');
+
+        let $runtimeErrorsTab = jQuery(errorsTab.bodyDiv);
+        let $runtimeErrorsTabHeading = $runtimeErrorsTab.find('.jo_errorsTabheading');
 
         $runtimeErrorsTab.empty();
         this.showErrorDecorations(errors);
@@ -410,9 +434,7 @@ export class ResultsetPresenter {
 
         }
 
-        this.$bottomDiv.find('.jo_tabheading').removeClass('jo_active');
-        $runtimeErrorsTabHeading.addClass('jo_active');
-        $runtimeErrorsTab.addClass('jo_active');
+        errorsTab.show();
 
     }
 
@@ -429,22 +451,19 @@ export class ResultsetPresenter {
     }
 
     private presentResultsIntern(query: string, results: QueryResult[], columnTypes: SQLType[]) {
-        let $resultTabheading = this.$bottomDiv.find('.jo_resultTabheading');
-        let $resultHeader = this.$bottomDiv.find('.jo_result-header');
 
-        let mousePointer = window.PointerEvent ? "pointer" : "mouse";
-        $resultTabheading.trigger(mousePointer + "down");
+        this.tab.show();
+
         this.result = results.pop();
         this.resultColumnTypes = columnTypes;
 
-        let headerDiv = $resultHeader;
 
         query = query.replace(/\n/g, " ");
         query = query.replace(/\s\s+/g, ' ');
         query = query.replace(/limit 100000/g, '');
 
         monaco.editor.colorize(query, "vscSQL", {}).then(
-            (html) => { headerDiv.html(html) });
+            (html) => { this.$resultHeader.html(html) });
 
         this.paginationAll = this.result ? this.result.values.length : 0;
         this.$infoDiv.find('.jo_pagination_all').html(`${this.paginationAll}`);
@@ -457,8 +476,8 @@ export class ResultsetPresenter {
     }
 
     public clear() {
-        let $bodyDiv = this.$bottomDiv.find('.jo_result-body');
-        $bodyDiv.empty();
+        
+        this.$resultBody.empty();
         this.$paginationDiv.hide();
     }
 
@@ -466,11 +485,10 @@ export class ResultsetPresenter {
     private showResultPending: boolean = false;
 
     private showResults() {
-        let $bodyDiv = this.$bottomDiv.find('.jo_result-body');
 
         if (this.result == null) {
             this.$infoDiv.find('.jo_pagination_fromto').html('---');
-            $bodyDiv.html('Die Datenbank lieferte eine leere Ergebnistabelle.');
+            this.$resultBody.html('Die Datenbank lieferte eine leere Ergebnistabelle.');
             return;
         }
 
@@ -533,7 +551,7 @@ export class ResultsetPresenter {
                 if (i < rows.length) {
                     setTimeout(f, 30);
                 } else {
-                    $bodyDiv.empty().append($table);
+                    this.$resultBody.empty().append($table);
                     this.showResultsBusy = false;
                 }
             }

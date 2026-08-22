@@ -3,6 +3,8 @@ import { copyTextToClipboard, openContextMenu } from "../../../tools/HtmlTools.j
 import { Main } from "../Main.js";
 import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
+import { Tab, TabManager } from "../../../tools/TabManager.js";
+import '/assets/css/writehistorytab.css'
 
 type HistoryPanelEntry = {
     statement: string;
@@ -13,13 +15,17 @@ type HistoryPanelEntry = {
 export class HistoryViewer {
 
     panelEntries: HistoryPanelEntry[] = [];
+    tab: Tab;
 
-    constructor(private main: MainBase, private $historyPanel: JQuery<HTMLElement>) {
+    constructor(private main: MainBase, private tabManager: TabManager) {
+
+        this.tab = new Tab('History', "Write History", ["jo_scrollable", "jo_historyTab"])
+        tabManager.addTab(this.tab);
 
     }
 
     clear() {
-        this.$historyPanel.empty();
+        this.tab.bodyDiv.innerHTML = "";
         this.main.getActionManager().setActive("rollback", false);
         this.panelEntries = [];
     }
@@ -33,11 +39,11 @@ export class HistoryViewer {
     appendStatements(statements: string[]) {
         statements.forEach(stmt => {
             let panelEntry = this.makePanelEntry(stmt, this.panelEntries.length + 1);
-            this.$historyPanel.prepend(panelEntry.$div);
+            this.tab.bodyDiv.prepend(panelEntry.$div[0]);
             this.panelEntries.unshift(panelEntry);
         })
 
-        if(statements.length > 0){
+        if (statements.length > 0) {
             this.main.getActionManager().setActive("rollback", true);
         }
 
@@ -115,9 +121,9 @@ export class HistoryViewer {
 
     rollbackLocal(new_version?: number) {
         let database = this.main.getCurrentWorkspace().database;
-        if(new_version == null) new_version = database.version - 1;
-        
-        while(database.version > new_version){
+        if (new_version == null) new_version = database.version - 1;
+
+        while (database.version > new_version) {
             database.statements.pop();
             database.version--;
         }

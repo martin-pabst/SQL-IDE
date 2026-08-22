@@ -1,0 +1,27 @@
+.jo_errorsTab {
+    height: 100%;
+    overflow: auto;
+    padding-left: 4px;
+}
+
+.jo_runtimeErrorPosition{
+    cursor: pointer;
+}
+
+.jo_runtimeErrorPosition:hover{
+    font-weight: bold;
+}
+
+.jo_error-caption {
+    color: var(--error-Caption);
+}
+
+.jo_noErrorMessage {
+    color: var(--noErrorMessage);
+    user-select: none;
+}
+
+.jo_sqlErrorStatement, .jo_sqlErrorMessage {
+    user-select: none;
+}
+

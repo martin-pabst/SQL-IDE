@@ -1,6 +1,6 @@
 import { Main } from "../main/Main.js";
 import { ajax, ajaxAsync, csrfToken, PerformanceCollector } from "./AjaxHelper.js";
-import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateGuiStateRequest, UpdateGuiStateResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse, type UpdateFileOrderRequest, type BaseResponse, type UpdateWorkspaceOrderRequest, type CreateWorkspaceData, type MoveFileRequest, type CheckIfPruefungIsRunningResponse } from "./Data.js";
+import { WorkspaceData, FileData, SendUpdatesRequest, SendUpdatesResponse, CreateOrDeleteFileOrWorkspaceRequest, CRUDResponse, UpdateGuiStateRequest, UpdateGuiStateResponse, DuplicateWorkspaceRequest, DuplicateWorkspaceResponse, ClassData, DistributeWorkspaceRequest, DistributeWorkspaceResponse, GetDatabaseRequest, getDatabaseResponse, GetNewStatementsRequest, GetNewStatementsResponse, AddDatabaseStatementsRequest, AddDatabaseStatementsResponse, TemplateListEntry, GetTemplateListRequest, GetTemplateListResponse, GetDatabaseSettingsResponse, GetDatabaseSettingsRequest, setDatabaseSecretRequest as SetDatabaseSecretRequest, SetDatabaseSecretResponse, SetPublishedToRequest, SetPublishedToResponse, GetTemplateRequest, RollbackRequest, RollbackResponse, type UpdateFileOrderRequest, type BaseResponse, type UpdateWorkspaceOrderRequest, type CreateWorkspaceData, type MoveFileRequest, type CheckIfPruefungIsRunningResponse, type GetGradeRequest, type GetGradeResponse, type CreateOrUpdateGradeRequest, type GradeData } from "./Data.js";
 import { Workspace } from "../workspace/Workspace.js";
 import { WDatabase } from "../workspace/WDatabase.js";
 import { CacheManager } from "./CacheManager.js";
@@ -92,8 +92,6 @@ export class NetworkManager {
         if (this.main.user == null || this.main.user.is_testuser) {
             return true;
         }
-
-        let userSettings = this.main.user.sql_gui_state;
 
         if (this.main.gui_state_dirty) {
 
@@ -670,6 +668,28 @@ export class NetworkManager {
         return response.success;
     }
 
+    public async fetchGrade(schueler_id: number, pruefung_id: number): Promise<GradeData> {
+        let request: GetGradeRequest = {
+            schuelerId: schueler_id,
+            pruefungId: pruefung_id
+        }
+
+        let response: GetGradeResponse = await ajaxAsync("servlet/getGrade", request);
+
+        return response.grade;
+    }
+
+    public createOrUpdateGrade(schueler_id: number, pruefung_id: number, grade: string, points: string, comment: string) {
+        let request: CreateOrUpdateGradeRequest = {
+            schuelerId: schueler_id,
+            pruefungId: pruefung_id,
+            grade: grade,
+            points: points,
+            comment: comment
+        }
+
+        ajaxAsync("servlet/createOrUpdateGrade", request);
+    }
 
 
 }

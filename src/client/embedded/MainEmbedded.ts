@@ -85,7 +85,7 @@ export class MainEmbedded implements MainBase {
     }
 
     getResultsetPresenter(): ResultsetPresenter {
-        return this.resultsetPresenter;
+        return this.bottomDiv.resultsetPresenter;
     }
 
     getWaitOverlay(): WaitOverlay {
@@ -93,7 +93,7 @@ export class MainEmbedded implements MainBase {
     }
 
     getHistoryViewer(): HistoryViewer {
-        return this.historyViewer;
+        return this.bottomDiv.historyViewer;
     }
 
     config: JavaOnlineConfig;
@@ -143,11 +143,7 @@ export class MainEmbedded implements MainBase {
 
     waitOverlay: WaitOverlay;
 
-    resultsetPresenter: ResultsetPresenter;
-
     writeQueryManager: WriteQueryManager;
-
-    historyViewer: HistoryViewer;
 
     initialTemplateDump: Uint8Array;
     initialStatements: string[];
@@ -534,7 +530,7 @@ export class MainEmbedded implements MainBase {
         this.actionManager = new ActionManager($div, this);
         this.actionManager.init();
 
-        this.bottomDiv = new BottomDiv(this, $bottomDivInner, $div);
+        this.bottomDiv = new BottomDiv(this, $bottomDivInner, $div, this.config.withErrorList, true);
         this.bottomDiv.initGUI();
 
         this.rightDiv = new RightDiv(this, this.$rightDivInner);
@@ -592,13 +588,11 @@ export class MainEmbedded implements MainBase {
 
         $controlsDiv.append($buttonOpen, $buttonSave);
 
-        this.resultsetPresenter = new ResultsetPresenter(this, $bottomDivInner);
-        this.resultsetPresenter.addWriteQueryListener(this.writeQueryManager);
+        // this.resultsetPresenter = new ResultsetPresenter(this, $bottomDivInner);
+        this.bottomDiv.resultsetPresenter.addWriteQueryListener(this.writeQueryManager);
 
 
         new ProgramControlButtons(this, $controlsDiv);
-
-        this.historyViewer = new HistoryViewer(this, $div.find('.jo_historyTab'));
 
         setTimeout(() => {
             this.editor.editor.layout();

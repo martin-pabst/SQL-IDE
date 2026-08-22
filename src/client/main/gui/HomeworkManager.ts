@@ -6,6 +6,7 @@ import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
 import jQuery from "jquery";
 import type { GUIFile } from '../../compiler/parser/GUIFile.js';
+import { Tab, TabManager } from '../../../tools/TabManager.js';
 
 type FileWithWorkspace = {
     file: GUIFile,
@@ -20,7 +21,6 @@ type DayWithModules = {
 
 export class HomeworkManager {
 
-    $homeworkTab: JQuery<HTMLElement>;
     $homeworkTabLeft: JQuery<HTMLElement>;
     $homeworkTabRight: JQuery<HTMLElement>;
 
@@ -29,14 +29,20 @@ export class HomeworkManager {
 
     diffEditor: monaco.editor.IStandaloneDiffEditor;
 
-    constructor(private main: Main, public $bottomDiv: JQuery<HTMLElement>) {
-        this.$homeworkTab = $bottomDiv.find('.jo_tabs>.jo_homeworkTab');
+    tab: Tab;
+
+
+    constructor(private main: Main, public tabManager: TabManager) {
+        this.tab = new Tab('Homework', "Hausaufgaben", ["jo_active", "jo_scrollable", "jo_editorFontSize", "jo_homeworkTab"])
+        tabManager.addTab(this.tab);
     }
 
     initGUI() {
         let that = this;
-        this.$homeworkTab.append(this.$homeworkTabLeft = makeDiv("", "jo_homeworkTabLeft jo_scrollable"));
-        this.$homeworkTab.append(this.$homeworkTabRight = makeDiv("", "jo_homeworkTabRight jo_scrollable"));
+        let $homeworkTab = jQuery(this.tab.bodyDiv);
+
+        $homeworkTab.append(this.$homeworkTabLeft = makeDiv("", "jo_homeworkTabLeft jo_scrollable"));
+        $homeworkTab.append(this.$homeworkTabRight = makeDiv("", "jo_homeworkTabRight jo_scrollable"));
         jQuery('#view-mode').prepend(this.$showRevisionButton = makeDiv("", "jo_button jo_active jo_homeworkRevisionButton", ""));
         this.$showRevisionButton.on("click", () => {
             if (this.showRevisionActive) {

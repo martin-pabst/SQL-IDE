@@ -1,13 +1,14 @@
 import { Main } from "../Main.js";
-import { UserData } from "../../communication/Data.js";
+import { UserData, type GetSingleUseSessionTokenResponse } from "../../communication/Data.js";
 import { DatabaseSettingsDialog } from "./DatabaseSettingsDialog.js";
 import { DatabaseImportExport } from "../../../tools/DatabaseImportExport.js";
 import { NewDatabaseDialog } from "./NewDatabaseDialog.js";
-import { ajax } from "../../communication/AjaxHelper.js";
+import { ajax, ajaxAsync, SINGLEUSETOKEN } from "../../communication/AjaxHelper.js";
 import { TemplateUploader } from "../../../tools/TemplateUploader.js";
 import jQuery from "jquery";
 import { AllDatabaseExporterImporter } from "../../../tools/AllDatabaseExporterImporter.js";
 import { downloadFile } from "../../../tools/HtmlTools.js";
+import { MainMenuMessages } from "./language/MainMenuMessages.js";
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -219,19 +220,17 @@ export class MainMenu {
             ]
         };
 
-        if (user != null && (user.is_admin)) {
-            mainMenu.items[0].subMenu.items.push({
-                identifier: "Shutdown server...",
-                action: () => {
-                    if (confirm("Server wirklich herunterfahren?")) {
-                        ajax("shutdown", {}, () => {
-                            alert('Server erfolgreich heruntergefahren.');
-                        }, (message) => {
-                            alert(message);
-                        })
+        if (user != null && (user.is_admin || user.is_schooladmin || user.is_teacher)) {
+            mainMenu.items[0].subMenu.items.push(
+                {
+                    identifier: MainMenuMessages.ClassesUserTests(),
+                    action: async () => {
+                        let response: GetSingleUseSessionTokenResponse = await ajaxAsync("servlet/getSingleUseSessionToken", {});
+                        if (response.success) {
+                            window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (user.sql_gui_state.language ?? "de"));
+                        }
                     }
                 }
-            }
             )
         }
 
