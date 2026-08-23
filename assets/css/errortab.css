@@ -2,6 +2,8 @@
     height: 100%;
     overflow: auto;
     padding-left: 4px;
+    display: flex;
+    flex-direction: column;
 }
 
 .jo_runtimeErrorPosition{

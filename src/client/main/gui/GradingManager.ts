@@ -4,8 +4,9 @@ import { PushClientManager } from '../../communication/pushclient/PushClientMana
 import { Main } from "../Main.js";
 import { Tab, TabManager } from '../../../tools/TabManager';
 import { AdminMessages } from '../../administration/AdministrationMessages.js';
-import type { GradeData } from '../../communication/Data.js';
+import type { GradeData, UserData } from '../../communication/Data.js';
 import { GradingManagerMessages } from './language/GradingManagerMessages.js';
+import '/assets/css/gradingtab.css';
 
 export class GradingManager {
 
@@ -34,7 +35,7 @@ export class GradingManager {
         PushClientManager.getInstance().subscribe("onGradeChangedInPruefungAdministration", (gradeData: GradeData) => { this.setValues(this.pruefungId) })
     }
 
-    initGUI() {
+    initGUI(user: UserData) {
         let that = this;
 
         this.$gradingTab.empty();
@@ -66,7 +67,7 @@ export class GradingManager {
         this.$gradingCommentMarkdown = jQuery(`<textarea class="jo_grading_commentmarkdown" placeholder="${GradingManagerMessages.remark()} ..." maxlength="1000"></textarea>`);
         this.$gradingCommentMarkdown.on('input', () => { that.onChange() })
 
-        if (!that.main.user.is_teacher) {
+        if (!user.is_teacher) {
             this.$gradingCommentMarkdown.attr('readonly', 'readonly');
             this.$gradingMark.attr('readonly', 'readonly');
             this.$gradingPoints.attr('readonly', 'readonly');
