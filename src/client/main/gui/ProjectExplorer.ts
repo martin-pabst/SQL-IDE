@@ -821,8 +821,8 @@ export class ProjectExplorer {
             this.main.getMonacoEditor().setModel(monaco.editor.createModel(ProjectExplorerMessages.noFile(), "text"));
             this.main.getMonacoEditor().updateOptions({ readOnly: true });
         } else {
-            this.main.getMonacoEditor().updateOptions({ readOnly: false });
             this.main.getMonacoEditor().setModel(file.getMonacoModel());
+            this.main.getMonacoEditor().updateOptions({ readOnly: this.main.currentWorkspace?.readonly });
 
             if (file.text_before_revision != null) {
                 this.main.bottomDiv.homeworkManager.showHomeWorkRevisionButton();
