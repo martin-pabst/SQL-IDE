@@ -8,13 +8,12 @@ import { UserMenu } from "./gui/UserMenu.js";
 import jQuery from "jquery";
 import { PruefungManagerForStudents } from './pruefung/PruefungManagerForStudents.js';
 import { LoginMessages } from './gui/language/LoginMessages.js';
+import { Constants } from '../Constants.js';
 
 export class Login {
 
     loggedInWithVidis: boolean = false;
     vidis_id_token: string = "";
-
-    static ApplicationSQLIde: Application = 2;
 
     constructor(private main: Main) {
         new AutoLogout(this);
@@ -150,7 +149,7 @@ export class Login {
         let loginRequest: LoginRequest = {
             username: singleUseToken ? "" : <string>jQuery('#login-username').val(),
             password: singleUseToken ? "" : <string>jQuery('#login-password').val(),
-            application: Login.ApplicationSQLIde,
+            application: Constants.Application,
             singleUseToken: singleUseToken || null
         }
 
@@ -196,6 +195,8 @@ export class Login {
                     let user: UserData = response.user;
 
                     that.main.mainMenu.initGUI(user);
+
+                    that.main.bottomDiv.gradingManager.initGUI(user);
 
                     that.main.waitOverlay.hide();
                     $loginSpinner.hide();
