@@ -5,6 +5,7 @@ import { Main } from "../Main.js";
 import jQuery from "jquery";
 import { PruefungManagerForStudentsMessages } from "./PruefungManagerForStudentsMessages.js";
 import { Workspace } from "../../workspace/Workspace.js";
+import { Constants } from "../../Constants.js";
 
 type MessagePruefungStart = { pruefung: Pruefung }
 type MessagePruefungStop = { pruefung: Pruefung }
@@ -22,9 +23,15 @@ export class PruefungManagerForStudents {
         jQuery('.jo_projectexplorer').prepend(this.$pruefungLaeuft);
 
         PushClientManager.subscribe("startPruefung", async (message: MessagePruefungStart) => {
+            if(message.pruefung.application != Constants.Application) {
+                return;
+            }
             this.startPruefung(message.pruefung);
         })
         PushClientManager.subscribe("stopPruefung", (message: MessagePruefungStop) => {
+            if(message.pruefung.application != Constants.Application) {
+                return;
+            }
             this.stopPruefung(true);
         })
     }
