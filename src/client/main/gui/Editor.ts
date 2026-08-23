@@ -10,7 +10,14 @@ import { MainBase } from "../MainBase.js";
 import { Helper } from "./Helper.js";
 import jQuery from "jquery";
 import * as monaco from 'monaco-editor'
+import type { GUIFile } from "../../compiler/parser/GUIFile.js";
+import type { Workspace } from "../../workspace/Workspace.js";
 
+export type HistoryEntry = {
+    file_id: number,
+    workspace_id: number,
+    position: monaco.Position;
+}
 
 export class Editor {
 
@@ -19,6 +26,9 @@ export class Editor {
     cw: monaco.editor.IContentWidget = null;
 
     dontPushNextCursorMove: number = 0;
+
+    lastPosition: HistoryEntry;
+
 
     constructor(public main: MainBase, private showMinimap: boolean, private isEmbedded: boolean) {
     }
@@ -179,7 +189,57 @@ export class Editor {
             }
         });
 
+        if (!this.isEmbedded) {
+
+            let _main: Main = <Main><any>this.main;
+
+            _main.windowStateManager.registerBackButtonListener((event: PopStateEvent) => {
+                let historyEntry: HistoryEntry = <HistoryEntry>event.state;
+                if (event.state == null) return;
+                let workspace: Workspace = _main.workspaceList.find((ws) => ws.id == historyEntry.workspace_id);
+                if (workspace == null) return;
+                let file: GUIFile = workspace.findFileById(historyEntry.file_id);
+                if (file == null) return;
+
+                // console.log("Processing pop state event, returning to module " + historyEntry.module_id);
+
+                if (workspace != _main.getCurrentWorkspace()) {
+                    that.dontPushNextCursorMove++;
+                    _main.projectExplorer.setWorkspaceActive(workspace);
+                    that.dontPushNextCursorMove--;
+                }
+                if (file != _main.getCurrentWorkspace()?.getCurrentlyEditedFile()) {
+                    that.dontPushNextCursorMove++;
+                    _main.projectExplorer.setFileActive(file);
+                    that.dontPushNextCursorMove--;
+                }
+                that.dontPushNextCursorMove++;
+                that.editor.setPosition(historyEntry.position);
+                that.editor.revealPosition(historyEntry.position);
+                that.dontPushNextCursorMove--;
+                that.pushHistoryState(true, historyEntry);
+            });
+        }
+
+
         this.editor.onDidChangeCursorPosition((event) => {
+
+            let currentModelId = (<GUIFile | undefined>this.main.getCurrentWorkspace()?.getCurrentlyEditedFile())?.id;
+            if (currentModelId != null) {
+                let pushNeeded = this.lastPosition == null
+                    || event.source == "api"
+                    || currentModelId != this.lastPosition.file_id
+                    || Math.abs(this.lastPosition.position.lineNumber - event.position.lineNumber) > 20;
+
+                if (pushNeeded && this.dontPushNextCursorMove == 0) {
+                    this.pushHistoryState(false, this.getPositionForHistory());
+                } else if (currentModelId == history.state?.module_id) {
+
+                    this.pushHistoryState(true, this.getPositionForHistory());
+                }
+            }
+
+
 
             that.onDidChangeCursorPosition(event.position);
 
@@ -200,6 +260,14 @@ export class Editor {
             if (this.main instanceof Main && file != null) {
 
                 this.main.projectExplorer.setActiveAfterExternalModelSet(file);
+
+                let pushNeeded = this.lastPosition == null
+                    || file.id != this.lastPosition.file_id;
+
+                if (pushNeeded && this.dontPushNextCursorMove == 0) {
+                    this.pushHistoryState(false, this.getPositionForHistory());
+                }
+
             }
         });
 
@@ -446,7 +514,7 @@ export class Editor {
 
         let executeActionActive = false;
 
-        for(let sqlStatement of module.getSQLSTatementsAtSelection(this.editor.getSelection())){
+        for (let sqlStatement of module.getSQLSTatementsAtSelection(this.editor.getSelection())) {
 
             let classname = "jo_highlightStatementGreen";
             if (sqlStatement != null) {
@@ -459,7 +527,7 @@ export class Editor {
                 } else {
                     executeActionActive = true;
                 }
-    
+
                 decorations.push({
                     range: {
                         startColumn: sqlStatement.from.column, startLineNumber: sqlStatement.from.line,
@@ -478,20 +546,53 @@ export class Editor {
                         zIndex: -100
                     }
                 })
-    
+
             }
         }
 
 
         this.main.getActionManager().setActive('execute', executeActionActive);
 
-        if(executeActionActive && !this.main.isEmbedded()){
+        if (executeActionActive && !this.main.isEmbedded()) {
             Helper.showHelper("playButtonHelper", <any>this.main, jQuery('div.img_start-dark'));
         }
 
 
         this.elementDecoration = this.editor.deltaDecorations(this.elementDecoration, decorations);
 
+    }
+
+    getPositionForHistory(): HistoryEntry {
+        let file = <GUIFile | undefined>this.main.getCurrentWorkspace()?.getCurrentlyEditedFile();
+        if (file == null) return;
+
+        return {
+            position: this.editor.getPosition(),
+            workspace_id: (<Workspace>this.main.getCurrentWorkspace()).id,
+            file_id: file.id
+        }
+    }
+
+    lastPushTime: number = 0;
+    pushHistoryState(replace: boolean, historyEntry: HistoryEntry) {
+
+        if (this.main.isEmbedded() || historyEntry == null) return;
+
+        if (replace) {
+            history.replaceState(historyEntry, ""); //`Java-Online, ${module.file.name} (Zeile ${this.lastPosition.position.lineNumber}, Spalte ${this.lastPosition.position.column})`);
+            // console.log("Replace History state with workspace-id: " + historyEntry.workspace_id + ", module-id: " + historyEntry.module_id);
+        } else {
+            let time = new Date().getTime();
+            if (time - this.lastPushTime > 200) {
+                history.pushState(historyEntry, ""); //`Java-Online, ${module.file.name} (Zeile ${historyEntry.position.lineNumber}, Spalte ${historyEntry.position.column})`);
+            } else {
+                history.replaceState(historyEntry, "");
+            }
+            this.lastPushTime = time;
+            // console.log("Pushed History state with workspace-id: " + historyEntry.workspace_id + ", module-id: " + historyEntry.module_id);
+        }
+
+        this.lastPosition = historyEntry;
     }
 
 

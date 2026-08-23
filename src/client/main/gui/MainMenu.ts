@@ -9,6 +9,7 @@ import jQuery from "jquery";
 import { AllDatabaseExporterImporter } from "../../../tools/AllDatabaseExporterImporter.js";
 import { downloadFile } from "../../../tools/HtmlTools.js";
 import { MainMenuMessages } from "./language/MainMenuMessages.js";
+import { SettingsGUI } from "../../settings/SettingsGUI.js";
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -233,6 +234,20 @@ export class MainMenu {
                 }
             )
         }
+
+        mainMenu.items[0].subMenu.items.push({
+            identifier: MainMenuMessages.Settings(),
+            action: () => {
+                let settingsGUI = new SettingsGUI(that.main);
+                settingsGUI.open();
+            }
+        },
+            {
+                identifier: MainMenuMessages.SaveAndExit(),
+                action: () => { jQuery('#buttonLogout').trigger("click"); }
+            }
+
+        );
 
 
         jQuery('#mainmenu').empty();

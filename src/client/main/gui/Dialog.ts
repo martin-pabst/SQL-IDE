@@ -7,25 +7,44 @@ export type DialogButton = {
     callback: () => void
 }
 
+export type CheckboxState = () => boolean;
+
 export class Dialog {
 
     $dialog: JQuery<HTMLElement>;
     $dialogMain: JQuery<HTMLElement>;
+    $dialogFooter: JQuery<HTMLElement>;
 
-    init() {
+    initAndOpen() {
         this.$dialog = jQuery('#dialog');
+        this.$dialog.empty();
         jQuery('#main').css('visibility', 'hidden');
         this.$dialog.append(jQuery(
-            '<div style="flex: 1"></div>' +
+            '<div style="height: 20px"></div>' +
             '<div class="dialog-main"></div>' +
-            '<div style="flex: 4"></div>'
+            '<div class="dialog-footer"></div>' 
         ));
         this.$dialogMain = this.$dialog.find('.dialog-main');
+        this.$dialogFooter = this.$dialog.find('.dialog-footer');
         this.$dialog.css('visibility', 'visible');
+
+        this.$dialogMain.empty();
+        this.$dialogFooter.empty();
     }
+
 
     heading(text: string) {
         let $div = jQuery('<div class="dialog-heading">' + text + "</div>")
+        this.$dialogMain.append($div);
+        return $div;
+    }
+
+    addDiv($div: JQuery<HTMLElement>){
+        this.$dialogMain.append($div);
+    }
+
+    subHeading(text: string) {
+        let $div = jQuery('<div class="dialog-subheading">' + text + "</div>")
         this.$dialogMain.append($div);
         return $div;
     }
@@ -72,6 +91,22 @@ export class Dialog {
         this.$dialog.css('visibility', 'hidden');
         this.$dialog.empty();
         jQuery('#main').css('visibility', 'visible');
+    }
+
+    addCheckbox(description: string, ischecked: boolean, name: string, $parent: HTMLElement = this.$dialogMain[0]): CheckboxState {
+        let cb: string = '<input type="checkbox" name="' + name + '"' + (ischecked ? ' checked' : '') + '>';
+        let $checkbox = jQuery(cb);
+        let $description = jQuery('<label for="' + name + '">' + description + "</label>");
+
+        let $div = jQuery('<div class="jo_checkbox_div"></div>')
+        $div.append($checkbox, $description);
+
+        $description.on('click', () => {$checkbox.prop("checked", !$checkbox.prop("checked"))})
+
+        $parent.append($div[0]);
+        return () => {
+            return $checkbox.is(':checked');
+        }
     }
 
 

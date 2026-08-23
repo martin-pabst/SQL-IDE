@@ -9,6 +9,7 @@ import jQuery from "jquery";
 import { PruefungManagerForStudents } from './pruefung/PruefungManagerForStudents.js';
 import { LoginMessages } from './gui/language/LoginMessages.js';
 import { Constants } from '../Constants.js';
+import { Settings } from '../settings/Settings.js';
 
 export class Login {
 
@@ -189,6 +190,8 @@ export class Login {
                         language: "de"
                     }
                 }
+
+                this.main.settings = new Settings(user, response.userSettings, response.classSettings, response.schoolSettings);
 
                 this.main.waitForGUICallback = () => {
 

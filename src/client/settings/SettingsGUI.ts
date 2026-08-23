@@ -1,0 +1,372 @@
+import { Tab, TabManager } from "../../tools/TabManager.ts";
+import { ajaxAsync } from "../communication/AjaxHelper.ts";
+import { GetSettingsResponse, UpdateSettingsDataRequest, UpdateSettingsDataResponse, UpdateGuiStateRequest } from "../communication/Data.ts";
+import { Dialog } from "../main/gui/Dialog.ts";
+import { Main } from "../main/Main.ts";
+import { SettingsMessages } from "./SettingsMessages.ts";
+import { AllSettingsMetadata, GroupOfSettingMetadata, SettingMetadata, SettingValues } from "./SettingsMetadata.ts";
+import jQuery from 'jquery';
+import '/assets/css/settings.css';
+import { getSelectedObject, SelectItem, setSelectItems } from "../../tools/HtmlTools.ts";
+import { Treeview } from "../../tools/treeview/Treeview.ts";
+import { SettingPrecedence, SettingPrecedenceValues, SettingsScope, SettingValue } from "./SettingsStore.ts";
+
+type ClassSettings = { classId: number, className: string, settings: SettingValues };
+
+export class SettingsGUI {
+
+    userSettings: SettingValues | null; // settings for user 
+    ownClassSettings?: SettingValues | null;
+    classSettings?: ClassSettings[] | null; // settings for classes if user is teacher
+    schoolSettings?: SettingValues | null; // settings for school if user is schooladmin
+
+    currentScope: SettingsScope = "user"; // current scope of settings, can be user, class or school
+    currentSettingsGroup: GroupOfSettingMetadata | null = null; // current settings group in the explorer
+    currentSettings: SettingValues | null = null; // current settings for the selected scope
+    currentClassId: number | null = null; // current class id if scope is class
+
+    $settingsLeftMenuDiv: JQuery<HTMLDivElement>; // left menu for settings tabs
+    $settingsMainDiv: JQuery<HTMLDivElement>; // main div for settings content
+
+    settingsExplorer: Treeview<GroupOfSettingMetadata, GroupOfSettingMetadata>;
+
+    constructor(private main: Main) {
+        this.userSettings = main.settings.values.user || {};
+        this.ownClassSettings = main.settings.values.class;
+        this.schoolSettings = main.settings.values.school;
+    }
+
+    async open() {
+        await this.getSettingsFromServer();
+
+        let dialog = new Dialog();
+        dialog.initAndOpen();
+
+        this.main.windowStateManager.registerOneTimeBackButtonListener(() => {
+            dialog.close();
+        });
+
+
+        dialog.heading(SettingsMessages.SettingsHeading());
+
+        let $tabDiv = jQuery('<div></div>');
+        dialog.addDiv($tabDiv);
+
+        let $tabBody = jQuery('<div class="jo_settingsTabBody"></div>');
+        dialog.addDiv($tabBody);
+
+        this.$settingsLeftMenuDiv = jQuery('<div class="jo_settingsLeftMenu"></div>');
+        $tabBody.append(this.$settingsLeftMenuDiv);
+
+        this.$settingsMainDiv = jQuery('<div class="jo_settingsMain jo_scrollable"></div>');
+        $tabBody.append(this.$settingsMainDiv);
+
+        let tabManager = new TabManager($tabDiv[0], true);
+
+        let userSettingsTab = new Tab('User Settings',SettingsMessages.UserSettingsTabHeading(), []);
+        userSettingsTab.onShow = () => { this.showSettingsData("user"); };
+        tabManager.addTab(userSettingsTab);
+        tabManager.setActive(userSettingsTab);
+
+        if (this.main.user.is_teacher && this.classSettings && this.classSettings.length > 0) {
+            let classSettingsTab = new Tab('Class Settings', SettingsMessages.ClassSettingsTabHeading(), []);
+            classSettingsTab.onShow = () => {
+                this.showSettingsData("class");
+            };
+            tabManager.addTab(classSettingsTab);
+
+            let $selectElement: JQuery<HTMLSelectElement> = jQuery('<select class="jo_settingsSelect"></select>');
+            classSettingsTab.headingDiv.append($selectElement[0]);
+
+            setSelectItems($selectElement, this.classSettings.map(cs => ({
+                value: cs.classId,
+                object: cs,
+                caption: cs.className
+            })).sort((a, b) => a.caption.localeCompare(b.caption)));
+
+            this.currentClassId = this.classSettings[0].classId;
+
+            $selectElement.on('change', () => {
+                let cs: ClassSettings = getSelectedObject($selectElement);
+                this.currentClassId = cs.classId;
+                if (this.currentScope == 'class') {
+                    this.showSettingsData();
+                }
+            })
+
+        }
+
+        if (this.main.user.is_schooladmin && this.schoolSettings) {
+            let schoolSettingsTab = new Tab('School Settings', SettingsMessages.SchoolSettingsTabHeading(), []);
+            schoolSettingsTab.onShow = () => { this.showSettingsData("school"); };
+            tabManager.addTab(schoolSettingsTab);
+        }
+
+        dialog.buttons([
+            {
+                caption: SettingsMessages.CloseButton(),
+                color: 'green',
+                callback: () => { window.history.back(); }
+            }
+        ]);
+
+        this.initSettingsExplorer();
+    }
+
+    async getSettingsFromServer() {
+        let response = <GetSettingsResponse>await ajaxAsync("/servlet/getSettings", {})
+        if (response.success) {
+            this.classSettings = response.classSettings;
+            this.schoolSettings = response.schoolSettings;
+        }
+    }
+
+    showSettingsData(scope?: SettingsScope) {
+        if (scope) this.currentScope = scope;
+        this.$settingsMainDiv.empty();
+
+        if (!this.currentSettingsGroup) return;
+
+        if (this.currentSettingsGroup.image) {
+            let $img = jQuery(`<img class="jo_settingImage" src="${this.currentSettingsGroup.image}">`);
+            this.$settingsMainDiv.append($img);
+        }
+
+
+        this.$settingsMainDiv.append(jQuery(`<div class="jo_settingsGroupCaption">${this.currentSettingsGroup.name()}</div>`));
+        if (this.currentSettingsGroup.description) this.$settingsMainDiv.append(jQuery(`<div class="jo_settingsGroupDescription">${this.currentSettingsGroup.description()}</div>`));
+
+        for (let setting of this.currentSettingsGroup.settings.filter(s => s.settingType == 'setting')) {
+            let $settingDiv = jQuery(`<div class="jo_settingDiv"></div>`);
+            this.$settingsMainDiv.append($settingDiv);
+            this.renderSetting(setting, $settingDiv);
+        }
+    }
+
+    renderSetting(setting: SettingMetadata, $settingDiv: JQuery<HTMLElement>) {
+        if (setting.image) {
+            $settingDiv.append(jQuery('<div class="jo_settingClearBoth"></div>'));
+            let $img = jQuery(`<img class="jo_settingImage" src="${setting.image}"${setting.imageWidth ? ' style="width: ' + setting.imageWidth + ';"' : ''}>`);
+            $settingDiv.append($img);
+        }
+        $settingDiv.append(jQuery(`<div class="jo_settingCaption">${setting.name()}</div>`));
+        if (setting.description) $settingDiv.append(jQuery(`<div class="jo_settingDescription">${setting.description()}</div>`));
+
+        let key = setting.key;
+        let currentSettingValue = this.getCurrentSettingValues()[key];
+        let defaultSettingValue = this.getDefaultSettingValue(key, !(this.main.user.is_teacher || this.main.user.is_schooladmin));
+        let isDisabled = defaultSettingValue.isForced;
+
+        switch (setting.type) {
+            case 'boolean':
+                let optionCaptions: string[] = [SettingsMessages.OptionTrue(), SettingsMessages.OptionFalse()];
+                if (setting.optionTexts) optionCaptions = setting.optionTexts.map(t => t());
+                optionCaptions.push(SettingsMessages.OptionDefault() + ": " + (defaultSettingValue ? optionCaptions[0] : optionCaptions[1]));
+                let optionValues: SettingValue[] = [true, false, undefined]
+                this.appendSelectElement($settingDiv, optionCaptions, optionValues, currentSettingValue,
+                    async (selectedValue, $savingMessage) => {
+                        await this.storeAndSave(setting, setting.key, selectedValue, $savingMessage);
+                    }, isDisabled)
+                break;
+            case 'string':
+                this.appendInputElement($settingDiv, <string>currentSettingValue, <string>defaultSettingValue.value,
+                    async (selectedValue, $savingMessage) => {
+                        await this.storeAndSave(setting, setting.key, selectedValue, $savingMessage)
+                    }, isDisabled)
+                break;
+            case 'enumeration':
+                let optionCaptions1: string[] = setting.optionTexts.map(t => t());
+                let defaultSettingIndex = setting.optionValues.indexOf(defaultSettingValue.value);
+                if(defaultSettingIndex == -1) defaultSettingIndex =  0;
+                optionCaptions1.push(SettingsMessages.OptionDefault() + ": " + optionCaptions1[defaultSettingIndex]);
+                let optionValues1: SettingValue[] = setting.optionValues.slice();
+                optionValues1.push(undefined);
+
+                this.appendSelectElement($settingDiv, optionCaptions1, optionValues1, currentSettingValue,
+                    async (selectedValue, $savingMessage) => {
+                        await this.storeAndSave(setting, setting.key, selectedValue, $savingMessage);
+                    }, isDisabled)
+                break;
+        }
+
+        if(setting.image){
+            $settingDiv.append(jQuery('<div class="jo_settingClearBoth"></div>'));
+        }
+
+        if(isDisabled){
+            let $disabledMessage = jQuery(`<div class="jo_settingDisabledMessage">${SettingsMessages.SettingDisabledByHigherPrecedence()}</div>`);
+            $settingDiv.append($disabledMessage);
+        }
+
+    }
+
+    async storeAndSave(setting: SettingMetadata, key: string, selectedValue: string | number | boolean, $savingMessage: JQuery<HTMLDivElement>) {
+        let oldValue = this.getCurrentSettingValues()[key];
+        if (oldValue !== selectedValue) {
+            this.getCurrentSettingValues()[key] = selectedValue;
+
+            // If the setting has an action, execute it
+            if (setting.action) {
+                setting.action(this.main, selectedValue);
+            }
+
+            let request: UpdateSettingsDataRequest = {
+                userId: this.currentScope == 'user' ? this.main.user.id : undefined,
+                klasseId: this.currentScope == 'class' ? this.currentClassId : undefined,
+                schuleId: this.currentScope == 'school' ? this.main.user.schule_id : undefined,
+                settings: this.getCurrentSettingValues()
+            }
+
+            $savingMessage.text(SettingsMessages.Saving() + '...');
+            $savingMessage.css('color', 'var(--loginMessageColor)');
+            $savingMessage.show();
+            let response: UpdateSettingsDataResponse = await ajaxAsync('/servlet/updateSettings', request);
+            $savingMessage.text(`-> ${SettingsMessages.Saved()} ✓`);
+            $savingMessage.css('color', 'var(--loginButtonBackground)')
+        }
+    }
+
+    wrapWithSavingMessageAndAppendToParent($element: JQuery<HTMLElement>, $parent: JQuery<HTMLElement>): JQuery<HTMLDivElement> {
+        let $wrapper = jQuery(`<div class='jo_settingsWrapper'></div>`);
+        $wrapper.append($element);
+        let $savingMessage: JQuery<HTMLDivElement> = jQuery(`<div class='jo_settingsSavingMessage'></div>`);
+        $wrapper.append($savingMessage);
+        $savingMessage.hide();
+        $parent.append($wrapper);
+
+        $element.on('click', () => {
+            $savingMessage.text('');
+        })
+
+        return $savingMessage;
+
+    }
+
+    appendInputElement($parent: JQuery<HTMLElement>, currentValue: string, defaultValue: string,
+        onChangedCallback: (selectedValue: SettingValue, $savingMessage: JQuery<HTMLDivElement>) => Promise<void>,
+        isDisabled: boolean = false
+    ) {
+        let disabledString = isDisabled ? " disabled" : "";
+        let $inputElement: JQuery<HTMLInputElement> = jQuery(`<input type='text' placeholder='default: ${defaultValue}' class='jo_settingsInput' ${disabledString}>`);
+        if (typeof currentValue !== 'undefined') $inputElement.val(currentValue);
+        let $savingMessage = this.wrapWithSavingMessageAndAppendToParent($inputElement, $parent);
+        $inputElement.on('focusout', async () => {
+            let value = $inputElement.val() as string | undefined;
+            if (value == '') value = undefined; // default-value!
+            await onChangedCallback(value, $savingMessage);
+        })
+
+        $inputElement.on('change', () => {
+            $savingMessage.hide();
+        })
+    }
+
+    appendSelectElement($parent: JQuery<HTMLElement>,
+        optionCaptions: string[],
+        optionValues: SettingValue[],
+        selectedValue: SettingValue,   // undefined -> defaultCaption 
+        onChangedCallback: (selectedValue: SettingValue, $savingMessage: JQuery<HTMLDivElement>) => Promise<void>,
+        isDisabled: boolean = false
+    ) {
+
+        let disabledString = isDisabled ?  " disabled" : "";
+
+        let $selectElement: JQuery<HTMLSelectElement> = jQuery(`<select class="jo_settingsSelect"${disabledString}></select>`);
+
+        let $savingMessage = this.wrapWithSavingMessageAndAppendToParent($selectElement, $parent);
+
+        let selectItems: SelectItem[] = [];
+        for (let i = 0; i < optionValues.length; i++) {
+            selectItems.push({
+                value: "" + optionValues[i],
+                caption: optionCaptions[i],
+                object: optionValues[i]
+            })
+        }
+
+        setSelectItems($selectElement, selectItems)
+
+        let selectedIndex: number = selectItems.findIndex(item => item.object === selectedValue);
+        $selectElement[0].selectedIndex = selectedIndex;
+
+        $selectElement.on('change',
+            async () => {
+                await onChangedCallback(getSelectedObject($selectElement), $savingMessage);
+            }
+        );
+
+    }
+
+
+    getDefaultSettingValue(key: string, userIsStudent: boolean):{value: SettingValue, isForced: boolean} {
+        let value: SettingValue = undefined;
+        let settingsPrecedence: SettingPrecedence = SettingPrecedenceValues[key] || 'userClassSchoolDefault';
+
+        let isForced: boolean = false;
+
+        if (this.currentScope == 'user' && this.ownClassSettings) {
+            value = this.ownClassSettings[key];
+            if(typeof value != 'undefined' && settingsPrecedence === 'classSchoolUserDefault') isForced = true;
+        }
+        if (typeof value == 'undefined') {
+            value = this.schoolSettings[key];
+            if(typeof value != 'undefined' && settingsPrecedence === 'classSchoolUserDefault') isForced = true;
+        }
+
+        if (typeof value == 'undefined') {
+            value = this.main.settings.values.default[key];
+        }
+
+        return { value: value, isForced: isForced && userIsStudent };
+    }
+
+    getCurrentSettingValues(): SettingValues {
+        switch (this.currentScope) {
+            case 'user': return this.userSettings;
+            case 'class': if (!(this.main.user.is_schooladmin || this.main.user.is_admin || this.main.user.is_teacher)) return this.ownClassSettings;
+                return this.classSettings.find(cs => cs.classId == this.currentClassId)?.settings || {};
+            case 'school': return this.schoolSettings;
+        }
+        return {};
+    }
+
+    initSettingsExplorer() {
+        this.settingsExplorer = new Treeview(this.$settingsLeftMenuDiv[0], {
+            withSelection: true,
+            selectMultiple: false,
+            captionLine: {
+                enabled: false
+            },
+            buttonAddElements: false,
+            buttonAddFolders: false,
+            withFolders: true,
+            withDeleteButtons: false,
+            isDragAndDropSource: false,
+            orderBy: "comparator"
+        })
+
+        for (let settingsGroup of AllSettingsMetadata.filter(sg => sg.settingType === 'group')) {
+            this.addSettingsToExplorer(settingsGroup);
+        }
+
+        this.settingsExplorer.nodeClickedCallback = (element: GroupOfSettingMetadata) => {
+            this.currentSettingsGroup = element;
+            this.showSettingsData();
+        }
+
+    }
+
+    addSettingsToExplorer(settingsGroup: GroupOfSettingMetadata, parent: GroupOfSettingMetadata | null = null) {
+
+
+        this.settingsExplorer.addNode(settingsGroup.settings.find(s => s.settingType === 'group') != null,
+            settingsGroup.name(), undefined, settingsGroup, parent);
+
+        settingsGroup.settings.filter(s => s.settingType === 'group').forEach(childGroup => {
+            this.addSettingsToExplorer(childGroup, settingsGroup);
+        });
+
+    }
+
+
+}

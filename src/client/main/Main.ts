@@ -33,70 +33,10 @@ import jQuery from "jquery";
 import type { PruefungManagerForStudents } from "./pruefung/PruefungManagerForStudents.js";
 import { PushClientManager } from "../communication/pushclient/PushClientManager.js";
 import type { GUIFile } from "../compiler/parser/GUIFile.js";
+import type { Settings } from "../settings/Settings.js";
+import { WindowStateManager } from "./gui/WindowStateManager.js";
 
 export class Main implements MainBase {
-    isEmbedded(): boolean {
-        return false;
-    }
-
-    getCurrentWorkspace(): Workspace {
-        return this.currentWorkspace;
-    }
-    getMonacoEditor(): monaco.editor.IStandaloneCodeEditor {
-        return this.editor.editor;
-    }
-
-    getRightDiv(): RightDiv {
-        return this.rightDiv;
-    }
-
-    getBottomDiv(): BottomDiv {
-        return this.bottomDiv;
-    }
-
-    getCurrentlyEditedFile(): GUIFile {
-        return this.currentWorkspace?.getCurrentlyEditedModule()?.file;
-    }
-
-    getCurrentlyEditedModule(): Module {
-        return this.currentWorkspace?.getCurrentlyEditedModule();
-    }
-
-    getActionManager(): ActionManager {
-        return this.actionManager;
-    }
-
-    getCompiler(): Compiler {
-        return this.compiler;
-    }
-
-    setFileActive(file: GUIFile) {
-        this.projectExplorer.setFileActive(file);
-    }
-
-    getSemicolonAngel(): SemicolonAngel {
-        return this.semicolonAngel;
-    }
-
-    getDatabaseTool(): DatabaseTool {
-        return this.databaseTool;
-    }
-
-    getDatabaseExplorer(): DatabaseExplorer {
-        return this.databaseExplorer;
-    }
-
-    getResultsetPresenter(): ResultsetPresenter {
-        return this.bottomDiv.resultsetPresenter;
-    }
-
-    getWaitOverlay(): WaitOverlay {
-        return this.waitOverlay;
-    }
-
-    getHistoryViewer(): HistoryViewer {
-        return this.bottomDiv.historyViewer;
-    }
 
     workspaceList: Workspace[] = [];
     workspacesOwnerId: number;
@@ -145,6 +85,11 @@ export class Main implements MainBase {
     notifier: NewNotifier;
 
     waitOverlay: WaitOverlay = new WaitOverlay(jQuery('.bitteWarten'));
+
+    settings: Settings;
+
+    windowStateManager: WindowStateManager = new WindowStateManager(this);
+
 
     initGUI() {
 
@@ -357,6 +302,71 @@ export class Main implements MainBase {
         return Workspace.restoreFromData(workspaceData, this);
     }
 
+    isEmbedded(): boolean {
+        return false;
+    }
 
+    getCurrentWorkspace(): Workspace {
+        return this.currentWorkspace;
+    }
+    getMonacoEditor(): monaco.editor.IStandaloneCodeEditor {
+        return this.editor.editor;
+    }
+
+    getRightDiv(): RightDiv {
+        return this.rightDiv;
+    }
+
+    getBottomDiv(): BottomDiv {
+        return this.bottomDiv;
+    }
+
+    getCurrentlyEditedFile(): GUIFile {
+        return this.currentWorkspace?.getCurrentlyEditedModule()?.file;
+    }
+
+    getCurrentlyEditedModule(): Module {
+        return this.currentWorkspace?.getCurrentlyEditedModule();
+    }
+
+    getActionManager(): ActionManager {
+        return this.actionManager;
+    }
+
+    getCompiler(): Compiler {
+        return this.compiler;
+    }
+
+    setFileActive(file: GUIFile) {
+        this.projectExplorer.setFileActive(file);
+    }
+
+    getSemicolonAngel(): SemicolonAngel {
+        return this.semicolonAngel;
+    }
+
+    getDatabaseTool(): DatabaseTool {
+        return this.databaseTool;
+    }
+
+    getDatabaseExplorer(): DatabaseExplorer {
+        return this.databaseExplorer;
+    }
+
+    getResultsetPresenter(): ResultsetPresenter {
+        return this.bottomDiv.resultsetPresenter;
+    }
+
+    getWaitOverlay(): WaitOverlay {
+        return this.waitOverlay;
+    }
+
+    getHistoryViewer(): HistoryViewer {
+        return this.bottomDiv.historyViewer;
+    }
+
+    getSettings(): Settings {
+        return this.settings;
+    }
 }
 

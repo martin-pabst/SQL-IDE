@@ -772,6 +772,28 @@ export type DatabaseChangedPushMessage = {
     rollbackToVersion?: number
 }
 
+export type GetSettingsRequest = {
+
+}
+
+export type GetSettingsResponse = {
+    success: boolean,
+    classSettings: {classId: number, className: string, settings: SettingValues}[] | null, // settings for classes if user is teacher
+    schoolSettings: SettingValues | null // settings for school if user is schooladmin
+}
+
+export type UpdateSettingsDataRequest = {
+    userId?: number,
+    klasseId?: number,
+    schuleId?: number,
+    settings: SettingValues
+}
+
+export type UpdateSettingsDataResponse = {
+    success: boolean,
+    message: string
+}
+
 
 export type FileOrder = {
     fileId: number,
