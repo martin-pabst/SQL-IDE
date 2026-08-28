@@ -963,7 +963,7 @@ export class ProjectExplorer {
             userId: this.main.user.id
         }
 
-        let response: GetWorkspacesResponse = await ajaxAsync("/servlet/getWorkspaces", request);
+        let response = await ajaxAsync("/servlet/getWorkspaces", request) as GetWorkspacesResponse;
 
         if (response.success == true) {
 

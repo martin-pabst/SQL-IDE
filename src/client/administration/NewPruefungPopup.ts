@@ -1,6 +1,7 @@
 import { KlassData, Pruefung, WorkspaceShortData } from "../communication/Data";
 import { w2form, w2popup, w2ui } from 'w2ui'
 import { AdminMessages } from "./AdministrationMessages";
+import { Constants } from "../Constants";
 
 
 export class NewPruefungPopup {
@@ -60,7 +61,8 @@ export class NewPruefungPopup {
                             state: "preparing",
                             template_workspace_a_id: this.record["templateA"]?.id,
                             template_workspace_b_id: this.record["templateB"]?.id,
-                            name: this.record["name"]
+                            name: this.record["name"],
+                            application: Constants.Application
                         }
                     );
                     form.destroy();

@@ -66,7 +66,7 @@ export class SchoolSettings extends AdminMenuItem {
 
         let request: GetSchoolSettingsRequest = {school_id: this.administration.userData.schule_id}
 
-        return await ajaxAsync("/servlet/getSchoolSettings", request);
+        return await ajaxAsync("/servlet/getSchoolSettings", request) as GetSchoolSettingsResponse;
 
     }
 
@@ -78,7 +78,7 @@ export class SchoolSettings extends AdminMenuItem {
             vidis_schulkennung: vidis_schulkennung
         }
 
-        let response: UpdateSchoolSettingsResponse = await ajaxAsync("/servlet/updateSchoolSettings", request);
+        let response = await ajaxAsync("/servlet/updateSchoolSettings", request) as UpdateSchoolSettingsResponse;
 
         if(response.success){
             this.form.message("Die Daten wurden erfolgreich gespeichert.")

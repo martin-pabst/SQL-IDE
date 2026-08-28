@@ -39,6 +39,8 @@ type PSchuelerData = {
 }
 
 type GetPruefungForPrintingResponse = {
+    success: boolean;
+    message: string;
     pSchuelerDataList: PSchuelerData[];
     templates: PFileData[];
 }
@@ -93,7 +95,7 @@ export class Pruefungen extends AdminMenuItem {
         //@ts-ignore
         w2utils.settings.dateStartYear = 1990;
 
-        let response: GetPruefungenForLehrkraftResponse = await ajaxAsync("/servlet/getPruefungenForLehrkraft", {});
+        let response = await ajaxAsync("/servlet/getPruefungenForLehrkraft", {}) as GetPruefungenForLehrkraftResponse;
         if (response == null) return;
         this.pruefungen = response.pruefungen;
         this.klassen = response.klassen;
@@ -166,8 +168,7 @@ export class Pruefungen extends AdminMenuItem {
 
                 if (this.counter % 5 == 0 && this.currentPruefung != null) {
                     let request: GetPruefungStudentStatesRequest = { pruefungId: this.currentPruefung.id }
-
-                    let pruefungStates: GetPruefungStudentStatesResponse = await ajaxAsync("/servlet/getPruefungStates", request);
+                    let pruefungStates = await ajaxAsync("/servlet/getPruefungStates", request) as GetPruefungStudentStatesResponse;
                     if (pruefungStates != null) {
                         this.displayStudentStates(pruefungStates);
                     }
@@ -547,7 +548,7 @@ export class Pruefungen extends AdminMenuItem {
     async print() {
         let request: GetPruefungForPrintingRequest = { pruefungId: this.currentPruefung.id };
 
-        let p: GetPruefungForPrintingResponse = await ajaxAsync("/servlet/getPruefungForPrinting", request);
+        let p = await ajaxAsync("/servlet/getPruefungForPrinting", request) as GetPruefungForPrintingResponse;
 
         if (p == null) return;
 
@@ -784,7 +785,7 @@ export class Pruefungen extends AdminMenuItem {
 
         let request: GetPruefungStudentTableDataRequest = { pruefung_id: recId };
 
-        let p: GetPruefungStudentTableDataResponse = await ajaxAsync("/servlet/getPruefungStudentTableData", request);
+        let p = await ajaxAsync("/servlet/getPruefungStudentTableData", request) as GetPruefungStudentTableDataResponse;
 
         for (let sd of p.studentDataList) {
             sd.mode = { id: <PruefungStudentMode>sd.mode, text: AdminMessages.modeToText(<string>sd.mode) };

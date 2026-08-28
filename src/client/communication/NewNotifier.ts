@@ -72,7 +72,7 @@ export class NewNotifier {
             }
             let statements = newStatements;
             if (statements.length > 0) {
-                this.main.resultsetPresenter.executeStatementsString(statements, 0, () => {
+                this.main.getResultsetPresenter().executeStatementsString(statements, 0, () => {
                     that.main.getHistoryViewer().appendStatements(statements);
                     that.database.statements = that.database.statements.concat(statements)
                     that.database.version = firstNewStatementIndex + newStatements.length - 1;

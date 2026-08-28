@@ -28,8 +28,8 @@ export class WriteQueryManager implements WriteQueryListener {
                 this.writtenStatements = JSON.parse(db);
                 this.statementsToExecute = this.writtenStatements.slice();
 
-                this.main.historyViewer.clear();
-                this.main.historyViewer.appendStatements(this.statementsToExecute);
+                this.main.getHistoryViewer().clear();
+                this.main.getHistoryViewer().appendStatements(this.statementsToExecute);
 
                 this.executeStatements();
                 this.writeStatementsIfNecessary();
@@ -41,7 +41,7 @@ export class WriteQueryManager implements WriteQueryListener {
         this.statementsToWrite = [];
         this.writtenStatements = [];
         this.statementsToExecute = [];
-        this.main.historyViewer.clear();
+        this.main.getHistoryViewer().clear();
         this.forceWriteStatements();
     }
 
@@ -83,7 +83,7 @@ export class WriteQueryManager implements WriteQueryListener {
         this.main.$databaseResetButton.fadeIn(200);
         let statementsSql = statements.map(stmt => stmt.sqlCleaned == null ? stmt.sql : stmt.sqlCleaned);
         this.statementsToWrite = this.statementsToWrite.concat(statementsSql);
-        this.main.historyViewer.appendStatements(statementsSql);
+        this.main.getHistoryViewer().appendStatements(statementsSql);
         this.writeStatementsIfNecessary();
     }
 

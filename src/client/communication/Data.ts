@@ -2,7 +2,7 @@ import jQuery from "jquery";
 
 export type Application = 1 | 2;    // 1 == OnlineIDE, 2 == SQLIDE
 
-export interface BaseResponse {
+export type BaseResponse = {
     success: boolean;
     message: string;
 }
@@ -156,6 +156,7 @@ export type GetClassesDataRequest = {
 
 export type GetClassesDataResponse = {
     success: boolean,
+    message: string,
     classDataList: ClassData[]
 }
 
@@ -165,6 +166,7 @@ export type GetTeacherDataRequest = {
 
 export type GetTeacherDataResponse = {
     success: boolean,
+    message: string,
     teacherData?: TeacherData[],
     classesWithoutTeacher: ClassData[]
 }
@@ -246,6 +248,7 @@ export type SendUpdatesRequest = {
 
 export type SendUpdatesResponse = {
     success: boolean,
+    message: string,
     workspaces: Workspaces,
     filesToForceUpdate: FileData[],
     activePruefung: Pruefung
@@ -278,6 +281,7 @@ export type MoveFileRequest = {
 
 export type CRUDResponse = {
     success: boolean,
+    message: string,
     id?: number, // in case of create
     error: string
 }
@@ -319,6 +323,7 @@ export type GetWorkspacesRequest = {
 
 export type GetWorkspacesResponse = {
     success: boolean,
+    message: string,
     workspaces: Workspaces
 }
 
@@ -342,26 +347,9 @@ export type DuplicateWorkspaceRequest = {
 
 export type DuplicateWorkspaceResponse = {
     workspace: WorkspaceData, // new Workspace (with copied files)
-    message: string
+    success: boolean,
+    message: string,
 }
-
-/**
- * Creates Repository and links it with given workspace
- */
-export type CreateRepositoryRequest = {
-    workspace_id: number, // Workspace to copy
-    publish_to: number // 0 == private, 1 == class, 2 == school
-}
-
-export type CreateRepositoryResponse = {
-    message: string
-}
-
-export type DeleteRepositoryRequest = {
-    repository_id: number
-}
-
-export type DeleteRepositoryResponse = { success: boolean, message?: string };
 
 
 /**
@@ -778,6 +766,7 @@ export type GetSettingsRequest = {
 
 export type GetSettingsResponse = {
     success: boolean,
+    message: string,
     classSettings: {classId: number, className: string, settings: SettingValues}[] | null, // settings for classes if user is teacher
     schoolSettings: SettingValues | null // settings for school if user is schooladmin
 }
@@ -953,6 +942,8 @@ export type WorkspaceShortData = {
 }
 
 export type GetPruefungenForLehrkraftResponse = {
+    success: boolean;
+    message: string;
     pruefungen: Pruefung[];
     klassen: KlassData[];
     workspaces: WorkspaceShortData[];

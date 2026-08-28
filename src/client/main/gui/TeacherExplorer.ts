@@ -1,5 +1,5 @@
 import { Main } from "../Main.js";
-import { ClassData, UserData, Pruefung, PruefungCaptions, getUserDisplayName, GetClassesDataResponse, type GetSingleUseSessionTokenResponse } from "../../communication/Data.js";
+import { ClassData, UserData, Pruefung, PruefungCaptions, getUserDisplayName, GetClassesDataResponse, type GetSingleUseSessionTokenResponse, type GetPruefungenForLehrkraftResponse } from "../../communication/Data.js";
 import { ajaxAsync, csrfToken, SINGLEUSETOKEN } from "../../communication/AjaxHelper.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import jQuery from "jquery";
@@ -59,7 +59,7 @@ export class TeacherExplorer {
         });
 
         PushClientManager.subscribe("onClassesChanged", async () => {
-            let response: GetClassesDataResponse = await ajaxAsync("/servlet/getClassesData", { wholeSchool: false })
+            let response = await ajaxAsync("/servlet/getClassesData", { wholeSchool: false }) as GetClassesDataResponse;
             this.classData = response.classDataList;
             if (this.classPanelMode == "classes") {
                 let currentClass: ClassData = null;
@@ -186,7 +186,7 @@ export class TeacherExplorer {
 
         let buttonPruefungAdministration = this.classPanel.captionLineAddIconButton("img_gear-dark", "right",
             async () => {
-                let response: GetSingleUseSessionTokenResponse = await ajaxAsync("servlet/getSingleUseSessionToken", {});
+                let response = await ajaxAsync("servlet/getSingleUseSessionToken", {}) as GetSingleUseSessionTokenResponse;
                 if (response.success) {
                     window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (this.main.user.sql_gui_state.language ?? "de") + "&menuItem=manageTests");
                     // window.open(`administration_mc.html?csrfToken=${csrfToken}&menuItem=manageTests`, '_blank').focus();
@@ -323,7 +323,7 @@ export class TeacherExplorer {
 
     async fetchPruefungen() {
 
-        let response = await ajaxAsync("/servlet/getPruefungenForLehrkraft", {})
+        let response = await ajaxAsync("/servlet/getPruefungenForLehrkraft", {}) as GetPruefungenForLehrkraftResponse;
         this.pruefungen = response.pruefungen;
 
     }

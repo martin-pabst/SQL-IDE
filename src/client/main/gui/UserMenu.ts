@@ -50,7 +50,7 @@ export class PasswordChanger {
     }
 
     show() {
-        this.dialog.init();
+        this.dialog.initAndOpen();
         this.dialog.heading("Passwort ändern");
         this.dialog.description("Bitte geben Sie Ihr bisheriges Passwort und darunter zweimal Ihr neues Passwort ein. <br>" + 
         "Das Passwort muss mindestens 8 Zeichen lang sein und sowohl Buchstaben als auch Zahlen oder Sonderzeichen enthalten.")
