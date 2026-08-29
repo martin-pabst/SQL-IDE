@@ -222,7 +222,6 @@ export type LoginResponse = {
     isTestuser: boolean,
     activePruefung: Pruefung,
     sqlIdeForOnlineIdeClient: string,
-    userSettings: SettingValues,   // new user settings
     classSettings: SettingValues, // settings for class if user is student
     schoolSettings: SettingValues, // settings for school
     vidis_id_token?: string,

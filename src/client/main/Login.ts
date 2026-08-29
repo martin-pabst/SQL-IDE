@@ -191,7 +191,7 @@ export class Login {
                     }
                 }
 
-                this.main.settings = new Settings(user, response.userSettings, response.classSettings, response.schoolSettings);
+                this.main.settings = new Settings(user, user.sql_settings, response.classSettings, response.schoolSettings);
 
                 this.main.waitForGUICallback = () => {
 
