@@ -7,7 +7,7 @@ import { Main } from "../Main.js";
 import pako from 'pako'
 
 import jQuery from "jquery";
-import type { TreeviewNode } from "../../../tools/treeview/TreeviewNode.js";
+import type { TreeviewNode } from "../../../tools/components/treeview/TreeviewNode.js";
 import type { Workspace } from "../../workspace/Workspace.js";
 import type { CreateWorkspaceData } from "../../communication/Data.js";
 import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";

@@ -10,6 +10,7 @@ import { PruefungManagerForStudents } from './pruefung/PruefungManagerForStudent
 import { LoginMessages } from './gui/language/LoginMessages.js';
 import { Constants } from '../Constants.js';
 import { Settings } from '../settings/Settings.js';
+import { SecureJSON } from '../../tools/SecureJSON.js';
 
 export class Login {
 
@@ -181,15 +182,15 @@ export class Login {
                 this.main.waitOverlay.show('Bitte warten...');
 
                 let user: UserData = response.user;
-                if (user.sql_gui_state == null || user.sql_gui_state.helperHistory == null) {
-                    user.sql_gui_state = {
-                        helperHistory: {
-                            newFileHelperDone: false
-                        },
-                        viewModes: null,
-                        language: "de"
-                    }
-                }
+
+                this.main.guiState = SecureJSON.parse(user.sql_gui_state) || {
+                    helperHistory: {
+                        newFileHelperDone: false
+                    },
+                    viewModes: null,
+                    language: "de"
+                };
+
 
                 this.main.settings = new Settings(user, user.sql_settings, response.classSettings, response.schoolSettings);
 

@@ -34,7 +34,8 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
             }
     
             this.websocket.onclose = (event) => {
-                console.log("Websocket has been closed, code: " + event.code + ", reason: " + event.reason);
+                let wasOpenMs = performance.now() - this.openedTimestamp;
+                console.log("Websocket has been closed after " + wasOpenMs + " ms, code: " + event.code + ", reason: " + event.reason);
 
                 this.state = "closed";
                 
@@ -76,21 +77,28 @@ export class PushClientWebsocketStrategy extends PushClientStrategy {
     }
 
     doPing(){
+        if(this.currentTimer != null){
+            clearTimeout(this.currentTimer);
+        }
+
         this.currentTimer = setTimeout(() => {
             switch(this.state){
                 case "closed":
                     this.currentTimer = null;
                     return;
                 case "connecting":
+                    this.currentTimer = null;
                     this.doPing();
                     break;
                 case "open":
                     this.websocket.send("ping");
+                    this.currentTimer = null;
                     this.doPing();
                     break;
             }
         }, 25000);
     }
+
 
     async close() {
         this.state = "closed";

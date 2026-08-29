@@ -1,4 +1,4 @@
-import { ClassData, UserData, Workspaces, type WorkspaceData } from "../communication/Data.js";
+import { ClassData, UserData, Workspaces, type GuiState, type WorkspaceData } from "../communication/Data.js";
 import { NetworkManager } from "../communication/NetworkManager.js";
 import { Compiler, CompilerStatus } from "../compiler/Compiler.js";
 import { Module } from "../compiler/parser/Module.js";
@@ -90,6 +90,7 @@ export class Main implements MainBase {
 
     windowStateManager: WindowStateManager = new WindowStateManager(this);
 
+    guiState: GuiState;
 
     initGUI() {
 

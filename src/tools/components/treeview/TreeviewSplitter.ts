@@ -1,4 +1,4 @@
-import { DOM } from "../DOM";
+import { DOM } from "../../DOM";
 import { AccordionElementInterface } from "./AccordionElementInterface";
 import { TreeviewAccordion } from "./TreeviewAccordion";
 

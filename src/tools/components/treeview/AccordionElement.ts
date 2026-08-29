@@ -1,6 +1,6 @@
-import { DOM } from "../DOM";
-import { ExpandCollapseComponent, ExpandCollapseState } from "../ExpandCollapseComponent";
-import { IconButtonComponent } from "../IconButtonComponent";
+import { DOM } from "../../DOM";
+import { ExpandCollapseComponent, ExpandCollapseState } from "../../ExpandCollapseComponent";
+import { IconButtonComponent } from "../../IconButtonComponent";
 import { AccordionElementInterface } from "./AccordionElementInterface";
 import { TreeviewAccordion } from "./TreeviewAccordion";
 import { TreeviewMessages } from "./TreeviewMessages";

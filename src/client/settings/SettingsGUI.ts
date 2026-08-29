@@ -8,8 +8,9 @@ import { AllSettingsMetadata, GroupOfSettingMetadata, SettingMetadata, SettingVa
 import jQuery from 'jquery';
 import '/assets/css/settings.css';
 import { getSelectedObject, SelectItem, setSelectItems } from "../../tools/HtmlTools.ts";
-import { Treeview } from "../../tools/treeview/Treeview.ts";
+import { Treeview } from "../../tools/components/treeview/Treeview.ts";
 import { SettingPrecedence, SettingPrecedenceValues, SettingsScope, SettingValue } from "./SettingsStore.ts";
+import { SecureJSON } from "../../tools/SecureJSON.ts";
 
 type ClassSettings = { classId: number, className: string, settings: SettingValues };
 
@@ -29,11 +30,15 @@ export class SettingsGUI {
     $settingsMainDiv: JQuery<HTMLDivElement>; // main div for settings content
 
     settingsExplorer: Treeview<GroupOfSettingMetadata, GroupOfSettingMetadata>;
+    tabManager: TabManager;
+    schoolSettingsTab: Tab;
+    classSettingsTab: Tab;
+    userSettingsTab: Tab;
 
     constructor(private main: Main) {
         this.userSettings = main.settings.values.user || {};
-        this.ownClassSettings = main.settings.values.class;
-        this.schoolSettings = main.settings.values.school;
+        this.ownClassSettings = main.settings.values.class || {};
+        this.schoolSettings = main.settings.values.school || {};
     }
 
     async open() {
@@ -61,22 +66,22 @@ export class SettingsGUI {
         this.$settingsMainDiv = jQuery('<div class="jo_settingsMain jo_scrollable"></div>');
         $tabBody.append(this.$settingsMainDiv);
 
-        let tabManager = new TabManager($tabDiv[0], true);
+        this.tabManager = new TabManager($tabDiv[0], true);
 
-        let userSettingsTab = new Tab('User Settings',SettingsMessages.UserSettingsTabHeading(), []);
-        userSettingsTab.onShow = () => { this.showSettingsData("user"); };
-        tabManager.addTab(userSettingsTab);
-        tabManager.setActive(userSettingsTab);
+        this.userSettingsTab = new Tab('User Settings',SettingsMessages.UserSettingsTabHeading(), []);
+        this.userSettingsTab.onShow = () => { this.showSettingsData("user"); };
+        this.tabManager.addTab(this.userSettingsTab);
+        this.tabManager.setActive(this.userSettingsTab);
 
         if (this.main.user.is_teacher && this.classSettings && this.classSettings.length > 0) {
-            let classSettingsTab = new Tab('Class Settings', SettingsMessages.ClassSettingsTabHeading(), []);
-            classSettingsTab.onShow = () => {
+            this.classSettingsTab = new Tab('Class Settings', SettingsMessages.ClassSettingsTabHeading(), []);
+            this.classSettingsTab.onShow = () => {
                 this.showSettingsData("class");
             };
-            tabManager.addTab(classSettingsTab);
+            this.tabManager.addTab(this.classSettingsTab);
 
             let $selectElement: JQuery<HTMLSelectElement> = jQuery('<select class="jo_settingsSelect"></select>');
-            classSettingsTab.headingDiv.append($selectElement[0]);
+            this.classSettingsTab.headingDiv.append($selectElement[0]);
 
             setSelectItems($selectElement, this.classSettings.map(cs => ({
                 value: cs.classId,
@@ -97,9 +102,9 @@ export class SettingsGUI {
         }
 
         if (this.main.user.is_schooladmin && this.schoolSettings) {
-            let schoolSettingsTab = new Tab('School Settings', SettingsMessages.SchoolSettingsTabHeading(), []);
-            schoolSettingsTab.onShow = () => { this.showSettingsData("school"); };
-            tabManager.addTab(schoolSettingsTab);
+            this.schoolSettingsTab = new Tab('School Settings', SettingsMessages.SchoolSettingsTabHeading(), []);
+            this.schoolSettingsTab.onShow = () => { this.showSettingsData("school"); };
+            this.tabManager.addTab(this.schoolSettingsTab);
         }
 
         dialog.buttons([
@@ -116,8 +121,11 @@ export class SettingsGUI {
     async getSettingsFromServer() {
         let response = await ajaxAsync("/servlet/getSettings", {}) as GetSettingsResponse;
         if (response.success) {
-            this.classSettings = response.classSettings;
-            this.schoolSettings = response.schoolSettings;
+            this.classSettings = response.classSettings.map(cs => ({
+                classId: cs.classId,
+                className: cs.className,
+                settings: SecureJSON.parse(cs.settings)
+            }));
         }
     }
 
@@ -214,15 +222,17 @@ export class SettingsGUI {
                 userId: this.currentScope == 'user' ? this.main.user.id : undefined,
                 klasseId: this.currentScope == 'class' ? this.currentClassId : undefined,
                 schuleId: this.currentScope == 'school' ? this.main.user.schule_id : undefined,
-                settings: this.getCurrentSettingValues()
+                settings:  SecureJSON.stringify(this.getCurrentSettingValues())
             }
 
             $savingMessage.text(SettingsMessages.Saving() + '...');
             $savingMessage.css('color', 'var(--loginMessageColor)');
             $savingMessage.show();
             let response: UpdateSettingsDataResponse = await ajaxAsync('/servlet/updateSettings', request);
-            $savingMessage.text(`-> ${SettingsMessages.Saved()} ✓`);
-            $savingMessage.css('color', 'var(--loginButtonBackground)')
+            if(response.success){
+                $savingMessage.text(`-> ${SettingsMessages.Saved()} ✓`);
+                $savingMessage.css('color', 'var(--loginButtonBackground)')
+            }
         }
     }
 
@@ -251,9 +261,9 @@ export class SettingsGUI {
         if (typeof currentValue !== 'undefined') $inputElement.val(currentValue);
         let $savingMessage = this.wrapWithSavingMessageAndAppendToParent($inputElement, $parent);
         $inputElement.on('focusout', async () => {
-            let value = $inputElement.val() as string | undefined;
+            let value = $inputElement.val();
             if (value == '') value = undefined; // default-value!
-            await onChangedCallback(value, $savingMessage);
+            await onChangedCallback(<string>value, $savingMessage);
         })
 
         $inputElement.on('change', () => {
@@ -346,11 +356,22 @@ export class SettingsGUI {
         })
 
         for (let settingsGroup of AllSettingsMetadata.filter(sg => sg.settingType === 'group')) {
+
+            if(settingsGroup.isSchooladminOnly && !this.main.user.is_schooladmin) continue; // Skip schooladmin-only groups for non-schooladmin users
+
             this.addSettingsToExplorer(settingsGroup);
         }
 
         this.settingsExplorer.nodeClickedCallback = (element: GroupOfSettingMetadata) => {
             this.currentSettingsGroup = element;
+            if(element.isSchooladminOnly){
+                this.tabManager.setActive(this.schoolSettingsTab);
+                this.classSettingsTab?.setVisible(false);
+                this.userSettingsTab.setVisible(false);
+            } else {
+                this.classSettingsTab?.setVisible(this.main.user.is_teacher);
+                this.userSettingsTab.setVisible(true);
+            }
             this.showSettingsData();
         }
 

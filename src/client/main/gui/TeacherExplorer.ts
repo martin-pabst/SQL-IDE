@@ -5,7 +5,7 @@ import { Workspace } from "../../workspace/Workspace.js";
 import jQuery from "jquery";
 import { PushClientManager } from "../../communication/pushclient/PushClientManager.js";
 import * as monaco from 'monaco-editor'
-import { Treeview } from "../../../tools/treeview/Treeview.js";
+import { Treeview } from "../../../tools/components/treeview/Treeview.js";
 import type { IconButtonComponent } from "../../../tools/IconButtonComponent.js";
 import { ProjectExplorerMessages } from "./language/ProjectExplorerMessages.js";
 import { TeacherExplorerMessages } from "./language/TeacherExplorerMessages.js";
@@ -30,6 +30,7 @@ export class TeacherExplorer {
 
     homeButton: IconButtonComponent;
 
+    $buttonContainer: JQuery<HTMLElement>;
 
 
     constructor(private main: Main, public classData: ClassData[]) {
@@ -157,18 +158,15 @@ export class TeacherExplorer {
 
     }
 
-    initClassPanel() {
+     initClassPanel() {
         let that = this;
 
-        let $buttonContainer = jQuery('<div class="joe_teacherExplorerClassButtons"></div>');
-        let toggleButtonClass = new GUIToggleButton(TeacherExplorerMessages.classes(), $buttonContainer, true);
-        let toggleButtonTest = new GUIToggleButton(TeacherExplorerMessages.tests(), $buttonContainer, false);
-        toggleButtonClass.linkTo(toggleButtonTest);
+        this.$buttonContainer = jQuery('<div class="joe_teacherExplorerClassButtons"></div>');
 
         this.classPanel = new Treeview(this.main.projectExplorer.accordion, {
             captionLine: {
                 enabled: true,
-                element: $buttonContainer[0]
+                element: this.$buttonContainer[0]
             },
             withSelection: true,
             selectMultiple: false,
@@ -183,18 +181,6 @@ export class TeacherExplorer {
             orderBy: "comparator"
 
         })
-
-        let buttonPruefungAdministration = this.classPanel.captionLineAddIconButton("img_gear-dark", "right",
-            async () => {
-                let response = await ajaxAsync("servlet/getSingleUseSessionToken", {}) as GetSingleUseSessionTokenResponse;
-                if (response.success) {
-                    window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (this.main.user.sql_gui_state.language ?? "de") + "&menuItem=manageTests");
-                    // window.open(`administration_mc.html?csrfToken=${csrfToken}&menuItem=manageTests`, '_blank').focus();
-                }
-            }, TeacherExplorerMessages.createNewTest());
-
-        buttonPruefungAdministration.setVisible(false);
-
         this.classPanel.nodeClickedCallback = (classOrPruefung) => {
 
             that.main.networkManager.sendUpdatesAsync().then(() => {
@@ -212,27 +198,50 @@ export class TeacherExplorer {
             });
 
         }
+        this.initPruefungButtons();
+    }
 
-        toggleButtonTest.onChange(async (checked) => {
-            buttonPruefungAdministration.setVisible(true);
-            that.classPanelMode = checked ? "tests" : "classes";
-            that.main.networkManager.sendUpdatesAsync().then(() => {
-                if (checked) {
-                    if (that.main.workspacesOwnerId == that.main.user.id) {
-                        that.ownWorkspaces = that.main.workspaceList.slice();
-                        that.currentOwnWorkspace = that.main.currentWorkspace;
+    initPruefungButtons() {
+        if (this.main.settings.getValue("schooladmin.functionality.pruefungen") == "enabled") {
+            this.$buttonContainer.empty();
+            let toggleButtonClass = new GUIToggleButton(TeacherExplorerMessages.classes(), this.$buttonContainer, true);
+            let toggleButtonTest = new GUIToggleButton(TeacherExplorerMessages.tests(), this.$buttonContainer, false);
+            toggleButtonClass.linkTo(toggleButtonTest);
+
+
+
+            let buttonPruefungAdministration = this.classPanel.captionLineAddIconButton("img_gear-dark", "right",
+                async () => {
+                    let response = await ajaxAsync("servlet/getSingleUseSessionToken", {}) as GetSingleUseSessionTokenResponse;
+                    if (response.success) {
+                        window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (this.main.guiState.language ?? "de") + "&menuItem=manageTests");
+                        // window.open(`administration_mc.html?csrfToken=${csrfToken}&menuItem=manageTests`, '_blank').focus();
                     }
-                    this.renderPruefungen();
-                    let firstPruefung = this.pruefungen.find(p => ["preparing", "running"].indexOf(p.state) < 0);
-                    if (firstPruefung != null) {
-                        this.classPanel.selectElement(firstPruefung, true);
+                }, TeacherExplorerMessages.createNewTest());
+
+            buttonPruefungAdministration.setVisible(false);
+
+            toggleButtonTest.onChange(async (checked) => {
+                buttonPruefungAdministration?.setVisible(checked);
+                this.classPanelMode = checked ? "tests" : "classes";
+                this.main.networkManager.sendUpdatesAsync().then(() => {
+                    if (checked) {
+                        if (this.main.workspacesOwnerId == this.main.user.id) {
+                            this.ownWorkspaces = this.main.workspaceList.slice();
+                            this.currentOwnWorkspace = this.main.currentWorkspace;
+                        }
+                        this.renderPruefungen();
+                        let firstPruefung = this.pruefungen.find(p => ["preparing", "running"].indexOf(p.state) < 0);
+                        if (firstPruefung != null) {
+                            this.classPanel.selectElement(firstPruefung, true);
+                        }
+                    } else {
+                        this.renderClasses(this.classData);
+                        this.onHomeButtonClicked();
                     }
-                } else {
-                    this.renderClasses(this.classData);
-                    this.onHomeButtonClicked();
-                }
+                })
             })
-        })
+        }
 
     }
 

@@ -1,5 +1,5 @@
 import * as monaco from 'monaco-editor';
-import { ClassData, type CreateWorkspaceData, type DuplicateWorkspaceResponse, type FileData, type GetWorkspacesRequest, type GetWorkspacesResponse, type Pruefung, type UserData, type WorkspaceData } from "../../communication/Data.js";
+import { ClassData, type CreateWorkspaceData, type FileData, type GetWorkspacesRequest, type GetWorkspacesResponse, type Pruefung, type UserData} from "../../communication/Data.js";
 import { TextPosition } from "../../compiler/lexer/Token.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
@@ -12,9 +12,9 @@ import { GUIFile } from '../../compiler/parser/GUIFile.js';
 import { FileTypeManager } from '../../compiler/parser/FileTypeManager.js';
 import { downloadFile } from '../../../tools/HtmlTools.js';
 import { dateToString } from '../../../tools/StringTools.js';
-import { TreeviewAccordion } from '../../../tools/treeview/TreeviewAccordion.js';
-import { Treeview, TreeviewContextMenuItem, DragKind } from '../../../tools/treeview/Treeview.js';
-import type { TreeviewNode } from '../../../tools/treeview/TreeviewNode.js';
+import { TreeviewAccordion } from '../../../tools/components/treeview/TreeviewAccordion.js';
+import { Treeview, TreeviewContextMenuItem, DragKind } from '../../../tools/components/treeview/Treeview.js';
+import type { TreeviewNode } from '../../../tools/components/treeview/TreeviewNode.js';
 import { NewDatabaseDialog } from './NewDatabaseDialog.js';
 import type { TeacherExplorer } from './TeacherExplorer.js';
 import { ajaxAsync } from '../../communication/AjaxHelper.js';
@@ -655,7 +655,7 @@ export class ProjectExplorer {
                 this.setFileActive(null);
             }
 
-            if (files.length == 0 && !this.main.user.sql_gui_state.helperHistory.newFileHelperDone) {
+            if (files.length == 0 && !this.main.guiState.helperHistory.newFileHelperDone) {
 
                 Helper.showHelper("newSQLFileHelper", this.main, jQuery(this.fileTreeview.addElementsButton.parent));
 

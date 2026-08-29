@@ -2,7 +2,7 @@ import { MainEmbedded } from "./MainEmbedded.js";
 import markdownit from 'markdown-it';
 import * as monaco from 'monaco-editor'
 import  { GUIFile } from "../compiler/parser/GUIFile.js";
-import  { Treeview } from "../../tools/treeview/Treeview.js";
+import  { Treeview } from "../../tools/components/treeview/Treeview.js";
 import { FileTypeManager } from "../compiler/parser/FileTypeManager.js";
 import { EmbeddedMessages } from "./EmbeddedMessages.js";
 import type { Workspace } from "../workspace/Workspace.js";

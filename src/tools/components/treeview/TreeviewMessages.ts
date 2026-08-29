@@ -1,4 +1,4 @@
-import { lm } from "../language/LanguageManager";
+import { lm } from "../../language/LanguageManager";
 
 export class TreeviewMessages {
     static caption = () => lm({

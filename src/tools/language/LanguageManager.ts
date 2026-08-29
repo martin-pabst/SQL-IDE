@@ -135,8 +135,8 @@ export class LanguageManager {
 
         this.setupLanguageSelector();
 
-        if(this.main.user.sql_gui_state.language != language.id){
-            this.main.user.sql_gui_state.language = language.id;
+        if(this.main.guiState.language != language.id){
+            this.main.guiState.language = language.id;
             this.main.gui_state_dirty = true;
         }
     }

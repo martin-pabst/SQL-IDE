@@ -107,10 +107,10 @@ export type UserData = {
     familienname: string,
     rufname: string,
     currentWorkspace_id?: number,
-    sql_gui_state?: GuiState,
+    sql_gui_state?: string, // serialized GuiState
     password?: string,
     is_testuser?: boolean,
-    sql_settings?: SettingValues,
+    sql_settings?: string,  // serialized SettingValues
 
     vidis_sub?: string,
     vidis_klasse?: string,
@@ -138,7 +138,8 @@ export type GetUserDataResponse = {
     user: UserData,
     classdata: ClassData[], // null if !is_teacher
     schoolName: string,
-    vidisSchoolId: string | null
+    vidisSchoolId: string | null;
+    schoolSettings: string, // settings for school; serialized SettingValues
 }
 
 export type GetSchoolDataRequest = {
@@ -222,8 +223,8 @@ export type LoginResponse = {
     isTestuser: boolean,
     activePruefung: Pruefung,
     sqlIdeForOnlineIdeClient: string,
-    classSettings: SettingValues, // settings for class if user is student
-    schoolSettings: SettingValues, // settings for school
+    classSettings: string, // settings for class if user is student; serialized SettingValues
+    schoolSettings: string, // settings for school; serialized SettingValues
     vidis_id_token?: string,
     penaltyTimeInSeconds: number,
 }
@@ -254,7 +255,7 @@ export type SendUpdatesResponse = {
 }
 
 export type UpdateGuiStateRequest = {
-    gui_state: GuiState,
+    gui_state: string,
     userId: number
 }
 
@@ -766,15 +767,15 @@ export type GetSettingsRequest = {
 export type GetSettingsResponse = {
     success: boolean,
     message: string,
-    classSettings: {classId: number, className: string, settings: SettingValues}[] | null, // settings for classes if user is teacher
-    schoolSettings: SettingValues | null // settings for school if user is schooladmin
+    classSettings: {classId: number, className: string, settings: string}[] | null, // settings for classes if user is teacher
+    schoolSettings: string | null // settings for school if user is schooladmin
 }
 
 export type UpdateSettingsDataRequest = {
     userId?: number,
     klasseId?: number,
     schuleId?: number,
-    settings: SettingValues
+    settings: string
 }
 
 export type UpdateSettingsDataResponse = {

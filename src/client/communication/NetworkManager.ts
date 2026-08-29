@@ -11,6 +11,7 @@ import pako from 'pako'
 import jQuery from "jquery";
 import type { GUIFile } from "../compiler/parser/GUIFile.js";
 import { FileTypeManager } from "../compiler/parser/FileTypeManager.js";
+import { SecureJSON } from "../../tools/SecureJSON.js";
 
 export class NetworkManager {
 
@@ -364,7 +365,7 @@ export class NetworkManager {
         }
 
         let request: UpdateGuiStateRequest = {
-            gui_state: this.main.user.sql_gui_state,
+            gui_state: SecureJSON.stringify(this.main.guiState),
             userId: this.main.user.id
         }
 

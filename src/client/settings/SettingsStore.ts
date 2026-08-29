@@ -18,6 +18,9 @@ export type SettingsType = {
     "explorer.fileOrder": "user-defined" | "comparator",
     "explorer.workspaceOrder": "user-defined" | "comparator",
 
+    "schooladmin.functionality.pruefungen": "enabled" | "disabled"
+
+
 }
 
 export type SettingKey = keyof SettingsType;
@@ -34,6 +37,7 @@ export var SettingDefaultValues: SettingsType = {
     "explorer.fileOrder": "user-defined",
     "explorer.workspaceOrder": "user-defined",
 
+    "schooladmin.functionality.pruefungen": "enabled"
 };
 
 export var SettingPrecedenceValues: Partial<{ [key in SettingKey]: SettingPrecedence }> = {
