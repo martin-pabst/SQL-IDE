@@ -40,7 +40,7 @@ export class Lexer {
     correspondingBracket: { [key: number]: TokenType } = {};
 
     tokenTypesToMerge: { first: TokenType, second: TokenType, merged: TokenType }[] = [
-        { first: TokenType.keywordNotIn, second: TokenType.keywordIn, merged: TokenType.keywordNotIn },
+        { first: TokenType.keywordNot, second: TokenType.keywordIn, merged: TokenType.keywordNotIn },
         { first: TokenType.keywordNot, second: TokenType.keywordBetween, merged: TokenType.keywordNotBetween },
         { first: TokenType.keywordNot, second: TokenType.keywordLike, merged: TokenType.keywordNotLike },
         { first: TokenType.keywordIs, second: TokenType.keywordNot, merged: TokenType.isNot },
