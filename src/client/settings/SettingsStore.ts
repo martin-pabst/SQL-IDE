@@ -8,8 +8,10 @@ export var SettingsPrecedenceArrays: { [key in SettingPrecedence]: SettingsScope
 
 export type SettingsType = {
     "editor.hoverVerbosity.showHelpOnKeywordsAndOperators": true | false,
-    "editor.hoverVerbosity.showMethodDeclaration": 'none' | 'declarations' | 'declarationsAndComments',
-    "editor.hoverVerbosity.showClassDeclaration": 'none' | 'declarations' | 'declarationsAndComments',
+
+    "editor.contextSensitiveHelp.offerStatementTemplates": true | false,
+    "editor.contextSensitiveHelp.offerIdentifiers": true | false,
+
     "editor.autoClosingBrackets": "always" | "beforeWhitespace" | "never",
     "editor.autoClosingQuotes": "always" | "beforeWhitespace" | "never",
     "editor.autoSemicolons": true | false,
@@ -17,6 +19,10 @@ export type SettingsType = {
 
     "explorer.fileOrder": "user-defined" | "comparator",
     "explorer.workspaceOrder": "user-defined" | "comparator",
+
+    "csvExport.withColumnIdentifiers": true | false,
+    "csvExport.separator": "comma" | "semicolon" | "tab",
+    "csvExport.quotesAroundValues": "singleQuote" | "doubleQuote" | "none",
 
     "schooladmin.functionality.pruefungen": "enabled" | "disabled"
 
@@ -27,8 +33,10 @@ export type SettingKey = keyof SettingsType;
 
 export var SettingDefaultValues: SettingsType = {
     "editor.hoverVerbosity.showHelpOnKeywordsAndOperators": true,
-    "editor.hoverVerbosity.showMethodDeclaration": 'declarationsAndComments',
-    "editor.hoverVerbosity.showClassDeclaration": 'declarationsAndComments',
+    
+    "editor.contextSensitiveHelp.offerStatementTemplates": true,
+    "editor.contextSensitiveHelp.offerIdentifiers": true,
+
     "editor.autoClosingBrackets": "beforeWhitespace",
     "editor.autoClosingQuotes": "beforeWhitespace",
     "editor.autoSemicolons": true,
@@ -36,6 +44,10 @@ export var SettingDefaultValues: SettingsType = {
 
     "explorer.fileOrder": "user-defined",
     "explorer.workspaceOrder": "user-defined",
+
+    "csvExport.withColumnIdentifiers": true,
+    "csvExport.separator":  "tab",
+    "csvExport.quotesAroundValues":  "none",
 
     "schooladmin.functionality.pruefungen": "enabled"
 };

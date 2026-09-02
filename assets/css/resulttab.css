@@ -18,7 +18,7 @@
     overflow: auto;
     background-color: var(--console-top-background);
     padding-right: 5px;
-    width: calc(100%-5px);
+    width: calc(100% - 5px);
 }
 
 .jo_result-header{

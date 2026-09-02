@@ -34,6 +34,9 @@ export class SemicolonAngel {
     }
 
     healSemicolons(){
+
+        if(!this.main.getSettings().getValue("editor.autoSemicolons")) return;
+
         let time = new Date().getTime();
         this.semicolonPositions = this.semicolonPositions.filter(p => p.isThereAgain);
 

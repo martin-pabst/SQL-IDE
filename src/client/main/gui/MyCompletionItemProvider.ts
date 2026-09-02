@@ -17,7 +17,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
     }
 
     first: boolean = true;
-    provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, 
+    provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext,
         token: monaco.CancellationToken): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
 
 
@@ -31,8 +31,8 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         return new Promise((resolve, reject) => {
             let that = this;
 
-            let wfc = function waitForCompiler(){
-                if(module.isDirty()){
+            let wfc = function waitForCompiler() {
+                if (module.isDirty()) {
                     setTimeout(() => {
                         wfc();
                     }, 100);
@@ -40,7 +40,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
                     resolve(that.provideCompletionItemsIntern(model, position, context, token));
                 }
             }
-        
+
             wfc();
 
         })
@@ -50,7 +50,7 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         // });
     }
 
-    provideCompletionItemsIntern(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, 
+    provideCompletionItemsIntern(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext,
         token: monaco.CancellationToken): monaco.languages.CompletionList {
 
         // setTimeout(() => {
@@ -89,7 +89,10 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
         }
 
         let completionItems: monaco.languages.CompletionItem[] = [];
-        this.addKeywordCompletionItems(completionHint, completionItems);
+
+        if (this.main.getSettings().getValue("editor.contextSensitiveHelp.offerStatementTemplates")) {
+            this.addKeywordCompletionItems(completionHint, completionItems);
+        }
 
         let dotMatch = textUntilPosition.match(/.*\s([\wöäüÖÄÜß]*)(\.)([\wöäüÖÄÜß]*)$/);
 
@@ -99,10 +102,12 @@ export class MyCompletionItemProvider implements monaco.languages.CompletionItem
             identifierAndBracketAfterCursor = ibMatch[0];
         }
 
-        if (dotMatch == null) {
-            this.addIdentifierCompletionItems(completionHint, symbolTable, completionItems);
-        } else {
-            this.addDotCompletionItems(position, dotMatch, identifierAndBracketAfterCursor, symbolTable, completionItems);
+        if (this.main.getSettings().getValue("editor.contextSensitiveHelp.offerIdentifiers")) {
+            if (dotMatch == null) {
+                this.addIdentifierCompletionItems(completionHint, symbolTable, completionItems);
+            } else {
+                this.addDotCompletionItems(position, dotMatch, identifierAndBracketAfterCursor, symbolTable, completionItems);
+            }
         }
 
         let word = model.getWordUntilPosition(position);

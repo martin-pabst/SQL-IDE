@@ -191,8 +191,9 @@ export class Login {
                     language: "de"
                 };
 
-
                 this.main.settings = new Settings(user, user.sql_settings, response.classSettings, response.schoolSettings);
+
+                this.main.startupAfterLogin();
 
                 this.main.waitForGUICallback = () => {
 

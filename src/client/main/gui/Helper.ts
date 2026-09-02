@@ -73,7 +73,7 @@ export class Helper {
         let user = main.user;
         if(user == null) return;
 
-        let helperHistory = user.sql_gui_state!.helperHistory;
+        let helperHistory = main.guiState.helperHistory;
 
         let flag = id + "Done";
 

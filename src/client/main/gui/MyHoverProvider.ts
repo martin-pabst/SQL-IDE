@@ -30,15 +30,15 @@ export class MyHoverProvider {
         monaco.languages.ProviderResult<monaco.languages.Hover> {
 
         let selection: monaco.Selection = this.editor.editor.getSelection();
-        
+
         // if cursor is inside current selection then don't show hover, because editor.onDidChangeCursorPosition evaluates selected Text 
         // (see class Editor).
-        if(selection != null){
-            if(selection.startLineNumber != selection.endLineNumber || selection.startColumn != selection.endColumn){
-                if(
-                    (selection.startLineNumber < position.lineNumber || selection.startLineNumber == position.lineNumber && selection.startColumn <= position.column) && 
-                    (selection.endLineNumber > position.lineNumber || selection.endLineNumber == position.lineNumber && selection.endColumn >= position.column) 
-                ){
+        if (selection != null) {
+            if (selection.startLineNumber != selection.endLineNumber || selection.startColumn != selection.endColumn) {
+                if (
+                    (selection.startLineNumber < position.lineNumber || selection.startLineNumber == position.lineNumber && selection.startColumn <= position.column) &&
+                    (selection.endLineNumber > position.lineNumber || selection.endLineNumber == position.lineNumber && selection.endColumn >= position.column)
+                ) {
                     return;
                 }
             }
@@ -50,13 +50,13 @@ export class MyHoverProvider {
             return null;
         }
 
-        for(let errorList of module.errors){
-            for(let error of errorList){
-                if(error.position.line == position.lineNumber && 
-                    error.position.column <= position.column && 
-                    error.position.column + error.position.length >= position.column){
-                        return null; // Show error-tooltip and don't show hover-tooltip
-                    }
+        for (let errorList of module.errors) {
+            for (let error of errorList) {
+                if (error.position.line == position.lineNumber &&
+                    error.position.column <= position.column &&
+                    error.position.column + error.position.length >= position.column) {
+                    return null; // Show error-tooltip and don't show hover-tooltip
+                }
             }
         }
 
@@ -66,12 +66,14 @@ export class MyHoverProvider {
 
         if (element != null) {
         } else {
-            let word = this.getWordUnderCursor(model, position);
-            let desc = MyHoverProvider.keywordDescriptions[word];
-            if (desc != null) {
-                return {
-                    range: null,
-                    contents: [{ value: desc }],
+            if (this.editor.main.getSettings().getValue("editor.hoverVerbosity.showHelpOnKeywordsAndOperators")) {
+                let word = this.getWordUnderCursor(model, position);
+                let desc = MyHoverProvider.keywordDescriptions[word];
+                if (desc != null) {
+                    return {
+                        range: null,
+                        contents: [{ value: desc }],
+                    }
                 }
             }
         }
@@ -80,8 +82,8 @@ export class MyHoverProvider {
     }
 
     getWordUnderCursor(model: monaco.editor.ITextModel, position: monaco.Position)
-         : string {
-        
+        : string {
+
         let pos = model.getValueLengthInRange({
             startColumn: 0,
             startLineNumber: 0,
@@ -110,12 +112,12 @@ export class MyHoverProvider {
             while (end < text.length && this.isInsideOperator(text.charAt(end))) {
                 end++;
             }
-    
+
             begin = pos;
             while (begin > 0 && this.isInsideOperator(text.charAt(begin - 1))) {
                 begin--;
             }
-    
+
             if (end - begin > 0) {
                 word = text.substring(begin, end);
             }

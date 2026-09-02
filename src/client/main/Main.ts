@@ -120,9 +120,6 @@ export class Main implements MainBase {
 
         let sliders = new Sliders(this);
         sliders.initSliders();
-        this.mainMenu = new MainMenu(this);
-        this.projectExplorer = new ProjectExplorer(this, jQuery('#leftpanel>.jo_projectexplorer'));
-        this.projectExplorer.initGUI();
 
         this.rightDiv = new RightDiv(this, jQuery('#rightdiv-inner'));
         this.rightDiv.initGUI();
@@ -369,5 +366,15 @@ export class Main implements MainBase {
     getSettings(): Settings {
         return this.settings;
     }
+
+    startupAfterLogin() {
+        this.mainMenu = new MainMenu(this);
+        this.projectExplorer = new ProjectExplorer(this, jQuery('#leftpanel>.jo_projectexplorer'));
+        this.projectExplorer.initGUI();
+        this.initEditor();
+        this.getMonacoEditor().updateOptions({ readOnly: true });
+
+    }
+
 }
 

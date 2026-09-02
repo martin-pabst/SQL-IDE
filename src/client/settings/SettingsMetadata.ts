@@ -71,6 +71,27 @@ export var AllSettingsMetadata: GroupOfSettingMetadata[] = [
             },
             {
                 settingType: 'group',
+                name: SettingsMessages.ContextSensitiveHelpName,
+                description: SettingsMessages.ContextSensitiveHelpDescription,
+                settings: [
+                    {
+                        key: "editor.contextSensitiveHelp.offerStatementTemplates",
+                        settingType: 'setting',
+                        name: SettingsMessages.OfferStatementTemplates,
+                        description: undefined,
+                        type: 'boolean'
+                    },
+                    {
+                        key: "editor.contextSensitiveHelp.offerIdentifiers",
+                        settingType: 'setting',
+                        name: SettingsMessages.OfferIdentifiers,
+                        description: undefined,
+                        type: 'boolean'
+                    },
+                ]
+            },
+            {
+                settingType: 'group',
                 name: SettingsMessages.TypingAssistanceName,
                 description: SettingsMessages.TypingAssistanceDescription,
                 settings: [
@@ -187,6 +208,46 @@ export var AllSettingsMetadata: GroupOfSettingMetadata[] = [
                     treeview.config.orderBy = value as 'comparator' | 'user-defined';
                     treeview.sort();
                 }
+            },
+        ]
+    },
+    {
+        settingType: 'group',
+        name: SettingsMessages.CsvExportSettingsName,
+        description: SettingsMessages.CsvExportSettingsDescription,
+        settings: [
+            {
+                key: "csvExport.withColumnIdentifiers",
+                settingType: 'setting',
+                name: SettingsMessages.CsvExportWithColumnIdentifiersName,
+                description: SettingsMessages.CsvExportWithColumnIdentifiersDescription,
+                type: 'boolean',
+            },
+            {
+                key: "csvExport.separator",
+                settingType: 'setting',
+                name: SettingsMessages.CsvExportSeparatorName,
+                description: SettingsMessages.CsvExportSeparatorDescription,
+                type: 'enumeration',
+                optionValues: ["comma", "semicolon", "tab"],
+                optionTexts: [
+                    SettingsMessages.CsvExportSeparatorComma,
+                    SettingsMessages.CsvExportSeparatorSemicolon,
+                    SettingsMessages.CsvExportSeparatorTab
+                ],
+            },
+            {
+                key: "csvExport.quotesAroundValues",
+                settingType: 'setting',
+                name: SettingsMessages.CsvExportQuotesAroundValuesName,
+                description: SettingsMessages.CsvExportQuotesAroundValuesDescription,
+                type: 'enumeration',
+                optionValues: ["singleQuote", "doubleQuote", "none"],
+                optionTexts: [
+                    SettingsMessages.CsvExportQuotesAroundValuesSingleQuote,
+                    SettingsMessages.CsvExportQuotesAroundValuesDoubleQuote,
+                    SettingsMessages.CsvExportQuotesAroundValuesNone
+                ],
             },
         ]
     },

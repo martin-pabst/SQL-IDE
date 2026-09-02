@@ -33,7 +33,7 @@ export class HomeworkManager {
 
 
     constructor(private main: Main, public tabManager: TabManager) {
-        this.tab = new Tab('Homework', "Hausaufgaben", ["jo_active", "jo_scrollable", "jo_editorFontSize", "jo_homeworkTab"])
+        this.tab = new Tab('Homework', "Hausaufgaben", ["jo_scrollable", "jo_editorFontSize", "jo_homeworkTab"])
         tabManager.addTab(this.tab);
     }
 

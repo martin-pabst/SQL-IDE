@@ -3,6 +3,7 @@ import { Table} from "../../compiler/parser/SQLTable.js";
 import { DatabaseStructure } from "../../sqljs-worker/DatabaseTools.js";
 import { downloadFile, openContextMenu } from "../../../tools/HtmlTools.js";
 import jQuery from "jquery";
+import { CsvExporter } from "./CsvExporter.js";
 
 export class DatabaseExplorer {
 
@@ -146,14 +147,9 @@ export class DatabaseExplorer {
         let statement = "select * from " + table.identifier + ";";
         this.main.getDatabaseTool().executeQuery(statement,
             (results) => {
-                let file: string = "";
-                // file += table.columns.map(c => c.identifier).join("; ") + "\n";
-                const result = results.pop();
-                if(result){
-                    file += result.columns.map(c => `"${c}"`).join(",") + "\n";
-                    file += result.values.map(line => line.map(c => `"${c}"`).join(",")).join("\n");
-                }
-                downloadFile("\ufeff" + file, table.identifier + ".csv", false);
+
+                CsvExporter.export(this.main, results.pop(), table.identifier + ".csv");
+
             },
             (error) => { });
 

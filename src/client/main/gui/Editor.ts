@@ -1,4 +1,3 @@
-import { Module } from "../../compiler/parser/Module.js";
 import { Main } from "../Main.js";
 import { MyCompletionItemProvider } from "./MyCompletionItemProvider.js";
 import { MySignatureHelpProvider } from "./MySignatureHelpProvider.js";
@@ -98,6 +97,7 @@ export class Editor {
             }
         });
 
+        let settings = this.main.getSettings();
 
         this.editor = monaco.editor.create($element[0], {
             // value: [
@@ -133,6 +133,17 @@ export class Editor {
             formatOnPaste: true,
             suggestFontSize: 16,
             suggestLineHeight: 22,
+
+            autoClosingBrackets: settings.getValue("editor.autoClosingBrackets") as monaco.editor.EditorAutoClosingStrategy,
+            autoClosingQuotes: settings.getValue("editor.autoClosingQuotes") as monaco.editor.EditorAutoClosingStrategy,
+
+            guides: {
+                bracketPairs: settings.getValue("editor.bracketPairLines") !== 'off',
+                highlightActiveBracketPair: settings.getValue("editor.bracketPairLines") !== 'off',
+                bracketPairsHorizontal: settings.getValue("editor.bracketPairLines") === 'verticalAndUnderlined'
+            },
+
+
             suggest: {
                 localityBonus: true,
                 insertMode: "replace"

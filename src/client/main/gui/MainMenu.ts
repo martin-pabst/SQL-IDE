@@ -228,7 +228,7 @@ export class MainMenu {
                     action: async () => {
                         let response = await ajaxAsync("servlet/getSingleUseSessionToken", {}) as GetSingleUseSessionTokenResponse;
                         if (response.success) {
-                            window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (user.sql_gui_state.language ?? "de"));
+                            window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (this.main.guiState.language ?? "de"));
                         }
                     }
                 }

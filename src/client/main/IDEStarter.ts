@@ -61,8 +61,6 @@ window.onload = () => {
     initMonacoEditor();
     let main = new Main();
     main.initGUI();
-    main.initEditor();
-    main.getMonacoEditor().updateOptions({ readOnly: true });
 
     main.bottomDiv.initGUI();
 

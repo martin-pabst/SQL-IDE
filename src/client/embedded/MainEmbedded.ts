@@ -28,6 +28,9 @@ import gridUrl from '/assets/graphics/grid.svg';
 import jQuery from "jquery";
 import { GUIFile } from '../compiler/parser/GUIFile.js';
 import { EmbeddedFileExplorer } from './EmbeddedFileExplorer.js';
+import { Settings } from '../settings/Settings.js';
+import type { SettingValues } from '../settings/SettingsMetadata.js';
+import { SecureJSON } from '../../tools/SecureJSON.js';
 
 type JavaOnlineConfig = {
     withFileList?: boolean,
@@ -36,7 +39,8 @@ type JavaOnlineConfig = {
     withBottomPanel?: boolean,
     id?: string,
     databaseURL?: string,
-    enableFileAccess?: boolean
+    enableFileAccess?: boolean,
+    settings?: SettingValues
 }
 
 export class MainEmbedded implements MainBase {
@@ -150,6 +154,8 @@ export class MainEmbedded implements MainBase {
 
     lastActiveFile?: GUIFile;
 
+    settings: Settings;
+
 
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
@@ -201,6 +207,16 @@ export class MainEmbedded implements MainBase {
 
         });
     }
+
+        getSettings(): Settings {
+        let userSettings = this.config.settings || {};
+
+        if (!this.settings) {
+            this.settings = new Settings(undefined, SecureJSON.stringify(userSettings), undefined, undefined);
+        }
+        return this.settings;
+    }
+
 
     resetDatabase(callback: () => void) {
         this.databaseTool.initializeWorker(this.initialTemplateDump, this.initialStatements, () => { }, () => {

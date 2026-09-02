@@ -306,6 +306,18 @@ export class SettingsMessages {
         'fr': `Ici, vous pouvez définir si des textes d'aide contextuels doivent être affichés dans certaines zones de l'application.`
     });
 
+    static OfferStatementTemplates = () => lm({
+        'de': `Vorlagen für SQL-Statements anbieten`,
+        'en': `Offer SQL statement templates`,
+        'fr': `Proposer des modèles d'instructions SQL`
+    })
+
+    static OfferIdentifiers = () => lm({
+        'de': `Vorschläge für Tabellen- und Spaltenbezeichner anbieten`,
+        'en': `Offer suggestions for table and column identifiers`,
+        'fr': `Proposer des suggestions pour les identificateurs de tables et de colonnes`
+    })
+
     static yes = () => lm({
         'de': `Ja`,
         'en': `Yes`,
@@ -352,6 +364,90 @@ export class SettingsMessages {
         'de': 'deaktiviert',
         'en': 'disabled',
         'fr': 'désactivé'
+    });
+
+    static CsvExportSettingsName = () => lm({
+        'de': 'CSV-Export-Optionen',
+        'en': 'CSV Export Options',
+        'fr': 'Options d\'exportation CSV'
+    });
+
+    static CsvExportSettingsDescription = () => lm({
+        'de': 'Hier können Sie Einstellungen für den CSV-Export vornehmen.',
+        'en': 'Here you can adjust settings for CSV export.',
+        'fr': 'Ici, vous pouvez ajuster les paramètres pour l\'exportation CSV.'
+    });
+
+    static CsvExportWithColumnIdentifiersName = () => lm({
+        'de': 'Spaltenbezeichner in CSV-Dateien exportieren',
+        'en': 'Export column identifiers in CSV files',
+        'fr': 'Exporter les identificateurs de colonnes dans les fichiers CSV'
+    });
+
+    static CsvExportWithColumnIdentifiersDescription = () => lm({
+        'de': 'Hier können Sie einstellen, ob beim Export von Tabellen in CSV-Dateien die Spaltenbezeichner in der ersten Zeile der CSV-Datei enthalten sein sollen.',
+        'en': 'Here you can set whether the column identifiers should be included in the first line of the CSV file when exporting tables to CSV files.',
+        'fr': 'Ici, vous pouvez définir si les identificateurs de colonnes doivent être inclus dans la première ligne du fichier CSV lors de l\'exportation de tableaux vers des fichiers CSV.'
+    });
+
+    static CsvExportSeparatorName = () => lm({
+        'de': 'Trennzeichen zwischen den Werten',
+        'en': 'Separator between values',
+        'fr': 'Séparateur entre les valeurs'
+    });
+
+    static CsvExportSeparatorDescription = () => lm({
+        'de': 'Hier können Sie einstellen, welches Zeichen als Trennzeichen zwischen den Werten in der CSV-Datei verwendet werden soll.',
+        'en': 'Here you can set which character should be used as a separator between the values in the CSV file.',
+        'fr': 'Ici, vous pouvez définir quel caractère doit être utilisé comme séparateur entre les valeurs dans le fichier CSV.'
+    });
+
+    static CsvExportSeparatorComma = () => lm({
+        'de': 'Komma (,)',
+        'en': 'Comma (,)',
+        'fr': 'Virgule (,)'
+    });
+
+    static CsvExportSeparatorSemicolon = () => lm({
+        'de': 'Semikolon (;)',
+        'en': 'Semicolon (;)',
+        'fr': 'Point-virgule (;)'
+    });
+
+    static CsvExportSeparatorTab = () => lm({
+        'de': 'Tabulator (\\t)',
+        'en': 'Tab (\\t)',
+        'fr': 'Tabulation (\\t)'
+    });
+
+    static CsvExportQuotesAroundValuesName = () => lm({
+        'de': 'Anführungszeichen um Werte setzen',
+        'en': 'Set quotes around values',
+        'fr': 'Mettre des guillemets autour des valeurs'
+    });
+
+    static CsvExportQuotesAroundValuesDescription = () => lm({
+        'de': 'Hier können Sie einstellen, ob beim Export von Tabellen in CSV-Dateien die Werte in Anführungszeichen gesetzt werden sollen.',
+        'en': 'Here you can set whether the values should be enclosed in quotes when exporting tables to CSV files.',
+        'fr': 'Ici, vous pouvez définir si les valeurs doivent être entourées de guillemets lors de l\'exportation de tableaux vers des fichiers CSV.'
+    });
+
+    static CsvExportQuotesAroundValuesSingleQuote = () => lm({
+        'de': 'Einfaches Anführungszeichen (\')',
+        'en': 'Single quote (\')',
+        'fr': 'Guillemet simple (\')'
+    });
+
+    static CsvExportQuotesAroundValuesDoubleQuote = () => lm({
+        'de': 'Doppeltes Anführungszeichen (")',
+        'en': 'Double quote (")',
+        'fr': 'Guillemet double (")'
+    });
+
+    static CsvExportQuotesAroundValuesNone = () => lm({
+        'de': 'Keine Anführungszeichen',
+        'en': 'No quotes',
+        'fr': 'Pas de guillemets'
     });
 
 }

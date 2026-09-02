@@ -12,6 +12,7 @@ import { RightDiv } from "./gui/RightDiv.js";
 import { WaitOverlay } from "./gui/WaitOverlay.js";
 import type { GUIFile } from '../compiler/parser/GUIFile.js';
 import type { Module } from '../compiler/parser/Module.js';
+import type { SettingsStore } from '../settings/SettingsStore.js';
 
 export interface MainBase {
     compileIfDirty();
@@ -35,4 +36,6 @@ export interface MainBase {
     getResultsetPresenter():ResultsetPresenter;
     getWaitOverlay(): WaitOverlay;
     getHistoryViewer(): HistoryViewer;
+
+    getSettings(): SettingsStore;
 }

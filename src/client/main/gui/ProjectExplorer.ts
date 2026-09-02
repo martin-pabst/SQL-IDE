@@ -1,5 +1,5 @@
 import * as monaco from 'monaco-editor';
-import { ClassData, type CreateWorkspaceData, type FileData, type GetWorkspacesRequest, type GetWorkspacesResponse, type Pruefung, type UserData} from "../../communication/Data.js";
+import { ClassData, type CreateWorkspaceData, type FileData, type GetWorkspacesRequest, type GetWorkspacesResponse, type Pruefung, type UserData } from "../../communication/Data.js";
 import { TextPosition } from "../../compiler/lexer/Token.js";
 import { Workspace } from "../../workspace/Workspace.js";
 import { Main } from "../Main.js";
@@ -90,7 +90,7 @@ export class ProjectExplorer {
             orderSetter(file, order) {
                 file.sorting_order = order;
             },
-            orderBy: "comparator"
+            orderBy: this.main.settings.getValue("explorer.fileOrder") as ("user-defined" | "comparator")
         })
 
         this.fileTreeview.newNodeCallback = async (name: string, node: TreeviewNode<GUIFile, number>) => {
@@ -357,7 +357,7 @@ export class ProjectExplorer {
             parentKeyExtractor: workspace => workspace.parent_folder_id,
             readOnlyExtractor: (workspace) => workspace.readonly || workspace.pruefung_id != null,
 
-            orderBy: "comparator",
+            orderBy: this.main.settings.getValue("explorer.workspaceOrder") as ("user-defined" | "comparator"),
             orderExtractor: workspace => workspace.sorting_order,
             orderSetter: (workspace, order) => workspace.sorting_order = order
         })
@@ -421,7 +421,7 @@ export class ProjectExplorer {
             }
         }
 
-        this.workspaceTreeview.newNodeCallback =  async (name: string, node: TreeviewNode<Workspace, number>) => {
+        this.workspaceTreeview.newNodeCallback = async (name: string, node: TreeviewNode<Workspace, number>) => {
 
             let parent_folder_id: number = null;
             let parentNode = node.getParent();
@@ -439,15 +439,15 @@ export class ProjectExplorer {
             let owner_id: number = this.main.workspacesOwnerId || this.main.user.id;
 
             let success = await this.main.networkManager.sendCreateWorkspace(workspaceData, owner_id);
-            if(success){
+            if (success) {
                 let w = this.main.createNewWorkspace(workspaceData.name, owner_id);
                 w.parent_folder_id = workspaceData.parent_folder_id;
                 w.id = workspaceData.id;
-    
+
                 this.main.workspaceList.push(w);
                 return w;
             }
-                        
+
             return null;
 
         }
@@ -717,8 +717,8 @@ export class ProjectExplorer {
     setWorkspaceActive(w: Workspace, scrollIntoView: boolean = false,
         selectElement: boolean = true, callback: () => void = null) {
 
-        if(w != null && w.isFolder){
-            if(callback) callback();
+        if (w != null && w.isFolder) {
+            if (callback) callback();
             return;
         }
 
@@ -749,7 +749,7 @@ export class ProjectExplorer {
         if (selectElement) this.workspaceTreeview.selectElement(w, false);
 
         let callbackAfterDatabaseFetched = (error: string) => {
-            
+
             this.main.bottomDiv.gradingManager?.setValues(w.pruefung_id);
 
             if (error != null) {
@@ -812,6 +812,9 @@ export class ProjectExplorer {
     setFileActive(file: GUIFile) {
 
         this.main.bottomDiv.homeworkManager.hideRevision();
+        let editor = this.main.getMonacoEditor();
+        this.lastOpenFile?.saveViewState(editor);
+
 
         if (this.lastOpenFile != null) {
             this.lastOpenFile.saveViewState(this.main.getMonacoEditor());
@@ -823,6 +826,10 @@ export class ProjectExplorer {
         } else {
             this.main.getMonacoEditor().setModel(file.getMonacoModel());
             this.main.getMonacoEditor().updateOptions({ readOnly: this.main.currentWorkspace?.readonly });
+
+            this.fileTreeview.selectElement(file, false);
+            file.restoreViewState(editor);
+            this.lastOpenFile = file;
 
             if (file.text_before_revision != null) {
                 this.main.bottomDiv.homeworkManager.showHomeWorkRevisionButton();

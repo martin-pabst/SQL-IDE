@@ -13,6 +13,7 @@ import { MainBase } from "../MainBase.js";
 import jQuery from "jquery";
 import { Tab, TabManager } from '../../../tools/TabManager.js';
 import '/assets/css/resulttab.css'
+import { CsvExporter } from './CsvExporter.js';
 
 type RuntimeError = {
     statement: SQLStatement,
@@ -121,24 +122,8 @@ export class ResultsetPresenter {
     }
 
     exportCSV(){
-        let quotationMark = '"';
-        let separator = ",";
-        if(!this.main.isEmbedded()){
-            if((<Main>this.main).user.schule_id == 243){
-                console.log("Using semicolon as separator and no quotation marks for CSV export, because school has id 243.");
-                quotationMark = "";
-                separator = ";";
-            }
-        }
-
-        let file: string = "";
-        // file += table.columns.map(c => c.identifier).join("; ") + "\n";
-        if(this.result){
-            file += this.result.columns.map(c => `${quotationMark}${c}${quotationMark}`).join(separator) + "\n";
-            file += this.result.values.map(line => line.map(c => `${quotationMark}${c}${quotationMark}`).join(separator)).join("\n");
-        }
-        downloadFile("\ufeff" + file, "results.csv", false);
-
+        // console.log("Using semicolon as separator and no quotation marks for CSV export, because school has id 243.");
+        CsvExporter.export(this.main, this.result, "results.csv");
     }
 
     executeSelectedStatements() {
