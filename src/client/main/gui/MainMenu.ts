@@ -46,6 +46,8 @@ export class MainMenu {
         let that = this;
         let editor = this.main.getMonacoEditor();
 
+        let language = this.main.guiState.language ?? "de";
+
         let mainMenu: Menu = {
             items: [
                 {
@@ -228,7 +230,7 @@ export class MainMenu {
                     action: async () => {
                         let response = await ajaxAsync("servlet/getSingleUseSessionToken", {}) as GetSingleUseSessionTokenResponse;
                         if (response.success) {
-                            window.open("administration_mc.html?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + (this.main.guiState.language ?? "de"));
+                            window.open("https://teacherbackend.online-ide.de?" + SINGLEUSETOKEN + "=" + response.singleUseSessionToken + "&lang=" + language);
                         }
                     }
                 }
