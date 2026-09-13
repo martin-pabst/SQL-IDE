@@ -166,6 +166,7 @@ export class MainEmbedded implements MainBase {
         this.initGUI($div);
 
         this.currentWorkspace = new Workspace("Embedded-Workspace", this, 0);
+        this.initScripts();
 
         this.databaseExplorer = new DatabaseExplorer(this, this.$dbTreeDiv);
         this.databaseTool = new DatabaseTool(this);
@@ -807,60 +808,60 @@ export class MainEmbedded implements MainBase {
 
     makeBottomDiv($bottomDiv: JQuery<HTMLElement>, $buttonDiv: JQuery<HTMLElement>) {
 
-        let $tabheadings = jQuery('<div class="jo_tabheadings"></div>');
-        $tabheadings.css('position', 'relative');
-        let $thLeftSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_controlsTabheading"></div>');
+    //     let $tabheadings = jQuery('<div class="jo_tabheadings"></div>');
+    //     $tabheadings.css('position', 'relative');
+    //     let $thLeftSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_controlsTabheading"></div>');
 
-        $thLeftSide.append($buttonDiv);
-        $tabheadings.append($thLeftSide);
+    //     $thLeftSide.append($buttonDiv);
+    //     $tabheadings.append($thLeftSide);
 
-        if (this.config.withErrorList) {
-            let $thErrors = jQuery('<div class="jo_tabheading jo_active" data-target="jo_errorsTab" style="line-height: 24px">Fehler</div>');
-            $tabheadings.append($thErrors);
-        }
+    //     if (this.config.withErrorList) {
+    //         let $thErrors = jQuery('<div class="jo_tabheading jo_active" data-target="jo_errorsTab" style="line-height: 24px">Fehler</div>');
+    //         $tabheadings.append($thErrors);
+    //     }
 
-        if (this.config.withOutput) {
-            let $thPCode = jQuery('<div class="jo_tabheading jo_resultTabheading" data-target="jo_resultTab" style="line-height: 24px">Ausgabe</div>');
-            $tabheadings.append($thPCode);
-        }
+    //     if (this.config.withOutput) {
+    //         let $thPCode = jQuery('<div class="jo_tabheading jo_resultTabheading" data-target="jo_resultTab" style="line-height: 24px">Ausgabe</div>');
+    //         $tabheadings.append($thPCode);
+    //     }
 
-        // let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">DB-Fehler</div>');
-        // $tabheadings.append($thRuntimeError);
+    //     // let $thRuntimeError = jQuery('<div class="jo_tabheading jo_runtimeerrorsTabheading" data-target="jo_runtimeerrorsTab" style="line-height: 24px">DB-Fehler</div>');
+    //     // $tabheadings.append($thRuntimeError);
 
-        let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">History</div>');
-        $tabheadings.append($thHistory);
+    //     let $thHistory = jQuery('<div class="jo_tabheading jo_historyTabheading" data-target="jo_historyTab" style="line-height: 24px">History</div>');
+    //     $tabheadings.append($thHistory);
 
-        let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');
-        $tabheadings.append($thRightSide);
+    //     let $thRightSide = jQuery('<div class="joe_tabheading-right jo_noHeading joe_paginationHeading"><div class="jo_pagination"></div></div>');
+    //     $tabheadings.append($thRightSide);
 
-        $bottomDiv.append($tabheadings);
+    //     $bottomDiv.append($tabheadings);
 
-        let $tabs = jQuery('<div class="jo_tabs jo_scrollable"></div>');
+    //     let $tabs = jQuery('<div class="jo_tabs jo_scrollable"></div>');
 
-        if (this.config.withErrorList) {
-            let $tabError = jQuery('<div class="jo_active jo_scrollable jo_errorsTab"></div>');
-            $tabs.append($tabError);
-        }
+    //     if (this.config.withErrorList) {
+    //         let $tabError = jQuery('<div class="jo_active jo_scrollable jo_errorsTab"></div>');
+    //         $tabs.append($tabError);
+    //     }
 
-        if (this.config.withOutput) {
-            let $tabPCode = jQuery(`<div class="jo_editorFontSize jo_resultTab">
-            <div class="jo_result-inner">
-                <div class="jo_result-header"></div>
-                <div class="jo_scrollable jo_result-body"></div>
-            </div>
-            </div>
-    `);
-            $tabs.append($tabPCode);
-        }
+    //     if (this.config.withOutput) {
+    //         let $tabPCode = jQuery(`<div class="jo_editorFontSize jo_resultTab">
+    //         <div class="jo_result-inner">
+    //             <div class="jo_result-header"></div>
+    //             <div class="jo_scrollable jo_result-body"></div>
+    //         </div>
+    //         </div>
+    // `);
+    //         $tabs.append($tabPCode);
+    //     }
 
-        // let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
-        // $tabs.append($tabRtErrors);
+    //     // let $tabRtErrors = jQuery('<div class="jo_scrollable jo_runtimeerrorsTab"></div>');
+    //     // $tabs.append($tabRtErrors);
 
-        let $tabHistory = jQuery('<div class="jo_scrollable jo_historyTab"></div>');
-        $tabs.append($tabHistory);
+    //     let $tabHistory = jQuery('<div class="jo_scrollable jo_historyTab"></div>');
+    //     $tabs.append($tabHistory);
 
 
-        $bottomDiv.append($tabs);
+    //     $bottomDiv.append($tabs);
 
     }
 
