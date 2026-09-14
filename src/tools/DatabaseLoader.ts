@@ -113,8 +113,12 @@ export class DatabaseFetcher {
         if (!this.cacheAvailable()) return;
 
         let cache = await caches.open('my-cache');
-
-        cache.put(databaseIdentifier, new Response(templateDump));
+        await cache.delete(databaseIdentifier);
+        try {
+            await cache.put(databaseIdentifier, new Response(templateDump));
+        } catch (reason: any) {
+            // console.warn("Konnte Template nicht im Cache speichern, Grund: " + reason);
+        }
     }
 
     cacheAvailable(): boolean {

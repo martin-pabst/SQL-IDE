@@ -40,6 +40,10 @@ export class TabManager {
         this.tabheadingRightDiv.appendChild(element);
     }
 
+    insertIntoHeadingDiv(element: HTMLElement) {
+        this.headingsDiv.insertBefore(element, this.tabheadingRightDiv);
+    }
+
     setActive(tab: Tab) {
 
         for (let tab1 of this.tabs) {
@@ -58,6 +62,8 @@ export class TabManager {
     }
 
     setTabVisible(tab: Tab, visibility: boolean) {
+        if(tab.visible == visibility) return;
+        
         tab.headingDiv.style.display = visibility ? 'block' : 'none';
         tab.bodyDiv.style.display = visibility ? '' : 'none';
         tab.visible = visibility;

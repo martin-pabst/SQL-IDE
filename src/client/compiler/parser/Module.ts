@@ -423,6 +423,11 @@ export class ModuleStore {
         }
     }
 
+    clear() {
+        this.modules = [];
+        this.moduleMap = new Map();
+    }
+
     removeModule(module: Module) {
 
         if (this.modules.indexOf(module) < 0) return;

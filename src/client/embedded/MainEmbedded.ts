@@ -359,6 +359,8 @@ export class MainEmbedded implements MainBase {
                     that.fileExplorer?.removeFile(file, false);  // calls MainEmbedded.removeFile subsequently
                 }
                 that.currentWorkspace.removeAllFiles();
+                that.currentWorkspace.moduleStore.clear();
+                that.editor.editor.setModel(null);
 
                 for (let name of scriptList) {
 
@@ -560,6 +562,8 @@ export class MainEmbedded implements MainBase {
         let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis-dark" style="margin-right: 10px"></div>');
 
         $controlsDiv.append($infoButton);
+
+        this.bottomDiv.tabManager.insertIntoHeadingDiv($controlsDiv[0]);
 
         this.$rightDivInner.append($rightSideContainer);
 
