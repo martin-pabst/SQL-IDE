@@ -621,3 +621,31 @@
    background-repeat: no-repeat;
    background-image: url('../icons/chevron-up.svg');
 }
+
+   .img_test-state-correcting {
+      width: 16px;
+      height: 16px;
+      background-repeat: no-repeat;
+      background-image: url('../icons/test-state-correcting.svg');
+   }
+
+   .img_test-state-opening {
+      width: 16px;
+      height: 16px;
+      background-repeat: no-repeat;
+      background-image: url('../icons/test-state-opening.svg');
+   }
+
+   .img_test-state-preparing {
+      width: 16px;
+      height: 16px;
+      background-repeat: no-repeat;
+      background-image: url('../icons/test-state-preparing.svg');
+   }
+
+   .img_test-state-running {
+      width: 16px;
+      height: 16px;
+      background-repeat: no-repeat;
+      background-image: url('../icons/test-state-running.svg');
+   }
