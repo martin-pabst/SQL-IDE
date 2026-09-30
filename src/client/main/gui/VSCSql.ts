@@ -75,7 +75,9 @@ export function defineVscSQL() {
         ],
         escapes: /\\(?:[abfnrtv\\"'])/,
         keywords: [
-            "ABORT", "ACTION", "ADD", "AFTER", "ALL", "ALTER", "ANALYZE", "AND", "AS", "ASC", "ATTACH", "AUTOINCREMENT", "BEFORE",
+            "ABORT", "ACTION", "ADD", "AFTER", "ALL", 
+            //"ALTER", <-- see [/alter table/, ... below
+            "ANALYZE", "AND", "AS", "ASC", "ATTACH", "AUTOINCREMENT", "BEFORE",
             "BEGIN", "BETWEEN", "BY", "CASCADE", "CASE", "CAST", "CHECK", "COLLATE", "COLUMN", "COMMIT", "CONFLICT", "CONSTRAINT",
             "CREATE", "CROSS", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "DATABASE", "DEFAULT", "DEFERRABLE", "DEFERRED",
             "DELETE", "DESC", "DETACH", "DISTINCT", "DROP", "EACH", "ELSE", "END", "ESCAPE", "EXCEPT", "EXCLUSIVE", "EXISTS", "EXPLAIN",
@@ -85,6 +87,9 @@ export function defineVscSQL() {
             "RAISE", "RECURSIVE", "REFERENCES", "REGEXP", "REINDEX", "RELEASE", "RENAME", "REPLACE", "RESTRICT", "RIGHT", "ROLLBACK", "ROW",
             "SAVEPOINT", "SELECT", "SET", "TABLE", "TEMP", "TEMPORARY", "THEN", "TO", "TRANSACTION", "TRIGGER", "UNION", "UNIQUE", "UPDATE",
             "USING", "VACUUM", "VALUES", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WITH", "WITHOUT", "ENGINE", "CHARSET"
+        ],
+        alter: [
+            "\nALTER"
         ],
         operators: [
             "AND", "BETWEEN", "IN", "LIKE", "NOT", "OR", "IS", "NULL", "INTERSECT", "UNION", "INNER", "JOIN", "LEFT", "OUTER", "RIGHT"
@@ -105,6 +110,11 @@ export function defineVscSQL() {
         tokenizer: {
             root: [
                 { include: '@comments' },
+                [/alter table/, {
+                    cases: {
+                        '@default': 'keyword'
+                    }
+                }],
                 { include: '@whitespace' },
                 { include: '@pseudoColumns' },
                 { include: '@numbers' },

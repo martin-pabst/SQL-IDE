@@ -657,6 +657,15 @@ export class Lexer {
         let text = this.input.substring(posStart, posEnd);
 
         let tt = keywordList[text.toLowerCase()];
+
+        if(tt == TokenType.keywordAlter){
+            let lastLine = this.nonSpaceLastToken?.position.line || -1;
+            if(lastLine == this.line){
+                this.pushToken(TokenType.identifier, text, line, column);
+                return;
+            }
+        }
+
         if (tt != null && typeof tt == "number") {
 
             switch (tt) {
