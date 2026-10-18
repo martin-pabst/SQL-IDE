@@ -76,17 +76,11 @@ export function ajax(url: string, request: any, successCallback: (response: any)
                 PushClientManager.getInstance().open();
             }
 
-
             showNetworkBusy(false);
             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
                 let error = "Fehler bei der Bearbeitung der Anfrage"
                 if (response.message != null) error = response.message;
                 if (response.error != null) error = response.error;
-
-                if (error.indexOf("Not logged in") >= 0) {
-                    // setTimeout(() => newLogin(url, request, successCallback, errorCallback), 10000);
-                    // location.reload();
-                }
 
                 console.log("Netzwerkfehler: " + error);
 
@@ -104,7 +98,10 @@ export function ajax(url: string, request: any, successCallback: (response: any)
                 if (jqXHR.status != 0) {
                     statusText = "" + jqXHR.status
                 }
-                errorCallback(message + ": " + statusText);
+                if (jqXHR.status == 401) {
+                    statusText = "Doppellogin während einer laufenden Prüfung. Du wurdest ausgeloggt.";
+                }
+                errorCallback(statusText);
                 return;
             }
         }
@@ -135,16 +132,16 @@ export async function extractSingleUseSessionTokenFromGetRequestAndRetrieveNewCs
     let url = window.location.href;
 
     let csrfTokenFromGetRequest = fetchGetParameterValueIntern(url, "csrfToken");
-    if(csrfTokenFromGetRequest == null) {
+    if (csrfTokenFromGetRequest == null) {
         let token = fetchGetParameterValueIntern(url, SINGLEUSETOKEN);
-    
+
         await ajaxAsync("/servlet/retrieveNewCsrfToken?" + SINGLEUSETOKEN + "=" + token, {});
 
         let index = url.indexOf("?");
         let newUrl = url.substring(0, index) + "?csrfToken=" + csrfToken;
 
         let menuItem = fetchGetParameterValueIntern(url, "menuItem");
-        if(menuItem != null) {
+        if (menuItem != null) {
             newUrl += "&menuItem=" + menuItem;
         }
 
@@ -199,6 +196,11 @@ export async function ajaxAsync(url: string, data: any): Promise<BaseResponse> {
         if (obj["csrfToken"] != null) {
             csrfToken = obj["csrfToken"];
             PushClientManager.getInstance().open();
+        }
+
+        if (response.status == 401) {
+            alert("Logout wegen Doppellogin während einer Prüfung.");
+            location.reload();
         }
 
         if (obj == null) {

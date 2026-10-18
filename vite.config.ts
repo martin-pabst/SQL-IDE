@@ -48,7 +48,8 @@ export default {
       //   rewrite: (path) => path.replace('/worker', '/dist/worker'),
       //   target: "http://localhost:4000"
       // }
-    }
+    },
+    port: 4000
   },
 
 } satisfies UserConfig;

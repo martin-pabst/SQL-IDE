@@ -237,6 +237,11 @@ export class Login {
                         }
                     }
 
+                    PushClientManager.subscribe("logoutDueToMultipleLogin", () => {
+                        alert("Während einer laufenden Prüfung wurde ein zweiter Login mit dem gleichen Benutzer durchgeführt. Du wurdest ausgeloggt.");
+                        location.reload();
+                    });
+
 
                 }
 
