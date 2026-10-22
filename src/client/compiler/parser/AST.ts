@@ -47,6 +47,8 @@ export type SelectNode = {
     limitNode?: LimitNode,
     sqlType?: SQLType,
 
+    hasAggregateFunctions: boolean,
+
     union?: SelectNode,
     symbolTableEndPosition: TextPosition   // if union != null then symbolTableEndPosition != endPosition
 }

@@ -170,15 +170,19 @@ export class SymbolResolver {
         }
 
         if(selectNode.groupByNode != null){
-            this.checkColumnsAgainstGroupBy(selectNode.columnList, selectNode.groupByNode);
+            this.checkColumnsAgainstGroupBy(selectNode.columnList, selectNode.groupByNode.columnList);
+        } else {
+            if(selectNode.hasAggregateFunctions){
+                this.checkColumnsAgainstGroupBy(selectNode.columnList, []);
+            }
         }
 
         return resultTable;
     }
 
-    checkColumnsAgainstGroupBy(columnList: ColumnNode[], groupByNode: GroupByNode) {
+    checkColumnsAgainstGroupBy(columnList: ColumnNode[], groupByColumns: TermNode[]) {
         let columnsInGroupBy: string[] = [];
-        for(let groupByColumn of groupByNode.columnList){
+        for(let groupByColumn of groupByColumns){
             switch(groupByColumn.type){
                 case TokenType.dot:
                     this.resolveDot(groupByColumn);
@@ -195,7 +199,11 @@ export class SymbolResolver {
         for(let columnNode of columnList){
             if(columnNode.term.type == TokenType.dot || columnNode.term.type == TokenType.identifier){
                 if(!columnsInGroupBy.includes((columnNode.term.columnIdentifier || "").toLocaleLowerCase())){
-                    this.pushError("Die Spalte " + (columnNode.term.columnIdentifier || "") + " ist in der GROUP BY-Klausel nicht enthalten.", "error", columnNode.position);
+                    if(groupByColumns.length > 0){
+                        this.pushError("Die Spalte " + (columnNode.term.columnIdentifier || "") + " ist in der GROUP BY-Klausel nicht enthalten.", "error", columnNode.position);
+                    } else {
+                        this.pushError("Die Spalten der Ergebnistabelle einer select-Anweisung mit Aggregatfunktionen müssen in der GROUP BY-Klausel enthalten sein.", "error", columnNode.position);
+                    }
                 }
             }
         }
