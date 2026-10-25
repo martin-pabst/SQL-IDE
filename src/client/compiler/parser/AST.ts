@@ -1,7 +1,7 @@
 import { TokenType, TextPosition, Token } from "../lexer/Token.js";
 import { SymbolTable } from "./SymbolTable.js";
 import { SQLBaseType, SQLType } from "./SQLTypes.js";
-import { Table } from "./SQLTable.js";
+import { Column, Table } from "./SQLTable.js";
 
 
 export type ASTNode = 
@@ -46,6 +46,8 @@ export type SelectNode = {
     orderByNode?: OrderByNode[],
     limitNode?: LimitNode,
     sqlType?: SQLType,
+
+    hasAggregateFunctions: boolean,
 
     union?: SelectNode,
     symbolTableEndPosition: TextPosition   // if union != null then symbolTableEndPosition != endPosition
@@ -221,7 +223,7 @@ export type DotNode = {
     position: TextPosition,
     identifierLeft: IdentifierNode,
     identifierRight: IdentifierNode,
-    symbol?: Symbol,
+    columnIdentifier?: string,
     sqlType?: SQLType
 }
 
@@ -229,7 +231,7 @@ export type IdentifierNode = {
     type: TokenType.identifier,
     position: TextPosition,
     identifier: string,
-    symbol?: Symbol,
+    columnIdentifier?: string,
     sqlType?: SQLType
 }
 

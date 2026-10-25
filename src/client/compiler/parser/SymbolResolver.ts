@@ -2,7 +2,7 @@ import { DatabaseTool } from "../../sqljs-worker/DatabaseTools.js";
 import { isDate, isDateTime, isTime } from "../../../tools/StringTools.js";
 import { Error, ErrorLevel } from "../lexer/Lexer.js";
 import { TextPosition, TokenType, TokenTypeReadable } from "../lexer/Token.js";
-import { AlterTableNode, BinaryOpNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
+import { AlterTableNode, BinaryOpNode, ColumnNode, CreateTableNode, CreateViewNode, DeleteNode, DotNode, DropTableNode, GroupByNode, IdentifierNode, InsertNode, MethodcallNode, SelectNode, TableOrSubqueryNode, TermNode, UpdateNode } from "./AST.js";
 import { Module } from "./Module.js";
 import { SQLMethodStore } from "./SQLMethods.js";
 import { Column, Table } from "./SQLTable.js";
@@ -169,7 +169,44 @@ export class SymbolResolver {
             }
         }
 
+        if(selectNode.groupByNode != null){
+            this.checkColumnsAgainstGroupBy(selectNode.columnList, selectNode.groupByNode.columnList);
+        } else {
+            if(selectNode.hasAggregateFunctions){
+                this.checkColumnsAgainstGroupBy(selectNode.columnList, []);
+            }
+        }
+
         return resultTable;
+    }
+
+    checkColumnsAgainstGroupBy(columnList: ColumnNode[], groupByColumns: TermNode[]) {
+        let columnsInGroupBy: string[] = [];
+        for(let groupByColumn of groupByColumns){
+            switch(groupByColumn.type){
+                case TokenType.dot:
+                    this.resolveDot(groupByColumn);
+                    if(groupByColumn.columnIdentifier != null){
+                        columnsInGroupBy.push(groupByColumn.columnIdentifier.toLocaleLowerCase());
+                    }
+                    break;
+                case TokenType.identifier:
+                    columnsInGroupBy.push((groupByColumn.identifier || "").toLocaleLowerCase());
+                    break;
+            }
+        }
+
+        for(let columnNode of columnList){
+            if(columnNode.term.type == TokenType.dot || columnNode.term.type == TokenType.identifier){
+                if(!columnsInGroupBy.includes((columnNode.term.columnIdentifier || "").toLocaleLowerCase())){
+                    if(groupByColumns.length > 0){
+                        this.pushError("Die Spalte " + (columnNode.term.columnIdentifier || "") + " ist in der GROUP BY-Klausel nicht enthalten.", "error", columnNode.position);
+                    } else {
+                        this.pushError("Die Spalten der Ergebnistabelle einer select-Anweisung mit Aggregatfunktionen müssen in der GROUP BY-Klausel enthalten sein.", "error", columnNode.position);
+                    }
+                }
+            }
+        }
     }
 
     resolveDropTable(node: DropTableNode) {
@@ -579,6 +616,7 @@ export class SymbolResolver {
 
         let column = columns[0];
         node.sqlType = column.type;
+        node.columnIdentifier = column.identifier;
         return column.type;
 
     }
@@ -595,6 +633,7 @@ export class SymbolResolver {
         }
 
         let symbol = symbols[0];
+        node.columnIdentifier = symbol.column.identifier;
         node.sqlType = symbol.column.type;
         return symbol.column.type;
     }
@@ -826,4 +865,5 @@ export class SymbolResolver {
 
 
 }
+
 

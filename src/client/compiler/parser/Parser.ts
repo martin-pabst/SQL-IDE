@@ -42,6 +42,8 @@ export class Parser {
     position: TextPosition;
     lastComment: Token;
 
+    currentSelectNodeHasAggregateFunctions: boolean[] = [];
+
     endToken: Token = {
         position: { line: 0, column: 0, length: 1 },
         tt: TokenType.endofSourcecode,
@@ -281,7 +283,7 @@ export class Parser {
         }
 
         let found = token.indexOf(this.tt) >= 0;
-        if(found && skip) this.nextToken;
+        if (found && skip) this.nextToken;
         return found;
 
     }
@@ -503,9 +505,9 @@ export class Parser {
         this.nextToken(); // skip 'set'
 
         // SET DATABASE Collation "German"  ( -> OpenOffice)
-        if(this.comesToken(TokenType.keywordDatabase)){
+        if (this.comesToken(TokenType.keywordDatabase)) {
             this.nextToken();
-        } 
+        }
         this.expect(TokenType.identifier, true);
         this.comesToken(TokenType.equal, true);   // skip = if present
         this.expect([TokenType.identifier, TokenType.stringConstant, TokenType.integerConstant, TokenType.charConstant, TokenType.booleanConstant, TokenType.floatingPointConstant], true);
@@ -1377,21 +1379,21 @@ export class Parser {
         if (this.cct.tt == TokenType.keywordEnum) {
             this.nextToken();
 
-            if(this.expect(TokenType.leftBracket, true)){
-    
+            if (this.expect(TokenType.leftBracket, true)) {
+
                 let constants: ConstantNode[] = [];
                 //@ts-ignore
-                while(!this.comesToken(TokenType.rightBracket, true) && !this.isEnd()){
-    
+                while (!this.comesToken(TokenType.rightBracket, true) && !this.isEnd()) {
+
                     let constant = this.parseConstant();
-                    if(constant != null) constants.push(constant);
-    
-                    if(this.comesToken(TokenType.comma)) this.nextToken();
-    
+                    if (constant != null) constants.push(constant);
+
+                    if (this.comesToken(TokenType.comma)) this.nextToken();
+
                 }
-    
-                if(constants.length > 0){
-                    switch(constants[0].constantType){
+
+                if (constants.length > 0) {
+                    switch (constants[0].constantType) {
                         case TokenType.integerConstant:
                         case TokenType.floatingPointConstant:
                             type = new SQLNumberEnumType(constants.map(c => c.constant));
@@ -1403,10 +1405,10 @@ export class Parser {
                 } else {
                     type = new SQLTextEnumType([]);
                 }
-    
+
                 node.baseType = type;
 
-            } 
+            }
 
 
         } else {
@@ -1745,6 +1747,7 @@ export class Parser {
     }
 
     parseSelect(): SelectNode {
+        this.currentSelectNodeHasAggregateFunctions.push(false);
         let startPosition = this.getCurrentPosition();
         this.nextToken(); // skip "select"
 
@@ -1763,10 +1766,13 @@ export class Parser {
             columnList: [],
             fromNode: null,
             whereNode: null,
-            parentStatement: null
+            parentStatement: null,
+            hasAggregateFunctions: false,
         }
 
         node.columnList = this.parseColumnList([TokenType.keywordFrom, TokenType.semicolon, TokenType.endofSourcecode], true);
+
+        node.hasAggregateFunctions = this.currentSelectNodeHasAggregateFunctions.pop();
 
         let columnListKeywordArray = ["distinct", "as", "*", "from"];
         if (node.columnList.findIndex(c => c.type == TokenType.allColumns) >= 0) {
@@ -2103,7 +2109,7 @@ export class Parser {
 
         let first = true;
 
-        if(this.tt == TokenType.keywordBetween || this.tt == TokenType.keywordNotBetween){
+        if (this.tt == TokenType.keywordBetween || this.tt == TokenType.keywordNotBetween) {
             return this.parseBetween(left, this.tt);
         }
 
@@ -2136,12 +2142,12 @@ export class Parser {
         return left;
 
     }
-    
+
     parseBetween(left: TermNode, tt: TokenType.keywordBetween | TokenType.keywordNotBetween): TermNode {
         let position = this.getCurrentPosition();
         this.nextToken(); // skip "between"
         let secondOperand = this.parseTermBinary(2);
-        if(this.expect(TokenType.keywordAnd, true)){
+        if (this.expect(TokenType.keywordAnd, true)) {
 
             let thirdOperand = this.parseTermBinary(2);
 
@@ -2149,7 +2155,7 @@ export class Parser {
                 type: TokenType.keywordBetween,
                 position: position,
                 firstOperand: left,
-                secondOperand: secondOperand, 
+                secondOperand: secondOperand,
                 thirdOperand: thirdOperand
             }
 
@@ -2191,7 +2197,7 @@ export class Parser {
                     operand: term,
                     operator: tt1
                 };
-                
+
             case TokenType.integerConstant:
             case TokenType.charConstant:
             case TokenType.floatingPointConstant:
@@ -2229,6 +2235,11 @@ export class Parser {
                         commaPositions: parameters.commaPositions,
                         distinctBeforeParameters: parameters.distinctBeforeParameters
                     }
+
+                    if(["sum", "avg", "count", "min", "max", "count"].indexOf(identifier1.toLowerCase()) >= 0 && this.currentSelectNodeHasAggregateFunctions.length > 0){
+                        this.currentSelectNodeHasAggregateFunctions[this.currentSelectNodeHasAggregateFunctions.length - 1] = true;
+                    }
+
                 } else {
                     term = {
                         type: TokenType.identifier,
