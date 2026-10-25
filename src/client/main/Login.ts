@@ -207,7 +207,7 @@ export class Login {
                     $loginSpinner.hide();
                     jQuery('#menupanel-username').html(getUserDisplayName(user));
 
-                    new UserMenu(that.main).init();
+                    new UserMenu(that.main).init(user);
 
                     if (user.is_teacher) {
                         that.main.initTeacherExplorer(response.classdata);
