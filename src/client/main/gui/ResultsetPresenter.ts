@@ -1,6 +1,6 @@
 import * as monaco from 'monaco-editor';
 import { TokenType } from "../../compiler/lexer/Token.js";
-import { SQLStatement } from "../../compiler/parser/Parser.js";
+import { Parser, SQLStatement } from "../../compiler/parser/Parser.js";
 import { Table } from "../../compiler/parser/SQLTable.js";
 import { SQLType } from "../../compiler/parser/SQLTypes.js";
 import { StatementCleaner } from "../../compiler/parser/StatementCleaner.js";
@@ -14,6 +14,10 @@ import jQuery from "jquery";
 import { Tab, TabManager } from '../../../tools/TabManager.js';
 import '/assets/css/resulttab.css'
 import { CsvExporter } from './CsvExporter.js';
+import { Lexer } from '../../compiler/lexer/Lexer.js';
+import { Module } from '../../compiler/parser/Module.js';
+import { GUIFile } from '../../compiler/parser/GUIFile.js';
+import { SymbolResolver } from '../../compiler/parser/SymbolResolver.js';
 
 type RuntimeError = {
     statement: SQLStatement,
@@ -121,7 +125,7 @@ export class ResultsetPresenter {
         this.$arrowRight.toggleClass('jo_active', this.paginationFrom < this.paginationAll - this.paginationSize + 1);
     }
 
-    exportCSV(){
+    exportCSV() {
         // console.log("Using semicolon as separator and no quotation marks for CSV export, because school has id 243.");
         CsvExporter.export(this.main, this.result, "results.csv");
     }
@@ -130,6 +134,40 @@ export class ResultsetPresenter {
 
         let statements = this.fetchSelectedStatements().filter(st => st.ast.type != TokenType.omittedeStatement);
 
+        this.executeStatements(statements);
+
+    }
+
+    excecuteStatementsFromString(statement: string) {
+        let module: Module = new Module(new GUIFile(this.main, "temp.intern", statement), this.main);
+        let lexed = new Lexer().lex(statement);
+        module.errors[0] = lexed.errors;
+        module.tokenList = lexed.tokens;
+        new Parser().parse(module);
+        let databaseTool = this.main.getDatabaseTool();
+        let symbolResolver: SymbolResolver = new SymbolResolver(databaseTool);
+        symbolResolver.start(module);
+
+        let lines = statement.split("\n");
+
+        for(let st of module.sqlStatements){
+            st.sql = statement.substring(this.getOffset(statement, st.from.line, st.from.column), this.getOffset(statement, st.to.line, st.to.column));
+        }
+
+        this.executeStatements(module.sqlStatements);
+    }
+
+    getOffset(statement: string, line: number, column: number): number {
+        let lines = statement.split("\n");
+        let offset = 0;
+        for (let i = 0; i < line - 1; i++) {
+            offset += lines[i].length + 1;
+        }
+        offset += column - 1;
+        return offset;
+    }
+
+    executeStatements(statements: SQLStatement[]) {
         if (statements.length == 0) return;
 
         let hasDDLStatements: boolean = statements.some(st => this.isDDLStatement(st));
@@ -156,14 +194,14 @@ export class ResultsetPresenter {
             }
 
         } else {
-            this.executeStatements(statements, 0, [], () => { });
+            this.executeStatementsIntern(statements, 0, [], () => { });
         }
 
     }
 
     executeDDLWriteStatementsEmbedded(workspace: Workspace, statements: SQLStatement[], database: WDatabase) {
         let sucessfullyExecutedModifyingStatements: SQLStatement[] = [];
-        this.executeStatements(statements, 0, sucessfullyExecutedModifyingStatements, () => {
+        this.executeStatementsIntern(statements, 0, sucessfullyExecutedModifyingStatements, () => {
 
             if (sucessfullyExecutedModifyingStatements.length == 0)
                 return;
@@ -183,7 +221,7 @@ export class ResultsetPresenter {
                 () => {
                     // Step 2: Execute new statements to see which are successful
                     let sucessfullyExecutedModifyingStatements: SQLStatement[] = [];
-                    this.executeStatements(statements, 0, sucessfullyExecutedModifyingStatements, () => {
+                    this.executeStatementsIntern(statements, 0, sucessfullyExecutedModifyingStatements, () => {
 
                         if (sucessfullyExecutedModifyingStatements.length == 0)
                             return;
@@ -199,7 +237,7 @@ export class ResultsetPresenter {
                             // Step 5 (worst case): statements before is not empty, so they should be executed before the statements executed in step 2
                             // => clear whole database and execute all statements in the right order, beginning with an empty database.
                             if (statements_before.length > 0) {
-    
+
                                 workspace.database.version = 0;
                                 workspace.database.statements = [];
                                 main.networkManager.getNewStatements(workspace, () => {
@@ -241,7 +279,7 @@ export class ResultsetPresenter {
     }
 
 
-    executeStatements(statements: SQLStatement[], index: number, successfullyExecutedModifyingStatements: SQLStatement[], callback: () => void, errors: RuntimeError[] = []) {
+    private executeStatementsIntern(statements: SQLStatement[], index: number, successfullyExecutedModifyingStatements: SQLStatement[], callback: () => void, errors: RuntimeError[] = []) {
 
         if (index >= statements.length) {
             this.showErrors(errors);
@@ -254,7 +292,7 @@ export class ResultsetPresenter {
 
 
         let callback1 = () => {
-            this.executeStatements(statements, index + 1, successfullyExecutedModifyingStatements, callback, errors);
+            this.executeStatementsIntern(statements, index + 1, successfullyExecutedModifyingStatements, callback, errors);
         }
 
         if (statement.ast == null) {
@@ -351,7 +389,7 @@ export class ResultsetPresenter {
         }
 
         let model = this.main.getCurrentlyEditedModule()?.file.getMonacoModel();
-        if(model){
+        if (model) {
             monaco.editor.setModelMarkers(model, 'test', markers);
             this.oldErrorDecorations = model.deltaDecorations(this.oldErrorDecorations, decorations);
         }
@@ -432,7 +470,7 @@ export class ResultsetPresenter {
     }
 
     isWriteStatement(statement: SQLStatement): boolean {
-        return statement.ast != null && [TokenType.keywordInsert, TokenType.keywordDelete, TokenType.keywordUpdate].indexOf(statement.ast.type) >= 0;
+        return statement.ast != null && [TokenType.keywordInsert, TokenType.keywordDelete, TokenType.keywordUpdate, TokenType.keywordDrop].indexOf(statement.ast.type) >= 0;
     }
 
     private presentResultsIntern(query: string, results: QueryResult[], columnTypes: SQLType[]) {
@@ -461,7 +499,7 @@ export class ResultsetPresenter {
     }
 
     public clear() {
-        
+
         this.$resultBody.empty();
         this.$paginationDiv.hide();
     }

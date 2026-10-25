@@ -78,6 +78,12 @@ export class DatabaseExplorer {
                             this.csvExport(table);
                         }
                     },
+                                        {
+                        caption: "Tabelle löschen (drop table)",
+                        callback: () => {
+                            this.dropTable(table);
+                        }
+                    },
                     {
                         caption: "Abbrechen",
                         callback: () => {
@@ -153,6 +159,11 @@ export class DatabaseExplorer {
             },
             (error) => { });
 
+    }
+
+    dropTable(table: Table){
+        let statement = "drop table " + table.identifier + ";";
+        this.main.getResultsetPresenter().excecuteStatementsFromString(statement);
     }
 
 }
