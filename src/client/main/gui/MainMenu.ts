@@ -10,6 +10,7 @@ import { AllDatabaseExporterImporter } from "../../../tools/AllDatabaseExporterI
 import { downloadFile } from "../../../tools/HtmlTools.js";
 import { MainMenuMessages } from "./language/MainMenuMessages.js";
 import { SettingsGUI } from "../../settings/SettingsGUI.js";
+import { PasswordChanger } from "./UserMenu.js";
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -198,6 +199,12 @@ export class MainMenu {
                     identifier: "Hilfe", subMenu:
                     {
                         items: [
+                            {
+                                identifier: "Passwort ändern...", action: () => {
+                                    let passwordChanger = new PasswordChanger(this.main);
+                                    passwordChanger.show();
+                                }
+                            },
                             {
                                 identifier: "Über die Online-IDE...",
                                 link: "https://www.learnj.de/doku.php?id=javaonline:ueber"
