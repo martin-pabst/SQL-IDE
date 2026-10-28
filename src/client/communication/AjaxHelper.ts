@@ -2,6 +2,7 @@ import { LoginRequest, PerformanceData, type BaseResponse } from "./Data.js";
 import jQuery from 'jquery';
 import { PushClientManager } from "./pushclient/PushClientManager.js";
 import { currentLanguageId, setLanguageId } from "../../tools/language/LanguageManager.js";
+import { CommunicationMessages } from "./CommunicationMessages.js";
 // export var credentials: { username: string, password: string } = { username: null, password: null };
 
 export var SINGLEUSETOKEN: string = "singleUseToken";
@@ -77,6 +78,7 @@ export function ajax(url: string, request: any, successCallback: (response: any)
             }
 
             showNetworkBusy(false);
+
             if (response.success != null && response.success == false || typeof (response) == "string" && response == '') {
                 let error = "Fehler bei der Bearbeitung der Anfrage"
                 if (response.message != null) error = response.message;
@@ -98,8 +100,10 @@ export function ajax(url: string, request: any, successCallback: (response: any)
                 if (jqXHR.status != 0) {
                     statusText = "" + jqXHR.status
                 }
-                if (jqXHR.status == 401) {
-                    statusText = "Doppellogin während einer laufenden Prüfung. Du wurdest ausgeloggt.";
+                if (jqXHR.status == 409) {
+                    statusText = CommunicationMessages.doubleLoginDuringPruefung();
+                } else if (jqXHR.status == 401) {
+                    statusText = CommunicationMessages.notLoggedIn();
                 }
                 errorCallback(statusText);
                 return;
@@ -151,6 +155,7 @@ export async function extractSingleUseSessionTokenFromGetRequestAndRetrieveNewCs
     }
 
 }
+
 export function fetchGetParameterValue(parameterIdentifier: string): string | null {
     let url = window.location.href;
     return fetchGetParameterValueIntern(url, parameterIdentifier);
@@ -174,8 +179,6 @@ export async function extractLanguageFromGetRequest(retrieveNewCsrfToken: boolea
     }
 }
 
-
-
 export async function ajaxAsync(url: string, data: any): Promise<BaseResponse> {
     let headers: [string, string][] = [["content-type", "text/json"]];
 
@@ -198,15 +201,18 @@ export async function ajaxAsync(url: string, data: any): Promise<BaseResponse> {
             PushClientManager.getInstance().open();
         }
 
-        if (response.status == 401) {
-            alert("Logout wegen Doppellogin während einer Prüfung.");
+        if (response.status == 409) {
+            alert(CommunicationMessages.doubleLoginDuringPruefung());
             location.reload();
+            return;
+        } else if (response.status == 401) {
+            alert(CommunicationMessages.notLoggedIn());
+            location.reload();
+            return;
         }
 
         if (obj == null) {
             alert("Fehler beim Übertragen der Daten.");
-        } else if (obj.success != true) {
-            alert("Fehler beim Übertragen der Daten:\n" + obj.message);
         }
         showNetworkBusy(false);
         return obj;
@@ -218,3 +224,5 @@ export async function ajaxAsync(url: string, data: any): Promise<BaseResponse> {
         }
     }
 }
+
+
