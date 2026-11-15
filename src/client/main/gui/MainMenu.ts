@@ -11,6 +11,9 @@ import { downloadFile } from "../../../tools/HtmlTools.js";
 import { MainMenuMessages } from "./language/MainMenuMessages.js";
 import { SettingsGUI } from "../../settings/SettingsGUI.js";
 import { PasswordChanger } from "./UserMenu.js";
+import * as monaco from 'monaco-editor'
+import { GuiMessages } from "./language/GuiMessages.js";
+
 
 declare var BUILD_DATE: string;
 declare var APP_VERSION: string;
@@ -145,7 +148,14 @@ export class MainMenu {
                             },
                             { identifier: "-" },
                             { identifier: "Hoher Kontrast im Editor ein/aus", action: () => { editor.getAction("editor.action.toggleHighContrast").run(); } },
-
+                            { identifier: "-" },
+                                                        {
+                                identifier: GuiMessages.LinebreakOnOff(), action: () => {
+                                    let wordWrap = this.main.editor.editor.getOption(monaco.editor.EditorOption.wordWrap);
+                                    wordWrap = wordWrap == "on" ? "off" : "on";
+                                    this.main.editor.editor.updateOptions({ wordWrap: wordWrap });
+                                }
+                            },
                             { identifier: "-" },
                             { identifier: "Zoom normal", action: () => { this.main.editor.setFontSize(14); } },
 
