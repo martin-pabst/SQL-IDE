@@ -3,7 +3,7 @@ import { makeDiv } from "../../../tools/HtmlTools.js";
 import { PushClientManager } from '../../communication/pushclient/PushClientManager.js';
 import { Main } from "../Main.js";
 import { Tab, TabManager } from '../../../tools/TabManager';
-import { AdminMessages } from '../../administration/AdministrationMessages.js';
+import { AdminMessages } from './language/AdministrationMessages.js';
 import type { GradeData, UserData } from '../../communication/Data.js';
 import { GradingManagerMessages } from './language/GradingManagerMessages.js';
 import '/assets/css/gradingtab.css';

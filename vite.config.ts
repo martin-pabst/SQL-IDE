@@ -8,7 +8,6 @@ export default {
     rollupOptions: {
       input: {
         main: ('./index.html'),
-        admin: './administration_mc.html',
         // 'sqljs-worker': './src/client/sqljs-worker/sqljsWorker.ts'
       },
       output: {
@@ -49,7 +48,8 @@ export default {
       //   target: "http://localhost:4000"
       // }
     },
-    port: 4000
+    port: 4000,
+    strictPort: true
   },
 
 } satisfies UserConfig;

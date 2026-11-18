@@ -29,3 +29,4 @@ dist-ssr
 /package-lock.json
 
 /intern/
+/.playwright-mcp/

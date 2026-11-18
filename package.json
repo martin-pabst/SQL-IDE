@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc && vite build && vite build --config vite.config-embedded.js",
+    "build": "tsc && vite build && vite build --config vite.config-embedded.ts",
     "build-ide": "tsc && vite build",
-    "build-embedded": "tsc && vite build --config vite.config-embedded.js",
+    "build-embedded": "tsc && vite build --config vite.config-embedded.ts",
     "preview": "npm run build && vite preview --host",
     "build_tools": "tsc --project tsconfig_development-tools.json",
     "deploy": "node src/development/ZipAndUpload.js"

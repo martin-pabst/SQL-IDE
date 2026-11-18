@@ -123,9 +123,9 @@ Are you sure?`
     });
 
 
-    static WORKSPACES = () => lm({
-        'de': 'WORKSPACES',
-        'en': 'WORKSPACES'
+    static Databases = () => lm({
+        'de': 'Datenbanken',
+        'en': 'Databases'
     });
 
     static newDatabase = () => lm({

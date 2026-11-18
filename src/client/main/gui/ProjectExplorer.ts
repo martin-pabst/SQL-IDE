@@ -337,7 +337,7 @@ export class ProjectExplorer {
         this.workspaceTreeview = new Treeview(this.accordion, {
             captionLine: {
                 enabled: true,
-                text: ProjectExplorerMessages.WORKSPACES()
+                text: ProjectExplorerMessages.Databases()
             },
             withSelection: true,
             withFolders: true,
