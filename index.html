@@ -12,7 +12,8 @@
         crossorigin="anonymous"></script>
 
 
-    <link rel='stylesheet' type='text/css' media='screen' href='assets/fonts/fonts.css'>
+    <!-- no media attribute here: Vite would then copy fonts.css unprocessed and the font files would be missing in the build -->
+    <link rel='stylesheet' type='text/css' href='assets/fonts/fonts.css'>
 
     <script type="module" src="src/client/main/IDEStarter.ts"></script>
 </head>

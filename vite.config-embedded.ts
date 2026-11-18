@@ -1,13 +1,12 @@
 
-import type { UserConfig } from 'vite'
+import { mergeConfig, type UserConfig } from 'vite'
 import commonConfig from './vite.config-common.ts'
 
-export default {
-  ...commonConfig,
+// mergeConfig merges deeply, so the `build` options from vite.config-common.ts are kept
+export default mergeConfig(commonConfig, {
   base: '',
   build: {
-    sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         embedded: './embedded.html'
       },
@@ -15,18 +14,22 @@ export default {
         entryFileNames: _assetInfo => {
           return 'sql-ide-embedded.js'; // im Hauptverzeichnis
         },
-        assetFileNames: assetInfo => assetInfo.name?.endsWith('css') ? 'sql-ide-embedded.css' : 'assets/[name]-[hash][extname]',
-        manualChunks: (id: string, { getModuleInfo, getModuleIds }) => {
-          if (id.endsWith('.css')) {
-            return 'css';
-          }
-          if (id.includes('node_modules')) return id.toString().split('node_modules/')[1].split('/')[0].toString().replace("@", "");
-          // 'everything' - jetzt entstehen nur 1 CSS Asset, 1 JS Assert, plus 1 Worker JS Assets.
-          return 'own_sourcecode';
+        assetFileNames: assetInfo => assetInfo.names.some(name => name.endsWith('css')) ? 'sql-ide-embedded.css' : 'assets/[name]-[hash][extname]',
+        codeSplitting: {
+          groups: [{
+            debugName: 'css / npm packages / own sourcecode',
+            name: (id: string) => {
+              if (id.endsWith('.css')) {
+                return 'css';
+              }
+              if (id.includes('node_modules')) return id.toString().split('node_modules/')[1].split('/')[0].toString().replace("@", "");
+              // 'everything' - jetzt entstehen nur 1 CSS Asset, 1 JS Assert, plus 1 Worker JS Assets.
+              return 'own_sourcecode';
+            },
+          }],
         },
       }
     },
     outDir: './dist-embedded',
-    chunkSizeWarningLimit: 4912,
   }
-} satisfies UserConfig;
+} satisfies UserConfig);

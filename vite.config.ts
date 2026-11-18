@@ -1,26 +1,30 @@
-import { type UserConfig } from 'vite'
+import { mergeConfig, type UserConfig } from 'vite'
 import commonConfig from './vite.config-common.ts'
 
-export default {
-  ...commonConfig,
+// mergeConfig merges deeply, so the `build` options from vite.config-common.ts are kept
+export default mergeConfig(commonConfig, {
   build: {
-    sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         main: ('./index.html'),
         // 'sqljs-worker': './src/client/sqljs-worker/sqljsWorker.ts'
       },
       output: {
-        manualChunks: (id: string, { getModuleInfo, getModuleIds }) => {
-          if (id.includes('node_modules')) {
-            let moduleName: string = id.toString().split('node_modules/')[1].split('/')[0].toString().replace("@", "");
-            if (id.endsWith('.css')) {
-              return moduleName + '_css';
-            }
-            return moduleName;
-          }
+        codeSplitting: {
+          groups: [{
+            debugName: 'one chunk per npm package',
+            name: (id: string) => {
+              if (id.includes('node_modules')) {
+                let moduleName: string = id.toString().split('node_modules/')[1].split('/')[0].toString().replace("@", "");
+                if (id.endsWith('.css')) {
+                  return moduleName + '_css';
+                }
+                return moduleName;
+              }
 
-          return undefined;
+              return null;
+            },
+          }],
         },
       },
 
@@ -37,7 +41,6 @@ export default {
       // }
     },
     outDir: './dist',
-    // chunkSizeWarningLimit: 4912
   },
   server: {
     proxy: {
@@ -52,4 +55,4 @@ export default {
     strictPort: true
   },
 
-} satisfies UserConfig;
+} satisfies UserConfig);
