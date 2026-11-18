@@ -33,7 +33,7 @@
     "jszip": "^3.10.1",
     "lz-string": "^1.4.4",
     "markdown-it": "^14.1.0",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "^0.57.0",
     "pako": "^2.1.0",
     "sql.js": "^1.11.0",
     "w2ui": "^2.0.0"
