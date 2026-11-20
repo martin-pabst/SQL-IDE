@@ -70,10 +70,10 @@ export class ResultsetPresenter {
 
         tabManager.tabheadingRightDiv.append(this.$paginationDiv[0]);
 
-        const $exportCsvButton = jQuery('<div class="jo_button jo_active img_export-csv-dark"></div>')
-        this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left-dark jo_active"></div>');
+        const $exportCsvButton = jQuery('<div class="jo_button jo_active img_export-csv"></div>')
+        this.$arrowLeft = jQuery('<div class="jo_button img_arrow-left jo_active"></div>');
         this.$infoDiv = jQuery('<div class="jo_pagination_info"><span class="jo_pagination_fromto"></span>/<span class="jo_pagination_all"></span></div>');
-        this.$arrowRight = jQuery('<div class="jo_button img_arrow-right-dark jo_active"></div>');
+        this.$arrowRight = jQuery('<div class="jo_button img_arrow-right jo_active"></div>');
 
         this.$paginationDiv.empty();
         this.$paginationDiv.append($exportCsvButton, this.$arrowLeft, this.$infoDiv, this.$arrowRight);

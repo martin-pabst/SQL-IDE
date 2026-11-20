@@ -6,13 +6,13 @@
 //     </div>
 // </div>
 // <!-- <img id="buttonStart" title="Start" src="assets/projectexplorer/start-dark.svg"> -->
-// <div id="buttonStart" title="Start" class="img_start-dark button"></div>
-// <div id="buttonPause" title="Pause" class="img_pause-dark button"></div>
-// <div id="buttonStop" title="Stop" class="img_stop-dark button"></div>
-// <div id="buttonStepOver" title="Step over" class="img_step-over-dark button"></div>
-// <div id="buttonStepInto" title="Step into" class="img_step-into-dark button"></div>
-// <div id="buttonStepOut" title="Step out" class="img_step-out-dark button"></div>
-// <div id="buttonRestart" title="Restart" class="img_restart-dark button"></div>
+// <div id="buttonStart" title="Start" class="img_start button"></div>
+// <div id="buttonPause" title="Pause" class="img_pause button"></div>
+// <div id="buttonStop" title="Stop" class="img_stop button"></div>
+// <div id="buttonStepOver" title="Step over" class="img_step-over button"></div>
+// <div id="buttonStepInto" title="Step into" class="img_step-into button"></div>
+// <div id="buttonStepOut" title="Step out" class="img_step-out button"></div>
+// <div id="buttonRestart" title="Restart" class="img_restart button"></div>
 // </div>
 
 import { MainBase } from "../MainBase.js";
@@ -35,7 +35,7 @@ export class ProgramControlButtons {
 
     constructor(private main: MainBase, private $buttonsContainer: JQuery<HTMLElement>) {
 
-        this.$buttonStart = jQuery('<div title="Start" class="img_start-dark jo_button"></div>');
+        this.$buttonStart = jQuery('<div title="Start" class="img_start jo_button"></div>');
         this.$buttonRollback = jQuery('<div title="Rollback" class="img_undo jo_button"></div>');
 
         let am = this.main.getActionManager();
@@ -64,12 +64,12 @@ export class ProgramControlButtons {
 
         am.setActive('rollback',false);
 
-        // this.$buttonPause = jQuery('<div title="Pause" class="img_pause-dark jo_button"></div>');
-        // this.$buttonStop = jQuery('<div title="Stop" class="img_stop-dark jo_button"></div>');
-        // this.$buttonStepOver = jQuery('<div title="Step over" class="img_step-over-dark jo_button"></div>');
-        // this.$buttonStepInto = jQuery('<div title="Step into" class="img_step-into-dark jo_button"></div>');
-        // this.$buttonStepOut = jQuery('<div title="Step out" class="img_step-out-dark jo_button"></div>');
-        // this.$buttonRestart = jQuery('<div title="Restart" class="img_restart-dark jo_button"></div>');
+        // this.$buttonPause = jQuery('<div title="Pause" class="img_pause jo_button"></div>');
+        // this.$buttonStop = jQuery('<div title="Stop" class="img_stop jo_button"></div>');
+        // this.$buttonStepOver = jQuery('<div title="Step over" class="img_step-over jo_button"></div>');
+        // this.$buttonStepInto = jQuery('<div title="Step into" class="img_step-into jo_button"></div>');
+        // this.$buttonStepOut = jQuery('<div title="Step out" class="img_step-out jo_button"></div>');
+        // this.$buttonRestart = jQuery('<div title="Restart" class="img_restart jo_button"></div>');
 
         // this.$buttonEdit = jQuery('<div class="jo_editButton" title="Programm anhalten damit der Programmtext bearbeitbar wird"></div>')
         // $editorContainer.append(this.$buttonEdit);
@@ -80,13 +80,13 @@ export class ProgramControlButtons {
         );
 
         // <!-- <img id="buttonStart" title="Start" src="assets/projectexplorer/start-dark.svg"> -->
-        // <div id="buttonStart" title="Start" class="img_start-dark button"></div>
-        // <div id="buttonPause" title="Pause" class="img_pause-dark button"></div>
-        // <div id="buttonStop" title="Stop" class="img_stop-dark button"></div>
-        // <div id="buttonStepOver" title="Step over" class="img_step-over-dark button"></div>
-        // <div id="buttonStepInto" title="Step into" class="img_step-into-dark button"></div>
-        // <div id="buttonStepOut" title="Step out" class="img_step-out-dark button"></div>
-        // <div id="buttonRestart" title="Restart" class="img_restart-dark button"></div>
+        // <div id="buttonStart" title="Start" class="img_start button"></div>
+        // <div id="buttonPause" title="Pause" class="img_pause button"></div>
+        // <div id="buttonStop" title="Stop" class="img_stop button"></div>
+        // <div id="buttonStepOver" title="Step over" class="img_step-over button"></div>
+        // <div id="buttonStepInto" title="Step into" class="img_step-into button"></div>
+        // <div id="buttonStepOut" title="Step out" class="img_step-out button"></div>
+        // <div id="buttonRestart" title="Restart" class="img_restart button"></div>
 
 
 

@@ -559,7 +559,7 @@ export class MainEmbedded implements MainBase {
         $div.append($rightDiv);
 
         let $rightSideContainer = jQuery('<div class="jo_rightdiv-rightside-container"></div>');
-        let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis-dark" style="margin-right: 10px"></div>');
+        let $infoButton = jQuery('<div class="jo_button jo_active img_ellipsis" style="margin-right: 10px"></div>');
 
         $controlsDiv.append($infoButton);
 
@@ -601,7 +601,7 @@ export class MainEmbedded implements MainBase {
             })
         })
 
-        let $buttonSave = jQuery('<div class="img_save-dark jo_button jo_active"' +
+        let $buttonSave = jQuery('<div class="img_save jo_button jo_active"' +
             'style="margin-right: 8px;" title="Datenbank-Dump in Datei speichern"></div>');
 
 

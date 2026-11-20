@@ -612,7 +612,7 @@ export class NetworkManager {
 
         this.main.workspaceList.push(w);
 
-        let iconClass = "img_database-dark";
+        let iconClass = "img_database";
         let node = this.main.projectExplorer.workspaceTreeview.addNode(w.isFolder,w.name,
             iconClass, w
          )

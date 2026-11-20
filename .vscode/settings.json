@@ -14,5 +14,6 @@
         "tab.activeBorder": "#b8ffa0",
         "iLoveWorkSpaceColors": true,
         "iLoveWorkSpaceRandom": false
-    }
+    },
+    "js/ts.tsdk.path": "node_modules\\typescript"
 }

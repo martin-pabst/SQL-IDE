@@ -233,7 +233,7 @@ export class NewDatabaseDialog {
 
         this.main.workspaceList.push(w);
 
-        let node = projectExplorer.workspaceTreeview.addNode(false, workspaceData.name, "img_database-dark", w, workspaceData.parent_folder_id);
+        let node = projectExplorer.workspaceTreeview.addNode(false, workspaceData.name, "img_database", w, workspaceData.parent_folder_id);
         projectExplorer.addSettingsIconToWorkspaceOrFolderNode(node);
 
         projectExplorer.setWorkspaceActive(w);

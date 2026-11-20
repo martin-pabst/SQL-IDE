@@ -72,7 +72,7 @@ export class ProjectExplorer {
             buttonAddFolders: true,
             withDeleteButtons: true,
             confirmDelete: true,
-            defaultIconClass: "img_file-dark-java",
+            defaultIconClass: "img_file-sql",
             buttonAddElementsCaption: ProjectExplorerMessages.newFile(),
             comparator: (a, b) => {
                 return a.name > b.name ? 1 : a.name < b.name ? -1 : 0;
@@ -349,7 +349,7 @@ export class ProjectExplorer {
             buttonAddFolders: true,
             minHeight: 150,
             flexWeight: "1",
-            defaultIconClass: "img_workspace-dark",
+            defaultIconClass: "img_workspace",
             comparator: (a, b) => {
                 return a.name > b.name ? 1 : a.name < b.name ? -1 : 0;
             },
@@ -362,7 +362,7 @@ export class ProjectExplorer {
             orderSetter: (workspace, order) => workspace.sorting_order = order
         })
 
-        this.addDatabaseButton = this.workspaceTreeview.captionLineAddIconButton("img_add-database-dark", "right", () => {
+        this.addDatabaseButton = this.workspaceTreeview.captionLineAddIconButton("img_add-database", "right", () => {
             let owner_id: number = this.main.user.id;
             if (this.main.workspacesOwnerId != null) {
                 owner_id = this.main.workspacesOwnerId;
@@ -670,7 +670,7 @@ export class ProjectExplorer {
         this.workspaceTreeview.clear();
 
         for (let ws of workspaceList) {
-            let iconClass = "img_database-dark";
+            let iconClass = "img_database";
             if (ws.isFolder) iconClass = undefined;
             let node = this.workspaceTreeview.addNode(ws.isFolder, ws.name, iconClass, ws);
             this.addSettingsIconToWorkspaceOrFolderNode(node);
@@ -693,7 +693,7 @@ export class ProjectExplorer {
 
     addSettingsIconToWorkspaceOrFolderNode(node: TreeviewNode<Workspace, number>) {
         if (!node.isFolder) {
-            node.addIconButton("img_settings-dark", (workspace, node, event) => {
+            node.addIconButton("img_settings", (workspace, node, event) => {
                 this.showSettings(workspace);
             }, ProjectExplorerMessages.databaseSettings(), false);
         }

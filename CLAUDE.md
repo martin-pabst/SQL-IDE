@@ -71,6 +71,8 @@ Call them (`MainMenuMessages.Settings()`) at render time so the current language
 ### UI
 jQuery and w2ui, plus custom components in `src/tools/` (`components/treeview`, `TabManager`, `GUIButton`, ...). CSS lives in `assets/css/` and is imported from the starter files. Sample databases for templates/embedded demos are in `public/assets/databases/`.
 
+Icons are CSS classes `img_<name>` in `assets/css/icons.css`. Each one shows `assets/icons/dark/<name>.svg`, or `assets/icons/light/<name>.svg` when `ThemeManager` has set `jo_theme-light` on `<html>`. Use only the plain class name in code (no `-dark` suffix). Every icon needs both SVG files and both CSS rules. To add an icon, put the dark SVG in `dark/` and run `node src/development/IconTool.js derive` to create the light one, then `node src/development/IconTool.js check`. Run `clean` after editing icons in Inkscape.
+
 ## Conventions and gotchas
 - Relative TS imports mostly use the `.js` extension (`import { Lexer } from "./lexer/Lexer.js"`). Follow the surrounding file.
 - `tsconfig.json` has `strict: false`.

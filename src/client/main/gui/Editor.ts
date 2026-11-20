@@ -565,7 +565,7 @@ export class Editor {
         this.main.getActionManager().setActive('execute', executeActionActive);
 
         if (executeActionActive && !this.main.isEmbedded()) {
-            Helper.showHelper("playButtonHelper", <any>this.main, jQuery('div.img_start-dark'));
+            Helper.showHelper("playButtonHelper", <any>this.main, jQuery('div.img_start'));
         }
 
 

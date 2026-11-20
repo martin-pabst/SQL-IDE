@@ -42,7 +42,7 @@
 //         let that = this;
 
 //         this.fileListPanel = new AccordionPanel(this.accordion, "Kein Workspace gewählt", "1",
-//             "img_add-file-dark", "Neue Datei...", "java", true, false, "file", true, []);
+//             "img_add-file", "Neue Datei...", "java", true, false, "file", true, []);
 
 //         this.fileListPanel.newFilesElementCallback =
 
@@ -197,7 +197,7 @@
 //         this.workspaceListPanel = new AccordionPanel(this.accordion, "Datenbanken", "3",
 //             null, "Neue Datenbank...", "workspace", true, true, "workspace", false, ["file"]);
 
-//         let $newWorkspaceAction = jQuery('<div class="img_add-database-dark jo_button jo_active" style="margin-right: 4px"' +
+//         let $newWorkspaceAction = jQuery('<div class="img_add-database jo_button jo_active" style="margin-right: 4px"' +
 //             ' title="Neue Datenbank auf oberster Ordnerebene anlegen">');
 
 //         let mousePointer = window.PointerEvent ? "pointer" : "mouse";
@@ -360,7 +360,7 @@
 
 
 
-//         this.$homeAction = jQuery('<div class="img_home-dark jo_button jo_active" style="margin-right: 4px"' +
+//         this.$homeAction = jQuery('<div class="img_home jo_button jo_active" style="margin-right: 4px"' +
 //             ' title="Meine eigenen Workspaces anzeigen">');
 
 //         this.$homeAction.on(mousePointer +'down', (e) => {

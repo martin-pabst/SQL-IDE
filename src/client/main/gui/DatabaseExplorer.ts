@@ -55,7 +55,7 @@ export class DatabaseExplorer {
         let $table = jQuery(
             `<div class="jo_table">
            <div class="jo_tableheader">
-              <div class="${isCollapsed ? 'img_tree-collapsed-dark' : 'img_tree-expanded-dark'} jo_treeswitch jo_button jo_active"></div>
+              <div class="${isCollapsed ? 'img_tree-collapsed' : 'img_tree-expanded'} jo_treeswitch jo_button jo_active"></div>
               <div class="jo_tableheaderlink">
                 <div class="${table.type == "table" ? "img_table" : "img_view"}"></div>
                 <div>${table.identifier}</div></div><div class="jo_tablesize">(${table.type == "view" ? "View, " : ""}${table.size}&nbsp;Datensätze)</div>
@@ -132,15 +132,15 @@ export class DatabaseExplorer {
         $treeSwitch.on('pointerup', (e) => {
             e.stopPropagation();
             let $columnList = $treeSwitch.parents('.jo_table').find('.jo_columnlist');
-            let collapsed = $treeSwitch.hasClass('img_tree-collapsed-dark');
+            let collapsed = $treeSwitch.hasClass('img_tree-collapsed');
             if (collapsed) {
-                $treeSwitch.removeClass('img_tree-collapsed-dark');
-                $treeSwitch.addClass('img_tree-expanded-dark');
+                $treeSwitch.removeClass('img_tree-collapsed');
+                $treeSwitch.addClass('img_tree-expanded');
                 $columnList.slideDown(300);
                 that.collapsedTables.delete(table.identifier);
             } else {
-                $treeSwitch.removeClass('img_tree-expanded-dark');
-                $treeSwitch.addClass('img_tree-collapsed-dark');
+                $treeSwitch.removeClass('img_tree-expanded');
+                $treeSwitch.addClass('img_tree-collapsed');
                 $columnList.slideUp(300);
                 that.collapsedTables.set(table.identifier, true);
             }
