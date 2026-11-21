@@ -1,6 +1,7 @@
 /*
  * Icons: css class img_<name> shows assets/icons/dark/<name>.svg, or assets/icons/light/<name>.svg
- * if the light theme is active (ThemeManager sets class jo_theme-light on the <html> element).
+ * if the light theme is active (ThemeManager sets class jo_theme-light on the IDE's root element:
+ * body in the full IDE, the div of each embedded IDE).
  * Every icon has to exist in both folders with the same name.
  * src/development/IconTool.js derives missing light icons from dark ones and checks this file.
  */

@@ -10,6 +10,7 @@ import { HistoryViewer } from "../main/gui/HistoryViewer.js";
 import { ProgramControlButtons } from "../main/gui/ProgramControlButtons.js";
 import { ResultsetPresenter } from "../main/gui/ResultsetPresenter.js";
 import { RightDiv } from "../main/gui/RightDiv.js";
+import { ThemeManager, type ThemeName } from "../main/gui/ThemeManager.js";
 import { WaitOverlay } from "../main/gui/WaitOverlay.js";
 import { MainBase } from "../main/MainBase.js";
 import { DatabaseImportExport } from "../../tools/DatabaseImportExport.js";
@@ -40,7 +41,15 @@ type JavaOnlineConfig = {
     id?: string,
     databaseURL?: string,
     enableFileAccess?: boolean,
-    settings?: SettingValues
+    settings?: SettingValues,
+
+    /**
+     * 'auto' follows the dark mode setting of the operating system/browser when the IDE starts.
+     * Default: 'dark'.
+     * As all Monaco editors on a page share one theme, the first embedded IDE on the page
+     * determines the theme of all code editors.
+     */
+    theme?: ThemeName | "auto"
 }
 
 export class MainEmbedded implements MainBase {
@@ -156,10 +165,15 @@ export class MainEmbedded implements MainBase {
 
     settings: Settings;
 
+    themeManager: ThemeManager;
+
 
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
+
+        this.themeManager = new ThemeManager($div[0]);
+        this.themeManager.switchTheme(this.getThemeNameFromConfig());
 
         this.writeQueryManager = new WriteQueryManager(this, (this.config.databaseURL == null ? "Empty database" : this.config.databaseURL) + this.config.id);
 
@@ -191,6 +205,20 @@ export class MainEmbedded implements MainBase {
         }
 
 
+    }
+
+    getThemeNameFromConfig(): ThemeName {
+        let theme = this.config.theme;
+        if (theme == null) return "dark";
+
+        if (theme == "auto") {
+            return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+
+        if (ThemeManager.isThemeName(theme)) return theme;
+
+        console.warn(`SQL-IDE: Invalid value '${theme}' for configuration parameter theme. Valid values are 'dark', 'light' and 'auto'. Using theme 'dark'.`);
+        return "dark";
     }
 
     initDatabase() {

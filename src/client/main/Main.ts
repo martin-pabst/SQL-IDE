@@ -126,7 +126,8 @@ export class Main implements MainBase {
 
         this.checkStartupComplete();
 
-        this.themeManager = new ThemeManager();
+        this.themeManager = new ThemeManager(document.body);
+        this.themeManager.switchTheme("dark");  // ViewModeController switches to the user's theme after login
 
         this.viewModeController = new ViewModeController(jQuery("#view-mode"), this);
 

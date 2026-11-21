@@ -1,5 +1,6 @@
 import jQuery from 'jquery';
 import { escapeHtml } from "./StringTools.js";
+import { ThemeManager } from "../client/main/gui/ThemeManager.js";
 
 export function makeEditable(elementWithText: JQuery<HTMLElement> | HTMLElement,
     elementToReplace: JQuery<HTMLElement> | HTMLElement | undefined,
@@ -110,11 +111,11 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number, 
     if (!isSubMenu) jQuery('.jo_contextmenu').remove();
 
     let $contextMenu = jQuery('<div class="jo_contextmenu"></div>');
-    let rootElement = <HTMLDivElement>jQuery('.joeCssFence')[0];
-    let backgroundColor = rootElement.style.getPropertyValue('--contextmenu-background');
-    $contextMenu.css('background-color', backgroundColor);
 
-    let fontColorNormal = rootElement.style.getPropertyValue('--fontColorNormal');
+    // the context menu is appended to body, so in the embedded version it doesn't inherit the theme
+    // (css variables, icon set) from the IDE's root element. A page may contain several embedded IDEs
+    // with different themes, so take the theme of the IDE the user interacted with last:
+    ThemeManager.getActiveThemeManager()?.applyThemeToElement($contextMenu[0]);
 
     let $openSubMenu: JQuery<HTMLElement> | undefined = undefined;
     let parentMenuItem: ContextMenuItem | undefined = undefined;
@@ -131,8 +132,6 @@ export function openContextMenu(items: ContextMenuItem[], x: number, y: number, 
             caption = `<a href="${mi.link}" target="_blank" class="jo_menulink">${mi.caption}</a>`;
         }
         let $item: JQuery<HTMLElement> = jQuery(`<div>${iconString}` + caption + (mi.subMenu != null ? '<span style="float: right; "> &nbsp; &nbsp; &gt;</span>' : "") + '</div>');
-        $item.find('a').attr('style', 'color: ' + fontColorNormal + " !important");
-        $item.attr('style', 'color: ' + fontColorNormal + " !important");
         if (mi.color != null) {
             $item.css('color', mi.color);
         }

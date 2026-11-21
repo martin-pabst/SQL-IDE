@@ -3,7 +3,7 @@
 // Every icon exists twice with the same file name: assets/icons/dark/<name>.svg (for the dark theme)
 // and assets/icons/light/<name>.svg (for the light theme). assets/css/icons.css defines the css class
 // img_<name> with the dark icon and overrides it with the light icon under .jo_theme-light
-// (ThemeManager sets this class on the <html> element).
+// (ThemeManager sets this class on the IDE's root element: body in the full IDE, the div of each embedded IDE).
 // Ported from the Online-IDE (src/development/IconTool.js there), only COPY_UNCHANGED differs.
 //
 // Usage (from the repository root):

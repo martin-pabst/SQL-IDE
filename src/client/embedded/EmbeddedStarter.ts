@@ -1,5 +1,4 @@
 import { Formatter } from "../main/gui/Formatter.js";
-import { ThemeManager } from "../main/gui/ThemeManager.js";
 import { MainEmbedded } from "./MainEmbedded.js";
 import jQuery from "jquery";
 
@@ -59,15 +58,12 @@ export class EmbeddedStarter {
 
     startupComplete = 2;
 
-    themeManager: ThemeManager;
-
     mainEmbeddedList: MainEmbedded[] = [];
 
     initGUI() {
 
         this.checkStartupComplete();
 
-        this.themeManager = new ThemeManager();
     }
 
     initEditor() {
@@ -90,6 +86,8 @@ export class EmbeddedStarter {
 
     initJavaOnlineDivs() {
 
+        // in document order: the first embedded IDE determines the (page-global)
+        // theme of all Monaco editors (see ThemeManager)
         jQuery('.sql-online').each((index: number, element: HTMLElement) => {
             let $div = jQuery(element);
             let scriptList: JOScript[] = [];

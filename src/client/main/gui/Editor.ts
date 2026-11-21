@@ -38,64 +38,7 @@ export class Editor {
 
         defineVscSQL();
 
-        monaco.editor.defineTheme('myCustomThemeDark', {
-            base: 'vs-dark', // can also be vs-dark or hc-black
-            inherit: true, // can also be false to completely replace the builtin rules
-            rules: [
-                { token: 'functions', foreground: 'dcdcaa', fontStyle: 'italic' },
-                { token: 'string.sql', foreground: '3DC9B0' },
-                { token: 'number', foreground: '7bef3f' },
-                { token: 'type', foreground: '499cd6' },
-                { token: 'identifier', foreground: 'effefe' },
-                { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
-                { token: 'keyword', foreground: '619ceb', fontStyle: 'bold' },
-                { token: 'table', foreground: 'ff0000', fontStyle: 'bold' },
-                { token: 'delimiter', foreground: 'e8eb38' }
-                // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },
-            ],
-            colors: {
-                "editor.background": "#1e1e1e",
-                "jo_highlightStatementGreen": "#004000",
-                "jo_highlightStatementYellow": "#404000",
-                "jo_highlightStatementRed": "#402020"
-            }
-        });
-
-        monaco.editor.defineTheme('myCustomThemeLight', {
-            base: 'vs', // can also be vs-dark or hc-black
-            inherit: true, // can also be false to completely replace the builtin rules
-            rules: [
-                { token: 'functions', foreground: '694E16', fontStyle: 'italic bold' },
-                { token: 'string.sql', foreground: 'a03030' },
-                { token: 'number', foreground: '404040' },
-                { token: 'type', foreground: '0000ff', fontStyle: 'bold' },
-                { token: 'identifier', foreground: '8000e0' },
-                { token: 'statement', foreground: '001080', fontStyle: 'bold' },
-                { token: 'keyword', foreground: '00a000', fontStyle: 'bold' },
-                { token: 'comment', foreground: '808080', fontStyle: 'italic' },
-            ],
-            colors: {
-                "editor.background": "#FFFFFF",
-                "editor.foreground": "#000000",
-                "editor.inactiveSelectionBackground": "#E5EBF1",
-                "editorIndentGuide.background": "#D3D3D3",
-                "editorIndentGuide.activeBackground": "#939393",
-                "editor.selectionHighlightBackground": "#ADD6FF80",
-                "editorSuggestWidget.background": "#F3F3F3",
-                "activityBarBadge.background": "#007ACC",
-                "sideBarTitle.foreground": "#6F6F6F",
-                "list.hoverBackground": "#E8E8E8",
-                "input.placeholderForeground": "#767676",
-                "searchEditor.textInputBorder": "#CECECE",
-                "settings.textInputBorder": "#CECECE",
-                "settings.numberInputBorder": "#CECECE",
-                "statusBarItem.remoteForeground": "#FFF",
-                "statusBarItem.remoteBackground": "#16825D",
-                "jo_highlightStatementGreen": "#004000",
-                "jo_highlightStatementYellow": "#404000",
-                "jo_highlightStatementRed": "#400000"
-            }
-        });
+        // the editor themes myCustomThemeDark/myCustomThemeLight are defined and set by ThemeManager
 
         let settings = this.main.getSettings();
 
@@ -164,7 +107,7 @@ export class Editor {
                 vertical: 'auto',
                 horizontal: 'auto'
             },
-            theme: "myCustomThemeDark",
+            // no theme option here: it would set the page-global Monaco theme, which is managed by ThemeManager
             // automaticLayout: true
 
 

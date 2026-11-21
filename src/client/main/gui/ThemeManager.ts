@@ -1,21 +1,80 @@
 import * as monaco from 'monaco-editor'
 
+export type ThemeName = "dark" | "light";
+
 export type Theme = {
-    name: string,
+    name: ThemeName,
     monacoTheme: string,
     cssColors: { [color: string]: string }
 }
 
+/**
+ * Applies a theme (dark/light) to the html elements of one IDE instance: it sets the css variables
+ * of the theme (cssColors) and the css class jo_theme-<name> (switches icon sets, see assets/css/icons.css)
+ * on the instance's root element.
+ *
+ * The full IDE has one instance (root element: body), the embedded version has one instance per
+ * embedded IDE (root element: its div). Several embedded IDEs on one page may use different themes.
+ *
+ * Monaco editors can't have individual themes: Monaco has only one page-global theme. It is
+ * set by the ThemeManager which was created first on the page.
+ */
 export class ThemeManager {
 
-    themes: Theme[] = [];
+    private static themes: Theme[] | undefined;
 
-    constructor() {
-        this.initThemes();
+    private static instances: ThemeManager[] = [];
+
+    /**
+     * The first ThemeManager on the page sets the page-global theme of all Monaco editors.
+     */
+    private static monacoThemeOwner: ThemeManager | undefined;
+
+    /**
+     * ThemeManager of the IDE instance the user interacted with last, see getActiveThemeManager
+     */
+    private static lastActiveInstance: ThemeManager | undefined;
+
+    currentTheme: Theme;
+
+    constructor(private rootElement: HTMLElement) {
+        if (!ThemeManager.themes) {
+            ThemeManager.themes = ThemeManager.createThemes();
+            ThemeManager.defineEditorThemes();
+            ThemeManager.trackLastActiveInstance();
+        }
+        if (!ThemeManager.monacoThemeOwner) ThemeManager.monacoThemeOwner = this;
+        ThemeManager.instances.push(this);
+
+        this.currentTheme = ThemeManager.themes[0];
+    }
+
+    static isThemeName(name: string): name is ThemeName {
+        return name == "dark" || name == "light";
+    }
+
+    /**
+     * Elements outside of all IDE instances' root elements (e.g. context menus, which are appended
+     * to body) don't inherit a theme. They get the theme of the IDE instance the user interacted
+     * with last (see applyThemeToElement).
+     */
+    static getActiveThemeManager(): ThemeManager | undefined {
+        return ThemeManager.lastActiveInstance ?? ThemeManager.instances[0];
+    }
+
+    private static trackLastActiveInstance() {
+        const rememberInstance = (event: Event) => {
+            if (!(event.target instanceof Node)) return;
+            let instance = ThemeManager.instances.find(tm => tm.rootElement.contains(<Node>event.target));
+            if (instance) ThemeManager.lastActiveInstance = instance;
+        }
+        // capture phase, as some components stop propagation
+        document.addEventListener("pointerdown", rememberInstance, true);
+        document.addEventListener("focusin", rememberInstance, true);
     }
 
     switchTheme(name: string) {
-        for (let theme of this.themes) {
+        for (let theme of ThemeManager.themes) {
             if (theme.name == name) {
                 this.internalSwitchTheme(theme);
                 break;
@@ -24,26 +83,37 @@ export class ThemeManager {
     }
 
     private internalSwitchTheme(theme: Theme) {
-        monaco.editor.setTheme(theme.monacoTheme);
+        this.currentTheme = theme;
 
-        let root = document.documentElement;
+        if (ThemeManager.monacoThemeOwner == this) {
+            monaco.editor.setTheme(theme.monacoTheme);
+        }
+
+        this.applyThemeToElement(this.rootElement);
+    }
+
+    /**
+     * Applies this IDE instance's theme to element. Use it for elements outside of the instance's
+     * root element, e.g. context menus appended to body.
+     */
+    applyThemeToElement(element: HTMLElement) {
+        const theme = this.currentTheme;
+
         for (const key of Object.keys(theme.cssColors)) {
-            const value = theme.cssColors[key]
-
-            root.style.setProperty(key, value);
-
+            element.style.setProperty(key, theme.cssColors[key]);
         }
 
         // switches icon sets: assets/css/icons.css overrides the (dark) icons for .jo_theme-light
-        for (const t of this.themes) {
-            root.classList.toggle("jo_theme-" + t.name, t == theme);
+        for (const t of ThemeManager.themes) {
+            element.classList.toggle("jo_theme-" + t.name, t == theme);
         }
-
     }
 
-    initThemes() {
+    private static createThemes(): Theme[] {
 
-        this.themes.push({
+        let themes: Theme[] = [];
+
+        themes.push({
             name: "dark",
             monacoTheme: "myCustomThemeDark",
             cssColors: {
@@ -70,6 +140,9 @@ export class ThemeManager {
                 "--file-active": "#094771",
                 "--file-active-hover": "rgba(9, 71, 113, 0.827)",
                 "--file-errorcount": "red",
+                "--treeview-selected-background": "#114c74c0",
+                "--treeview-selected-hover-background": "#2a4658c0",
+                "--treeview-focus-border": "#66b6ecab",
                 "--inplace-editor": "blue",
                 "--contextmenu-background": "#3c3c3c",
                 "--contextmenu-color": "rgb(212,212,212)",
@@ -96,6 +169,15 @@ export class ThemeManager {
                 "--editorTooltip-border": "#454545",
 
                 "--renameInput-color": "#ffffff",
+
+                // embedded version: buttons "Code Reset"/"Datenbank Reset" and their dialogs
+                "--resetButton-background": "#464646c7",
+                "--resetButton-color": "#c2cccc",
+                "--resetDialog-background": "rgba(46, 46, 46, 0.849)",
+                "--resetDialog-color": "#c2cccc",
+                "--resetDialog-button-color": "#c2cccc",
+                "--resetDialog-cancelButton-background": "rgb(15, 104, 15)",
+                "--resetDialog-okButton-background": "rgb(128, 33, 33)",
 
                 //bottomDiv
                 "--bottomdiv-tabheading-hover": "white",
@@ -143,7 +225,7 @@ export class ThemeManager {
 
         let highlightColor = "#8080ff";
 
-        this.themes.push({
+        themes.push({
             name: "light",
             monacoTheme: "myCustomThemeLight",
             cssColors: {
@@ -170,6 +252,9 @@ export class ThemeManager {
                 "--file-active": highlightColor,
                 "--file-active-hover": "#a0a0ff",
                 "--file-errorcount": "red",
+                "--treeview-selected-background": "rgba(171, 231, 255, 0.74)",
+                "--treeview-selected-hover-background": "rgba(203, 212, 253, 0.61)",
+                "--treeview-focus-border": "rgba(76, 204, 255, 0.74)",
                 "--inplace-editor": "white",
                 "--contextmenu-background": "white",
                 "--contextmenu-color": "#756161",
@@ -197,6 +282,14 @@ export class ThemeManager {
 
                 "--renameInput-color": "#000000",
 
+                // embedded version: buttons "Code Reset"/"Datenbank Reset" and their dialogs
+                "--resetButton-background": "#e0e0e0",
+                "--resetButton-color": "#000000",
+                "--resetDialog-background": "rgba(243, 243, 243, 0.92)",
+                "--resetDialog-color": "#000000",
+                "--resetDialog-button-color": "#000000",
+                "--resetDialog-cancelButton-background": "rgb(140, 210, 140)",
+                "--resetDialog-okButton-background": "rgb(240, 140, 140)",
 
                 //bottomDiv
                 "--bottomdiv-tabheading-hover": "#424242",
@@ -241,11 +334,68 @@ export class ThemeManager {
             }
         });
 
-
-
+        return themes;
     }
 
+    private static defineEditorThemes() {
+        monaco.editor.defineTheme('myCustomThemeDark', {
+            base: 'vs-dark', // can also be vs-dark or hc-black
+            inherit: true, // can also be false to completely replace the builtin rules
+            rules: [
+                { token: 'functions', foreground: 'dcdcaa', fontStyle: 'italic' },
+                { token: 'string.sql', foreground: '3DC9B0' },
+                { token: 'number', foreground: '7bef3f' },
+                { token: 'type', foreground: '499cd6' },
+                { token: 'identifier', foreground: 'effefe' },
+                { token: 'statement', foreground: '9cdcfe', fontStyle: 'bold' },
+                { token: 'keyword', foreground: '619ceb', fontStyle: 'bold' },
+                { token: 'table', foreground: 'ff0000', fontStyle: 'bold' },
+                { token: 'delimiter', foreground: 'e8eb38' }
+                // { token: 'comment.js', foreground: '008800', fontStyle: 'bold italic underline' },
+            ],
+            colors: {
+                "editor.background": "#1e1e1e",
+                "jo_highlightStatementGreen": "#004000",
+                "jo_highlightStatementYellow": "#404000",
+                "jo_highlightStatementRed": "#402020"
+            }
+        });
 
-
+        monaco.editor.defineTheme('myCustomThemeLight', {
+            base: 'vs', // can also be vs-dark or hc-black
+            inherit: true, // can also be false to completely replace the builtin rules
+            rules: [
+                { token: 'functions', foreground: '694E16', fontStyle: 'italic bold' },
+                { token: 'string.sql', foreground: 'a03030' },
+                { token: 'number', foreground: '404040' },
+                { token: 'type', foreground: '0000ff', fontStyle: 'bold' },
+                { token: 'identifier', foreground: '8000e0' },
+                { token: 'statement', foreground: '001080', fontStyle: 'bold' },
+                { token: 'keyword', foreground: '00a000', fontStyle: 'bold' },
+                { token: 'comment', foreground: '808080', fontStyle: 'italic' },
+            ],
+            colors: {
+                "editor.background": "#FFFFFF",
+                "editor.foreground": "#000000",
+                "editor.inactiveSelectionBackground": "#E5EBF1",
+                "editorIndentGuide.background": "#D3D3D3",
+                "editorIndentGuide.activeBackground": "#939393",
+                "editor.selectionHighlightBackground": "#ADD6FF80",
+                "editorSuggestWidget.background": "#F3F3F3",
+                "activityBarBadge.background": "#007ACC",
+                "sideBarTitle.foreground": "#6F6F6F",
+                "list.hoverBackground": "#E8E8E8",
+                "input.placeholderForeground": "#767676",
+                "searchEditor.textInputBorder": "#CECECE",
+                "settings.textInputBorder": "#CECECE",
+                "settings.numberInputBorder": "#CECECE",
+                "statusBarItem.remoteForeground": "#FFF",
+                "statusBarItem.remoteBackground": "#16825D",
+                "jo_highlightStatementGreen": "#004000",
+                "jo_highlightStatementYellow": "#404000",
+                "jo_highlightStatementRed": "#400000"
+            }
+        });
+    }
 
 }
